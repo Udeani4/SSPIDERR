@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- The above 4 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+
+    <!-- Title -->
+    <title>SSPIDERR</title>
+
+    <!--
+
+Template 2101 Insertion
+
+http://www.tooplate.com/view/2101-insertion
+
+-->
+                                           <!-- Templatemo style -->
+
+
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='img/core-img/favicon.ico') }}">
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- dropzone scripts-->
+    <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/dropzone@5/dist/min/dropzone.min.css" type="text/css" />
+<!--    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">-->
+    <!-- load insertion_template CSS -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,400">        <!-- Google web font "Open Sans" -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/css/bootstrap.min.css') }}">                                            <!-- https://getbootstrap.com/ -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fontawesome-all.min.css') }}">                                      <!-- Font awesome -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tooplate-style.css') }}">
+    <style>
+    /* Music list row */
+
+        .music-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f5f5f5;
+      padding: 10px 15px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+
+    .music-cover img {
+      width: 60px;
+      height: 60px;
+      border-radius: 8px;
+      object-fit: cover;
+      margin-right: 15px;
+    }
+
+    .music-info {
+      flex-grow: 1;
+    }
+
+    .song-title {
+      color: #007bff; /* blue */
+      margin: 0;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .artist-name {
+      margin: 0;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .music-actions {
+      text-align: right;
+    }
+
+    .buy-btn {
+      background: #007bff;
+      color: white;
+      padding: 6px 12px;
+      text-decoration: none;
+      border-radius: 6px;
+      margin-right: 10px;
+    }
+
+    .buy-btn:hover {
+      background: #0056b3;
+    }
+
+    .price {
+      color: #007bff;
+      font-weight: bold;
+    }
+
+    /* Album card style */
+    .album-info {
+    position: absolute;
+    bottom: 15px;
+    left: 15px;
+    right: 15px;
+    color: white;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.7);
+
+    }
+
+    .album-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    padding-bottom: 10px;
+    }
+
+    .album-artist-name {
+    margin: 0;
+    font-size: 14px;
+    opacity: 0.9;
+    }
+
+    figure.effect-sadie {
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* dropdown css */
+    .keyword-select {
+      background-color: #3a0606 !important;   /* dark background */
+      color: #fff;             /* white text */
+      padding: 6px 10px !important;       /* spacing inside */
+      border-radius: 4px;      /* rounded edges */
+      appearance: none;        /* remove default arrow style */
+    }
+
+    /* Optional: custom arrow for dropdown */
+    .keyword-select:after {
+      content: "▼";
+      color: #fff;
+      position: absolute;
+      right: 10px;
+      pointer-events: none;
+    }
+
+    /* Date picker render */
+    .date-picker-container {
+      display: none;                 /* hidden by default */
+      margin-top: 15px;
+      text-align: center;            /* centers inside container */
+      padding-bottom: 20px;
+    }
+
+    .date-picker-container label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+      color: white;                  /* matches your theme */
+      font-weight: 500;
+    }
+
+    .date-picker-container input[type="date"] {
+      max-width: 125px;              /* keeps it from overflowing */
+      width: 100%;                   /* responsive */
+      margin: 0 auto;                /* centers horizontally */
+      padding: 6px 10px;
+      font-size: 14px;               /* standardized smaller font */
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+
+    .tm-search-form-container {
+      display: flex;
+    }
+
+    /* FIXED BACKGROUND IMAGE */
+    .fixed-bg {
+      background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), /* overlay */
+      url("../static/img/wallpaperflare.com_wallpaper(11).jpg") no-repeat center center / cover;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1; /* sit behind everything */
+    }
+
+    .content {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Animating the albums/tracks */
+    /* Base hidden state */
+    .tm-album-col, .music-item {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: all 0.8s ease-in-out;
+    }
+
+    /* Album animation (from right) */
+    .tm-album-col.animate {
+      opacity: 1;
+      transform: translateX(0);
+      animation: slideInRight 0.8s ease forwards;
+    }
+
+    /* Track animation (from top) */
+    .music-item.animate {
+      opacity: 1;
+      transform: translateY(0);
+      animation: slideInDown 0.8s ease forwards;
+    }
+
+    /* Keyframes */
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(80px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes slideInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-40px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+  </style>
+
+
+  <script>
+    var renderPage = true;
+
+    if (navigator.userAgent.indexOf('MSIE') !== -1
+      || navigator.appVersion.indexOf('Trident/') > 0) {
+      /* Microsoft Internet Explorer detected in. */
+      alert("Please view this in a modern browser such as Chrome or Microsoft Edge.");
+      renderPage = false;
+    }
+  </script>
+
+</head>
+
+<body class="about-page">
+    <!-- Preloader -->
+    <div class="preloader d-flex align-items-center justify-content-center">
+        <div class="lds-ellipsis">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    </div>
+
+    <!-- ##### Header Area Start ##### -->
+    <header class="header-area">
+        <!-- Navbar Area -->
+        <div class="oneMusic-main-menu">
+            <div class="classy-nav-container breakpoint-off">
+                <div class="container">
+                    <!-- Menu -->
+                    <nav class="classy-navbar justify-content-between" id="oneMusicNav">
+
+                        <!-- Nav brand -->
+                        <a href="{{ url_for('home') }}" class="nav-brand"><img src="static/img/core-img/logo.png" alt=""></a>
+
+                        <!-- Navbar Toggler -->
+                        <div class="classy-navbar-toggler">
+                            <span class="navbarToggler"><span></span><span></span><span></span></span>
+                        </div>
+
+                        <!-- Menu -->
+                        <div class="classy-menu">
+
+                            <!-- Close Button -->
+                            <div class="classycloseIcon">
+                                <div class="cross-wrap"><span class="top"></span><span class="bottom"></span></div>
+                            </div>
+
+                            <!-- Nav Start -->
+                            <div class="classynav">
+                                <ul>
+                                    <li><a href="{{ url_for('home') }}">Home</a></li>
+                                    {% if current_user.is_authenticated: %}
+                                        <li><a href="{{ url_for('playlist') }}">playlists</a></li>
+                                    {% endif %}
+                                    <li><a href="#">Pages</a>
+                                        <ul class="dropdown">
+                                            <li><a href="{{ url_for('home') }}">Home</a></li>
+                                            {% if current_user.is_authenticated: %}
+                                                <li><a href="{{ url_for('playlist') }}">Playlists</a></li>
+                                            {% endif %}
+                                            <li><a href="{{ url_for('about_us') }}">About</a></li>
+                                            <li><a href="{{ url_for('news_blog') }}">News</a></li>
+                                            <li><a href="{{ url_for('contact_us') }}">Contact</a></li>
+                                            <li><a href="{{ url_for('elements') }}">Elements</a></li>
+                                            {% if not current_user.is_authenticated: %}
+                                                <li><a href="{{ url_for('login_page') }}">Login</a></li>
+                                            {% else: %}
+                                                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                                            {% endif %}
+                                            <li><a href="#">Dropdown</a>
+                                                <ul class="dropdown">
+                                                    <li><a href="{{ url_for('file_upload') }}">Upload Test</a></li>
+                                                    <li><a href="#">Even Dropdown</a></li>
+                                                    <li><a href="#">Even Dropdown</a></li>
+                                                    <li><a href="#">Even Dropdown</a>
+                                                        <ul class="dropdown">
+                                                            <li><a href="#">Deeply Dropdown</a></li>
+                                                            <li><a href="#">Deeply Dropdown</a></li>
+                                                            <li><a href="#">Deeply Dropdown</a></li>
+                                                            <li><a href="#">Deeply Dropdown</a></li>
+                                                            <li><a href="#">Deeply Dropdown</a></li>
+                                                        </ul>
+                                                    </li>
+                                                    <li><a href="#">Even Dropdown</a></li>
+                                                </ul>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li><a href="{{ url_for('about_us') }}">About</a></li>
+                                    <li><a href="{{ url_for('news_blog') }}">News</a></li>
+                                    <li><a href="{{ url_for('contact_us') }}">Contact</a></li>
+                                </ul>
+
+                                <!-- Login/Register & Cart Button -->
+                                <div class="login-register-cart-button d-flex align-items-center">
+
+                                    {% if not current_user.is_authenticated: %}
+                                        <!-- Login/Register -->
+                                        <div class="login-register-btn mr-50">
+                                            <a href="{{ url_for('login_page') }}" id="loginBtn">Login / Register</a>
+                                        </div>
+                                    {% else: %}
+                                        <!--Logout-->
+                                        <div class="login-register-btn mr-50">
+                                            <a href="{{ url_for('logout') }}" id="logoutBtn">Logout</a>
+                                        </div>
+                                    {% endif %}
+
+                                    <!-- Cart Button -->
+                                    <div class="cart-btn">
+                                        <p><span class="icon-shopping-cart"></span> <span class="quantity">1</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Nav End -->
+
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- ##### Header Area End ##### -->
+
+  <div class="fixed-bg"></div>
+
+  <!-- Loader -->
+  <div id="loader-wrapper">
+    <div id="loader"></div>
+    <div class="loader-section section-left"></div>
+    <div class="loader-section section-right"></div>
+  </div>
+
+
+  <!-- TOP CHART SECTION -->
+
+  <div class="tm-main" id="top-charts">
+
+    <div class="tm-welcome-section top-chart">
+
+      <div class="container text-center tm-welcome-container">
+        <div class="tm-welcome">
+          <i class="fas tm-fa-big fa-music tm-fa-mb-big"></i>
+          <h1 class="text-uppercase mb-3 tm-site-name">Top chart</h1>
+          <p class="tm-site-description">Select the best from Billboard</p>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="container">
+      <div class="tm-search-form-container">
+        <form action="{{ url_for('see_whats_new_results') }}" method="GET" class="form-inline tm-search-form" id="top-charts-form" data-target="top-charts-results">
+
+          <!-- This gets updated when dropdown changes -->
+          <div class="text-uppercase tm-new-release java-release-label">Billboard Hot 100</div>
+
+          <div class="form-group tm-search-box">
+            <!-- Dropdown replaces the keyword text input -->
+            <select name="keyword" class="form-control tm-search-input java-keyword-class keyword-select">
+              <option value="hot-100" selected>Billboard Hot 100</option>
+              <option value="billboard-200">Billboard 200</option>
+              <option value="artist-100">Billboard 100 Artists</option>
+              <option value="streaming-songs">Streaming Songs</option>
+              <option value="radio-songs">Radio Songs</option>
+            </select>
+            <input type="submit" value="Search" class="form-control tm-search-submit">
+          </div>
+
+          <div class="form-group tm-advanced-box java-go-advanced">
+            <a href="javascript:void(0)" class="tm-text-white">Go Advanced</a>
+          </div>
+
+          <!-- Hidden date picker (shows when "Go Advanced" is clicked) -->
+          <div class="java-date-picker date-picker-container">
+            <label for="release-date">Select Date:</label>
+            <input type="date" id="release-date1" name="release-date" class="form-control">
+          </div>
+        </form>
+      </div>
+
+
+        <div id="top-charts-results">
+
+            {% include "partials/section_results.html" %}
+         <!-- media-boxes -->
+        </div>
+  </div>
+
+
+  <!-- GLOBAL SECTION -->
+  <div class="tm-main" style="padding-top: 200px;" id="global">
+
+    <div class="tm-welcome-section global">
+
+      <div class="container text-center tm-welcome-container">
+        <div class="tm-welcome">
+          <i class="fas tm-fa-big fa-music tm-fa-mb-big"></i>
+          <h1 class="text-uppercase mb-3 tm-site-name">global</h1>
+          <p class="tm-site-description">Get the world best from Billboard</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="tm-search-form-container">
+        <form action="{{ url_for('see_whats_new_results') }}" method="GET" class="form-inline tm-search-form" id="global-form" data-target="global-results">
+
+          <!-- This gets updated when dropdown changes -->
+          <div class="text-uppercase tm-new-release java-release-label">Billboard Global 200</div>
+
+          <div class="form-group tm-search-box">
+            <!-- Dropdown replaces the keyword text input -->
+            <select name="keyword" class="form-control tm-search-input java-keyword-class keyword-select">
+              <option value="billboard-global-200" selected>Billboard Global 200</option>
+              <!-- <option value="top-100-songs">Top 100 Songs</option> -->
+            </select>
+            <input type="submit" value="Search" class="form-control tm-search-submit">
+          </div>
+
+          <div class="form-group tm-advanced-box java-go-advanced">
+            <a href="javascript:void(0)" class="tm-text-white">Go Advanced</a>
+          </div>
+
+          <!-- Hidden date picker (shows when "Go Advanced" is clicked) -->
+          <div class="java-date-picker date-picker-container">
+            <label for="release-date">Select Date:</label>
+            <input type="date" id="release-date2" name="release-date" class="form-control">
+          </div>
+        </form>
+      </div>
+
+
+        <div id="global-results">
+
+            {% include "partials/section_results.html" %}
+         <!-- media-boxes -->
+        </div>
+  </div>
+
+
+  <!-- HITS OF THE WORLD SECTION -->
+  <div class="tm-main" style="padding-top: 200px;" id="hits-of-the-world">
+
+    <div class="tm-welcome-section hits-of-the-world">
+      <div class="container text-center tm-welcome-container">
+        <div class="tm-welcome">
+          <i class="fas tm-fa-big fa-music tm-fa-mb-big"></i>
+          <h1 class="text-uppercase mb-3 tm-site-name">Hits of the world</h1>
+          <p class="tm-site-description">Best Hits everywhere from Billboard</p>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="container">
+      <div class="tm-search-form-container">
+        <form action="{{ url_for('see_whats_new_results') }}" method="GET" class="form-inline tm-search-form" id="hits-of-the-world-form" data-target="hits-of-the-world-results">
+
+          <!-- This gets updated when dropdown changes -->
+          <div class="text-uppercase tm-new-release java-release-label">Arabic Hot 100</div>
+
+          <div class="form-group tm-search-box">
+            <!-- Dropdown replaces the keyword text input -->
+            <select name="keyword" class="form-control tm-search-input java-keyword-class keyword-select">
+              <option value="the-arabic-hot-100" selected>Arabic Hot 100</option>
+              <option value="top-arabic-artist-100">Arabic Artist 100</option>
+              <option value="billboard-argentina-hot-100">Argentina Hot 100</option>
+              <option value="billboard-brasil-hot-100">Brasil Hot 100</option>
+              <option value="malasia-songs-hotw">Malasia Songs</option>
+              <option value="luxenburg-songs-hotw">Luxenburg Songs</option>
+              <option value="ireland-songs-hotw">Ireland Songs</option>
+              <option value="indonesia-songs-hotw">Indonesia Songs</option>
+              <option value="india-songs-hotw">India Songs</option>
+              <option value="iceland-songs-hotw">Iceland Songs</option>
+              <option value="hong-kong-songs-hotw">Hongkong Songs</option>
+              <option value="greece-albums">Greece Albums</option>
+              <option value="greece-songs-hotw">Greece Songs</option>
+              <option value="german-albums">Germany Albums</option>
+              <option value="germany-songs-hotw">Germany Songs</option>
+              <option value="france-songs-hotw">France Songs</option>
+              <option value="finland-songs-hotw">Finland Songs</option>
+              <option value="ecuador-songs-hotw">Ecuador Songs</option>
+              <option value="denmark-songs-hotw">Denmark Songs</option>
+              <option value="czech-republic-songs-hotw">Czech Republic Songs</option>
+              <option value="croatia-songs-hotw">Croatia Songs</option>
+              <option value="china-tme-uni-hotw">China TME UNI Songs</option>
+              <option value="chile-songs-hotw">Chile Songs</option>
+              <option value="bolivia-songs-hotw">Bolivia Songs</option>
+              <option value="belgium-songs-hotw">Belgium Songs</option>
+              <option value="austria-songs-hotw">Austria Songs</option>
+              <option value="australia-songs-hotw">Australia Songs</option>
+              <option value="australian-albums">Australia Albums</option>
+              <option value="official-uk-albums">Official UK Albums</option>
+              <option value="official-uk-songs">Official UK Singles</option>
+              <option value="billboard-thailand-top-thai-songs">Thailand Top Songs</option>
+              <option value="billboard-thailand-top-thai-country-songs">Thailand Country Songs</option>
+              <option value="billboard-phillipines-top-phillipines-songs">Phillipine Songs</option>
+              <option value="japan-hot-100">Japan Hot 100</option>
+              <option value="billboard-italy-albums-top-100">Italy Albums</option>
+              <option value="billboard-italy-hot-100">Italy Hot 100</option>
+              <option value="canadian-albums">Canadian Albums</option>
+              <option value="canadian-hot-100">Canadian Hot 100</option>
+              <option value="u-k-songs-hotw">UK Songs</option>
+              <option value="turkey-songs-hotw">Turkey Songs</option>
+              <option value="taiwan-songs-hotw">Taiwan Songs</option>
+              <option value="switzerland-songs-hotw">Switzerland Songs</option>
+              <option value="sweden-songs-hotw">Sweden Songs</option>
+              <option value="spain-songs-hotw">Spain Songs</option>
+              <option value="south-africa-songs-hotw">South Africa Songs</option>
+              <option value="slovekia-songs-hotw">Slovekia Songs</option>
+              <option value="singapore-songs-hotw">Singapore Songs</option>
+              <option value="romania-songs-hotw">Romania Songs</option>
+              <option value="portugal-songs-hotw">Portugal Songs</option>
+              <option value="poland-songs-hotw">Poland Songs</option>
+              <option value="peru-songs-hotw">Peru Songs</option>
+              <option value="norway-songs-hotw">Norway Songs</option>
+              <option value="new-zealand-songs-hotw">New Zealand Songs</option>
+              <option value="neitherlands-songs-hotw">Neitherland Songs</option>
+
+            </select>
+            <input type="submit" value="Search" class="form-control tm-search-submit">
+          </div>
+
+          <div class="form-group tm-advanced-box java-go-advanced">
+            <a href="javascript:void(0)" class="tm-text-white">Go Advanced</a>
+          </div>
+
+          <!-- Hidden date picker (shows when "Go Advanced" is clicked) -->
+          <div class="java-date-picker date-picker-container">
+            <label for="release-date">Select Date:</label>
+            <input type="date" id="release-date3" name="release-date" class="form-control">
+          </div>
+        </form>
+      </div>
+
+
+        <div id="hits-of-the-world-results">
+
+            {% include "partials/section_results.html" %}
+         <!-- media-boxes -->
+        </div>
+  </div>
+
+
+  <!-- GREATEST OF ALL TIME SECTION -->
+  <div class="tm-main" style="padding-top: 200px;" id="greatest-of-all-time">
+
+    <div class="tm-welcome-section greatest-of-all-time">
+
+      <div class="container text-center tm-welcome-container">
+        <div class="tm-welcome">
+          <i class="fas tm-fa-big fa-music tm-fa-mb-big"></i>
+          <h1 class="text-uppercase mb-3 tm-site-name">greatest of all time</h1>
+          <p class="tm-site-description">Greatest music ever from Billboard</p>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="container">
+      <div class="tm-search-form-container">
+        <form action="{{ url_for('see_whats_new_results') }}" method="GET" class="form-inline tm-search-form" id="greatest-of-all-time-form" data-target="greatest-of-all-time-results">
+
+          <!-- This gets updated when dropdown changes -->
+          <div class="text-uppercase tm-new-release java-release-label">GOAT Artists</div>
+
+          <div class="form-group tm-search-box">
+            <!-- Dropdown replaces the keyword text input -->
+            <select name="keyword" class="form-control tm-search-input java-keyword-class keyword-select">
+              <option value="greatest-of-all-time-artists" selected>G-O-A-T Artists</option>
+              <option value="greatest-of-all-time-hot-100-no-2-hits">G-O-A-T NO 2 Tracks</option>
+              <option value="greatest-of-all-time-songs-of-the-summer">G-O-A-T Summer Songs</option>
+              <option value="greatest-of-all-time-holiday-100-songs">G-O-A-T Holiday Songs</option>
+              <option value="greatest-of-all-time-top-holiday-albums">G-O-A-T Holiday Albums</option>
+              <option value="greatest-of-all-time-pop-song-artists">G-O-A-T Pop Artists</option>
+              <option value="greatest-of-all-time-adult-contemporary-artists">G-O-A-T Contemporary Artists</option>
+              <option value="greatest-of-all-time-adult-contemporary-songs">G-O-A-T Contemporary Songs</option>
+              <option value="greatest-of-all-time-pop-songs">G-O-A-T Pop Songs</option>
+              <option value="greatest-of-all-time-adult-alternative-songs">G-O-A-T Alternative Songs</option>
+
+            </select>
+            <input type="submit" value="Search" class="form-control tm-search-submit">
+          </div>
+
+          <div class="form-group tm-advanced-box java-go-advanced">
+            <a href="javascript:void(0)" class="tm-text-white">Go Advanced</a>
+          </div>
+
+          <!-- Hidden date picker (shows when "Go Advanced" is clicked) -->
+          <div class="java-date-picker date-picker-container">
+            <label for="release-date">Select Date:</label>
+            <input type="date" id="release-date4" name="release-date" class="form-control">
+          </div>
+        </form>
+      </div>
+
+
+        <div id="greatest-of-all-time-results">
+
+            {% include "partials/section_results.html" %}
+         <!-- media-boxes -->
+        </div>
+  </div>
+
+
+  <!-- POP SECTION -->
+  <div class="tm-main" style="padding-top: 200px;" id="pop">
+
+    <div class="tm-welcome-section pop">
+
+      <div class="container text-center tm-welcome-container">
+        <div class="tm-welcome">
+          <i class="fas tm-fa-big fa-music tm-fa-mb-big"></i>
+          <h1 class="text-uppercase mb-3 tm-site-name">pop</h1>
+          <p class="tm-site-description">Get your favorite pop song from Billboard</p>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="container">
+      <div class="tm-search-form-container">
+        <form action="{{ url_for('see_whats_new_results') }}" method="GET" class="form-inline tm-search-form" id="pop-form" data-target="pop-results">
+
+          <!-- This gets updated when dropdown changes -->
+          <div class="text-uppercase tm-new-release java-release-label">Adult Contemporary</div>
+
+          <div class="form-group tm-search-box">
+            <!-- Dropdown replaces the keyword text input -->
+            <select name="keyword" class="form-control tm-search-input java-keyword-class keyword-select">
+              <option value="adult-contemporary" selected>Adult Contemporary</option>
+              <option value="top-100-songs">Top 100 Songs</option>
+              <option value="top-100-artists">Top 100 Artists</option>
+              <option value="top-100-albums">Top 100 Albums</option>
+            </select>
+            <input type="submit" value="Search" class="form-control tm-search-submit">
+          </div>
+
+          <div class="form-group tm-advanced-box java-go-advanced">
+            <a href="javascript:void(0)" class="tm-text-white">Go Advanced</a>
+          </div>
+
+          <!-- Hidden date picker (shows when "Go Advanced" is clicked) -->
+          <div class="java-date-picker date-picker-container">
+            <label for="release-date">Select Date:</label>
+            <input type="date" id="release-date" name="release-date" class="form-control">
+          </div>
+        </form>
+      </div>
+
+
+        <div id="pop-results">
+
+            {% include "partials/section_results.html" %}
+         <!-- media-boxes -->
+        </div>
+  </div>
+
+  <!-- Modal -->
+    <div class="modal" id="playlistModal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h3 style="font-family: 'Archivo Narrow', 'sans-serif'; color: #000000; line-height: 1.3; font-weight: 700;">Choose a Playlist</h3>
+
+            <!-- Playlist Items -->
+            {% for playlist in playlist_list: %}
+                <div class="playlist" onclick="startLoading()">
+                    <img src="{{ playlist['image'] }}" alt="Chill Vibes">
+                    <span class="playlist-name">{{ playlist['name'] }}</span>
+                </div>
+            {% endfor %}
+
+            <!-- Add more as needed -->
+            <div class="create-btn-wrapper-popup">
+                <button class="open-btn-popup" onclick="location.href='{{ url_for('create_playlist') }}'">Create Playlist</button>
+            </div>
+        </div>
+    </div>
+    <!-- Modal 2: Loading -->
+    <div id="modal2" class="modal2">
+      <div class="modal-content2">
+        <span class="close-btn" onclick="closeModal2()">&times;</span>
+        <h2 id="status-text">Loading Songs...</h2>
+        <div class="loading-bar">
+          <div class="loader"></div>
+        </div>
+      </div>
+    </div>
+
+
+{% include "footer.html" %}
+
+<!-- ##### All Javascript Script ##### -->
+    <!-- jQuery-2.2.4 js -->
+    <!-- jQuery js -->
+    <script src="{{ url_for('static', filename='js/jquery/jquery-2.2.4.min.js') }}"></script>
+    <!-- load JS -->
+<!--    <script src="{{ url_for('static', filename='js/jquery/jquery-3.2.1.slim.min.js') }}"></script> &lt;!&ndash; https://jquery.com/ &ndash;&gt;-->
+    <!-- Popper js -->
+    <script src="{{ url_for('static', filename='js/bootstrap/popper.min.js') }}"></script>
+    <!-- Bootstrap js -->
+    <script src="{{ url_for('static', filename='js/bootstrap/bootstrap.min.js') }}"></script>
+    <!-- All Plugins js -->
+    <script src="{{ url_for('static', filename='js/plugins/plugins.js') }}"></script>
+    <!-- Active js -->
+    <script src="{{ url_for('static', filename='js/active.js') }}"></script>
+
+
+
+  <script>
+
+    /* DOM is ready
+    ------------------------------------------------*/
+    $(function () {
+
+      if (renderPage) {
+        $('body').addClass('loaded');
+      }
+
+      $('.tm-current-year').text(new Date().getFullYear());  // Update year in copyright
+    });
+
+  </script>
+
+  <script>
+    const dropdowns = document.querySelectorAll(".java-keyword-class");
+    const labels = document.querySelectorAll(".java-release-label");
+
+    dropdowns.forEach((dropdown, index) => {
+      dropdown.addEventListener("change", function () {
+        const selectedText = this.options[this.selectedIndex].text;
+        if (labels[index]) {
+          labels[index].textContent = selectedText;
+        }
+      });
+    });
+  </script>
+
+
+  <!-- ✅ Script moved to bottom so elements exist when it runs -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const goAdvancedElems = document.querySelectorAll(".java-go-advanced");
+      const datePickers = document.querySelectorAll(".java-date-picker");
+
+      goAdvancedElems.forEach((goAdvanced, index) => {
+        const datePicker = datePickers[index];
+
+        goAdvanced.addEventListener("click", function () {
+          if (datePicker.style.display === "none" || datePicker.style.display === "") {
+            datePicker.style.display = "block";
+            goAdvanced.style.display = "none";
+          } else {
+            datePicker.style.display = "none";
+            goAdvanced.style.display = "block";
+          }
+        });
+      });
+    });
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("animate");
+          }
+        });
+      }, { threshold: 0.2 });
+
+      // Observe albums and tracks
+      document.querySelectorAll(".tm-album-col, .music-item").forEach(el => {
+        observer.observe(el);
+      });
+    });
+  </script>
+  <!-- Modal Script -->
+    <script>
+        function openModal() {
+          document.getElementById("playlistModal").style.display = "flex";
+        }
+
+        function closeModal() {
+          document.getElementById("playlistModal").style.display = "none";
+        }
+
+        function closeModal2() {
+          document.getElementById("modal2").style.display = "none";
+        }
+
+
+        function startLoading() {
+          // Close Modal 1
+          document.getElementById("playlistModal").style.display = "none";
+
+          // Open Modal 2
+          document.getElementById("modal2").style.display = "block";
+
+          // Reset loader animation before starting
+          const loader = document.querySelector(".loader");
+          loader.style.animation = "moveBackAndForth 1s infinite ease-in-out";
+
+          // Reset status text
+          document.getElementById("status-text").innerText = "Loading Songs...";
+
+          // Simulate loading time (e.g., 3 seconds)
+          setTimeout(function() {
+            document.getElementById("status-text").innerText = "Songs Loaded!";
+            document.querySelector(".loader").style.animation = "none"; // Stop animation
+          }, 3000);
+        }
+
+        // Close if clicking outside either modal
+        window.onclick = function(event) {
+          const modal1 = document.getElementById("playlistModal");
+          const modal2 = document.getElementById("modal2");
+
+          if (event.target === modal1) {
+            modal1.style.display = "none";
+          }
+          if (event.target === modal2) {
+            modal2.style.display = "none";
+          }
+        };
+    </script>
+
+  <script>
+    ["top-charts", "global", "hits-of-the-world", "greatest-of-all-time", "pop"].forEach(id => {
+      const form = document.getElementById(`${id}-form`);
+      form.addEventListener("submit", function(event) {
+        event.preventDefault();
+        const keyword = form.querySelector(".keyword-select").value;
+
+        const resultsDiv = document.getElementById(`${id}-results`);
+
+        // ✅ Step 1: Show preloader before fetching
+        resultsDiv.innerHTML = `
+          <div class="preloader small-loader d-flex align-items-center justify-content-center">
+            <div class="lds-ellipsis">
+              <div></div><div></div><div></div><div></div>
+            </div>
+          </div>
+        `;
+
+        // ✅ Step 2: Fetch partial HTML and replace preloader with results
+        fetch(`/see-whats-new-results?keyword=${keyword}`)
+          .then(response => response.text())
+          .then(html => {
+            resultsDiv.innerHTML = html;
+          })
+          .catch(error => {
+            resultsDiv.innerHTML = `<p class="text-danger">Something went wrong. Please try again.</p>`;
+            console.error(error);
+          });
+      });
+    });
+  </script>
+      <script>
+          window.addEventListener('load', () => {
+          const elements = document.querySelectorAll('.music-item, .album-item, .artist-item');
+
+          elements.forEach((el, index) => {
+            setTimeout(() => {
+              el.classList.add('visible');
+            }, index * 200); // delay each one slightly
+          });
+        });
+      </script>
+
+</body>
+
+</html>

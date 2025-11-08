@@ -1,0 +1,247 @@
+{% from "bootstrap5/form.html" import render_form %}
+{% include "header.html" %}
+<style>
+  /* Scoped only to this comments section */
+  .comments-section .commentList {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .comments-section .commentList li {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    background: #f9f9f9;
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  .comments-section .commenterImage img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 15px;
+    object-fit: cover;
+  }
+
+  .comments-section .commentText {
+    flex: 1;
+  }
+
+  .comments-section .commentText .sub-text {
+    display: block;
+    font-size: 13px;
+    color: #777;
+    margin-top: 5px;
+  }
+
+  .comments-section .no-comments {
+    color: #888;
+    font-style: italic;
+    margin-top: 10px;
+  }
+</style>
+        <!-- ##### Hero Area Start ##### -->
+        <section class="hero-area">
+            <div class="hero-slides owl-carousel">
+                <!-- Single Hero Slide -->
+                <div class="single-hero-slide d-flex align-items-center justify-content-center">
+                    <!-- Slide Img -->
+                    <div class="slide-img bg-img" style="background-image: url('{{ post.img_url }}'); background-size: contain;
+                background-repeat: no-repeat;
+                background-position: center;
+                background-color: black;"></div>
+                    <!-- Slide Content -->
+                    <div class="container" style="text-align: center">
+                        <div class="row">
+                            <div class="col-12">
+                               <div class="hero-slides-content text-center"
+                                     style="padding: 80px 0; max-width: 900px; margin: 0 auto;">
+
+                                  <!-- Tagline -->
+                                  <h2 style="
+                                        font-size: 3rem;
+                                        font-weight: 800;
+                                        letter-spacing: 0.4rem;
+                                        text-transform: uppercase;
+                                        margin-bottom: 20px;
+                                        color: white;
+                                        text-shadow: 0 2px 6px rgba(0,0,0,0.4);
+                                      "
+                                      data-animation='fadeInUp' data-delay='300ms'>
+                                      RECENT <span style="color: white; opacity: 0.5"> RECENT </span>
+                                  </h2>
+
+                                  <!-- Headline -->
+                                  <h2 style="
+                                        font-size: 2rem;
+                                        font-weight: 500;
+                                        line-height: 1.5;
+                                        letter-spacing: 0.15rem;
+                                        max-width: 750px;
+                                        margin: 0 auto 15px;
+                                        color: white;
+                                        text-align: center;
+                                        text-shadow: 0 2px 6px rgba(0,0,0,0.4);
+                                      "
+                                      data-animation='fadeInUp' data-delay='100ms'>
+                                      {{ post.title }}
+                                  </h2>
+
+                                  <!-- Metadata -->
+                                  <p style="
+                                        font-size: 1rem;
+                                        color: #e0e0e0;
+                                        margin-bottom: 5px;
+                                        letter-spacing: 0.05rem;
+                                      "
+                                      data-animation='fadeInUp' data-delay='100ms'>
+                                      Release date: {{ post.date }}
+                                  </p>
+
+                                  <h6 style="
+                                        font-size: 0.95rem;
+                                        font-weight: 400;
+                                        letter-spacing: 0.1rem;
+                                        color: #d6d6d6;
+                                      "
+                                      data-animation='fadeInUp' data-delay='100ms'>
+                                      Source:
+                                      <a href='{{ post.news_link }}' style='color: #fff; text-decoration: underline;'>
+                                        {{ post.source }}
+                                      </a>
+                                  </h6>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+<!--            Short description-->
+            <section class="latest-albums-area section-padding-100">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="section-heading style-2">
+                                <p>See what’s new</p>
+                                <h2>NEWS SUMMARY</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row justify-content-center">
+                        <div class="col-12 col-lg-9">
+                            <div class="ablums-text text-center mb-70">
+                                <p class="description">{{ post.subtitle | safe }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="row">
+                <!-- comments -->
+                <div class="col-12 col-lg-6 comments-section">
+                  <div class="weeks-top-area mb-100">
+                    <div class="section-heading text-left mb-50 wow fadeInUp" data-wow-delay="50ms">
+                      <p>Comments Section</p>
+                      <h2>{{ post.comments | length }} Comments</h2>
+                    </div>
+
+                    <div class="comment">
+                      <ul class="commentList">
+                      {% with messages = get_flashed_messages(with_categories=true) %}
+                          {% if messages %}
+                            {% for category, message in messages %}
+                              <div id="flash-message" class="flash {{ category }}">
+                                {{ message }}
+                              </div>
+                            {% endfor %}
+                          {% endif %}
+                        {% endwith %}
+
+                        {% for comment in post.comments %}
+                            <li style="display: flex; align-items: flex-start; margin-bottom: 15px;">
+                              <div class="commenterImage" style="margin-right: 10px;">
+                                <img src="{{ comment.comment_author.email | gravatar }}" alt="User" style="border-radius: 50%; width: 50px; height: 50px;">
+                              </div>
+
+                              <div class="commentText" style="flex: 1;">
+                                <p>{{ comment.text | safe }}</p>
+                                <span class="sub-text" style="font-size: 0.9rem; color: #ccc;">
+                                  {{ comment.comment_author.email.split('@')[0] }} •
+                                  {{ comment.created_at.strftime('%b %d, %Y %I:%M %p') }}
+                                </span>
+
+                                {% if current_user.is_authenticated and comment.author_id == current_user.id %}
+                                <form action="{{ url_for('delete_comment', comment_id=comment.id) }}" method="POST" style="display:inline;">
+                                  <button type="submit" style="
+                                      background: transparent;
+                                      border: none;
+                                      color: #ff5c5c;
+                                      font-size: 0.9rem;
+                                      margin-left: 10px;
+                                      cursor: pointer;
+                                    "
+                                    onclick="return confirm('Are you sure you want to delete this comment?');">
+                                    Delete
+                                  </button>
+                                </form>
+                                {% endif %}
+                              </div>
+                            </li>
+                          {% else %}
+                             <p class="no-comments">No comments yet. Be the first to comment!</p>
+                        {% endfor %}
+
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- comment editor -->
+                {% if current_user.is_authenticated %}
+                    <div class="col-12 col-lg-6 comments-section">
+                      <div class="new-hits-area mb-100">
+                        <div class="section-heading text-left mb-50 wow fadeInUp" data-wow-delay="50ms">
+                          <p>Post Section</p>
+                          <h2>Add a comment</h2>
+                        </div>
+
+                        <!-- Load CKEditor -->
+                        {{ ckeditor.load() }}
+                        {{ ckeditor.config(name='comment_text') }}
+                        <!-- Override the built-in script with the latest one -->
+<!--                        <script src="https://cdn.ckeditor.com/4.25.1-lts/standard/ckeditor.js"></script>-->
+                        <!-- Render form -->
+                        {{ render_form(form, novalidate=True, button_map={"submit": "primary"}) }}
+                      </div>
+                    </div>
+                {% endif %}
+            </div>
+
+{% include "footer.html" %}
+         <!-- ##### All Javascript Script ##### -->
+    <!-- jQuery-2.2.4 js -->
+    <script src="{{ url_for('static', filename='js/jquery/jquery-2.2.4.min.js') }}"></script>
+    <!-- Popper js -->
+    <script src="{{ url_for('static', filename='js/bootstrap/popper.min.js') }}"></script>
+    <!-- Bootstrap js -->
+    <script src="{{ url_for('static', filename='js/bootstrap/bootstrap.min.js') }}"></script>
+    <!-- All Plugins js -->
+    <script src="{{ url_for('static', filename='js/plugins/plugins.js') }}"></script>
+    <!-- Active js -->
+    <script src="{{ url_for('static', filename='js/active.js') }}"></script>
+
+
+
+    </body>
+
+</html>
+

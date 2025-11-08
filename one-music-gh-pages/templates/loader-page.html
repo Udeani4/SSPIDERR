@@ -1,0 +1,183 @@
+{% include "header.html" %}
+
+
+<section class="loader-body">
+    <div class="loader-container">
+        <!-- Background image behind content -->
+        <img src="static/img/bg-img/loaderpageimage.png" class="bg-behind" alt="Background">
+
+        <div class="icon">
+            <i class="icon-cloud-computing"></i>
+        </div>
+        <!--dropzone form-->
+        <form action="{{ url_for('file_upload') }}"
+              class="dropzone dropzone-style"
+              id="my-awesome-dropzone">
+        </form>
+         {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                <div id="flash-messages">
+                  {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} flash-message">
+                      {{ message }}
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+         {% endwith %}
+
+        <h2 style="color:rgb(239, 245, 251)">Upload Local Song</h2>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                    <button class="btn-create" onclick="location.href='{{ url_for('create_playlist') }}'">+ Create Playlist</button>
+
+                    <!-- Or you use ##<a class="btn-create" href="create-playlist.html">+ Create Playlist</a>
+                 -->
+                    <div class="select-container">
+                        <label for="playlist">Or select existing playlist</label>
+
+                        <button class="btn-create" id="playlist" onclick="openModal()" style="background-color: seagreen;">Select Playlist</button>
+
+                    </div>
+              {% endif %}
+        {% endwith %}
+
+    </div>
+
+</section>
+<!-- Modal 1-->
+    <div class="modal" id="playlistModal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h3>Choose a Playlist</h3>
+
+            <!-- Playlist Items -->
+            {% for playlist in playlist_list: %}
+                <div class="playlist" onclick="window.location='{{ url_for('show_song_processing', playlist_id=playlist['id']) }}'">
+                    <img src="{{ playlist['image'] }}" alt="Chill Vibes">
+                    <span class="playlist-name">{{ playlist['name'] }}</span>
+                </div>
+            {% endfor %}
+
+            <!-- Add more as needed -->
+            <div class="create-btn-wrapper-popup">
+                <button class="open-btn-popup" onclick="location.href='{{ url_for('create_playlist') }}'">Create Playlist</button>
+            </div>
+        </div>
+    </div>
+    <!-- Modal 2: Loading -->
+    <div id="modal2" class="modal2">
+      <div class="modal-content2">
+        <span class="close-btn" onclick="closeModal2()">&times;</span>
+        <h2 id="status-text">Loading Songs...</h2>
+        <div class="loading-bar">
+          <div class="loader"></div>
+        </div>
+      </div>
+    </div>
+
+{% include "footer.html" %}
+ <!-- ##### All Javascript Script ##### -->
+    <!-- jQuery-2.2.4 js -->
+    <script src="static/js/jquery/jquery-2.2.4.min.js"></script>
+    <!-- Popper js -->
+    <script src="static/js/bootstrap/popper.min.js"></script>
+    <!-- Bootstrap js -->
+    <script src="static/js/bootstrap/bootstrap.min.js"></script>
+    <!-- All Plugins js -->
+    <script src="static/js/plugins/plugins.js"></script>
+    <!-- Active js -->
+    <script src="static/js/active.js"></script>
+
+<!-- Modal Script -->
+    <script>
+        function openModal() {
+          document.getElementById("playlistModal").style.display = "flex";
+        }
+
+        function closeModal() {
+          document.getElementById("playlistModal").style.display = "none";
+        }
+
+        function closeModal2() {
+          document.getElementById("modal2").style.display = "none";
+        }
+
+        function startLoading() {
+          // Close Modal 1
+          document.getElementById("playlistModal").style.display = "none";
+
+          // Open Modal 2
+          document.getElementById("modal2").style.display = "block";
+
+          // Reset loader animation before starting
+          const loader = document.querySelector(".loader");
+          loader.style.animation = "moveBackAndForth 1s infinite ease-in-out";
+
+          // Reset status text
+          document.getElementById("status-text").innerText = "Loading Songs...";
+
+          // Simulate loading time (e.g., 3 seconds)
+          setTimeout(function() {
+            document.getElementById("status-text").innerText = "Songs Loaded!";
+            document.querySelector(".loader").style.animation = "none"; // Stop animation
+          }, 3000);
+        }
+
+        // Close if clicking outside either modal
+        window.onclick = function(event) {
+          const modal1 = document.getElementById("playlistModal");
+          const modal2 = document.getElementById("modal2");
+
+          if (event.target === modal1) {
+            modal1.style.display = "none";
+          }
+          if (event.target === modal2) {
+            modal2.style.display = "none";
+          }
+        };
+
+        Dropzone.options.myAwesomeDropzone = {
+            init: function() {
+                this.on("success", function(file, response) {
+                    console.log("Upload success:", response);
+
+                    // Example 1: Refresh page
+                    location.reload();
+
+                    // Example 2: Redirect instead of reload
+                    // window.location.href = "/create-playlist";
+
+                    // Example 3: Update a modal instead of refreshing
+                    // document.getElementById("status-text").innerText = "Upload Complete!";
+                });
+
+                this.on("error", function(file, errorMessage) {
+                    console.error("Upload error:", errorMessage);
+                    alert("Upload failed: " + errorMessage);
+                });
+
+                this.on("queuecomplete", function() {
+                    console.log("All files uploaded");
+                });
+            }
+        };
+        document.addEventListener("DOMContentLoaded", function() {
+          const flashMessages = document.querySelectorAll(".flash-message");
+
+          flashMessages.forEach((msg, i) => {
+            setTimeout(() => msg.classList.add("show"), i * 200); // staggered show
+            setTimeout(() => {
+              msg.classList.remove("show");
+              setTimeout(() => msg.remove(), 600); // remove after fade-out
+            }, 4000 + i * 200); // visible for 4s
+          });
+        });
+    </script>
+
+
+
+</body>
+
+</html>

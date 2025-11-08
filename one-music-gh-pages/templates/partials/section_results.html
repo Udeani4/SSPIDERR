@@ -1,0 +1,165 @@
+
+<style>
+    /* Animating the albums/tracks */
+
+    /* Album animation (from right) */
+    .tm-album-col.animate {
+      opacity: 1;
+      transform: translateX(0);
+      animation: slideInRight 0.8s ease forwards;
+    }
+
+    /* Track animation (from top) */
+    .music-item.animate {
+      opacity: 1;
+      transform: translateY(0);
+      animation: slideInDown 0.8s ease forwards;
+    }
+
+    /* Keyframes */
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(80px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes slideInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-40px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+  <style>
+    .music-item.visible,
+    .album-item.visible,
+    .artist-item.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+
+
+{% if endpoint_type == 'albums' %}
+<div class="row tm-albums-container grid">
+        {% for album in full_chart_info %}
+            <!-- Album 1 -->
+            <div class="col-sm-6 col-12 col-md-6 col-lg-3 col-xl-3 tm-album-col album-item" style="opacity: 0;
+      transform: translateY(40px);
+      transition: all 0.8s ease-in-out;">
+              <figure class="effect-sadie" style="position: relative;
+      overflow: hidden;">
+                <div class="album-cover">
+                  <img src="{{ album['image'] }}" alt="Alive Album" class="album-image">
+                </div>
+                <div class="album-info" style=" position: absolute;
+    bottom: 15px;
+    left: 15px;
+    right: 15px;
+    color: white;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.7)">
+                  <h3 class="album-title" style="margin: 0;
+    font-size: 18px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    padding-bottom: 10px;">{{ album['album_name'] }}</h3>
+                  <h6 class="album-artist-name" style="margin: 0;
+    font-size: 14px;
+    opacity: 0.9;">{{ album['artist_name'] }}</h6>
+                </div>
+                <figcaption>
+                  <h2>{{ album['album_name'] }}</h2>
+                  <p>{{ album['description'] }}</p>
+                </figcaption>
+              </figure>
+            </div>
+        {% endfor %}
+{% elif endpoint_type == 'artists' %}
+        {% for artist in full_chart_info %}
+            <!-- Album 2 -->
+            <div class="col-sm-6 col-12 col-md-6 col-lg-3 col-xl-3 tm-album-col artist-item" style="opacity: 0;
+      transform: translateY(40px);
+      transition: all 0.8s ease-in-out;">
+              <figure class="effect-sadie" style="position: relative;
+      overflow: hidden;">
+                <div class="album-cover">
+                  <img src="{{ artist['artist_image'] }}" alt="Album Two" class="img-fluid">
+                </div>
+                <div class="album-info" style=" position: absolute;
+    bottom: 15px;
+    left: 15px;
+    right: 15px;
+    color: white;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.7)">
+                  <h3 class="album-title" style="margin: 0;
+    font-size: 18px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    padding-bottom: 10px">{{ artist['artist_name'] }}</h3>
+                  <h6 class="album-artist-name" style="margin: 0;
+    font-size: 14px;
+    opacity: 0.9;">{{ artist['artist_name'] }}</h6>
+                </div>
+                <figcaption>
+                  <h2>{{ artist['artist_name'] }}</h2>
+                  <p>{{ artist['artist_description'] }}</p>
+                </figcaption>
+              </figure>
+            </div>
+{% endfor %}
+    </div>
+    {% else %}
+      <div class="music-list">
+        {% for song in full_chart_info %}
+          <!-- Music List Item -->
+          <div class="music-item" style="display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f5f5f5;
+      padding: 10px 15px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      opacity: 0;
+      transform: translateY(40px);
+      transition: all 0.8s ease-in-out;">
+            <div class="music-cover">
+              <img src="{{ song['image'] }}" alt="{{ song['track_name'] }} - {{ song['track_artist'] }}" style="width: 60px;
+      height: 60px;
+      border-radius: 8px;
+      object-fit: cover;
+      margin-right: 15px;">
+            </div>
+
+            <div class="music-info" style="flex-grow: 1;">
+              <h5 class="song-title" style="color: #007bff;
+      margin: 0;
+      font-size: 16px;
+      font-weight: bold;">{{ song['track_name'] }}</h5>
+              <p class="artist-name" style="margin: 0;
+      color: #666;
+      font-size: 14px;">{{ song['track_artist'] }}</p>
+            </div>
+
+            {% if current_user.is_authenticated %}
+              <a href="#" class="open-btn" onclick="openModal()">
+                <div class="add-btn">
+                  <i class="icon-cloud-computing"></i>
+                  <span>Add to Playlist</span>
+                </div>
+              </a>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+

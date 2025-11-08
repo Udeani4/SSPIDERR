@@ -1,0 +1,276 @@
+{% include "header.html" %}
+        <!-- ##### Hero Area Start ##### -->
+        <section class="hero-area">
+            <div class="hero-slides owl-carousel">
+                <!-- Single Hero Slide -->
+                <div class="single-hero-slide d-flex align-items-center justify-content-center">
+                    <!-- Slide Img -->
+                    <div class="slide-img bg-img" style="background-image: url({{ song_data['itunes']['artwork'] }});background-size: contain;
+                background-repeat: no-repeat;
+                background-position: center;
+                background-color: black;"></div>
+                    <!-- Slide Content -->
+                    <div class="container" style="text-align: center">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="hero-slides-content text-center" style="padding: 50px 0px 0px 0px;">
+
+                                    <h2 style="font-size: 3rem; font-weight: bold; line-height: 1.2;" data-animation="fadeInUp" data-delay="300ms">GET THE BEST IN THE WORLD<span>GET THE BEST IN THE WORLD</span></h2>
+
+                                    <h2 data-animation="fadeInUp" data-delay="100ms">THE GRAMMIES</h2>
+
+                                    <p class="text-visible" data-animation="fadeInUp" data-delay="100ms">Release date: PUT A RELEASE DATE</p>
+
+<!--                                    <h6 data-animation="fadeInUp" data-delay="100ms"></h6>-->
+                                </div>
+
+                                <div class="java-date-picker date-picker-container">
+                                    <label for="release-date">Select Date:</label>
+                                    <input type="date" id="release-date" name="release-date" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+
+<!--            Short description-->
+            <section class="latest-albums-area section-padding-100">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="section-heading style-2">
+                                <a href="{{ url_for('see_whats_new') }}" class="see-new-link">See what’s new</a>
+                                <h2>GRAMMY AWARD WINNERS</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row justify-content-center">
+                        <div class="col-12 col-lg-9">
+                            <div class="ablums-text text-center mb-70">
+                                <p class="description">Get the best of the best from the grammies. Integrate the best global songs / albums to your spotify playlist </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        <section>
+            <!-- List of Album Songs -->
+
+            <div class="container" style="padding:50px 0px 0px 0px">
+                <div class="row">
+                    <div class="col-12 col-lg-6">
+                        <div class="new-hits-area mb-100">
+                            <div class="section-heading text-left mb-50 wow fadeInUp" data-wow-delay="50ms">
+                                <p>{{ song_data['spotify']['album']['name'] }}</p>
+                                <h2>Songs List</h2>
+                            </div>
+
+                            {% for tracks in song_album_tracks %}
+                                <!-- Single Top Item -->
+                                <div class="single-new-item d-flex align-items-center justify-content-between wow fadeInUp" data-wow-delay="100ms">
+                                    <a href="{{ url_for('song_page', song_id=tracks['id']) }}">
+                                        <div class="first-part d-flex align-items-center">
+                                            <div class="thumbnail">
+                                                <img src="{{ tracks['image'] }}" alt="{{ url_for('static', filename='img/bg-img/wt7.jpg') }}">
+                                            </div>
+                                            <div class="content-">
+                                                <h6>{{ tracks['name'] }}</h6>
+                                                <p>{{ tracks['artist'] }}</p>
+                                            </div>
+                                        </div>
+                                    </a>
+
+                                    <!-- Audio and Icon side-by-side -->
+                                    <div style="display: flex; align-items: center; gap: 15px; flex-shrink: 0;">
+                                        <audio preload="auto" controls>
+                                            <source src="{{ url_for('static', filename='audio/dummy-audio.mp3') }}">
+                                        </audio>
+                                        {% if current_user.is_authenticated %}
+                                            <a href = "#" style = "margin-left: auto;" class="open-btn" data-track-id="{{ tracks['id'] }}" onclick="openModal(this)">
+                                                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-left: auto;">
+                                                    <i class="icon-cloud-computing" style="font-size: 30px; color: #000;"></i>
+                                                    <span style="font-size: 12px; color: #333; font-weight: 500;">Add to Playlist</span>
+                                                </div>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <!-- Modal -->
+            <div class="modal" id="playlistModal">
+              <div class="modal-content">
+                <span class="close-btn" onclick="closeModal()">&times;</span>
+                <h3>Choose a Playlist</h3>
+
+                <!-- Playlist Items -->
+                {% for playlist in playlist_list %}
+                  <div class="playlist"
+                       data-playlist-id="{{ playlist['id'] }}"
+                       onclick="addToPlaylist('{{ playlist['id'] }}')">
+                    <img src="{{ playlist['image'] }}" alt="{{ playlist['name'] }}">
+                    <span class="playlist-name">{{ playlist['name'] }}</span>
+                  </div>
+                {% endfor %}
+
+                <!-- Create Playlist Button -->
+                <div class="create-btn-wrapper-popup">
+                  <button class="open-btn-popup"
+                          onclick="location.href='{{ url_for('create_playlist') }}'">
+                    Create Playlist
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Modal 2: Loading -->
+            <div id="modal2" class="modal2">
+              <div class="modal-content2">
+                <span class="close-btn" onclick="closeModal2()">&times;</span>
+                <h2 id="status-text">Loading Songs...</h2>
+                <div class="loading-bar">
+                  <div class="loader"></div>
+                </div>
+              </div>
+            </div>
+
+        </section>
+
+
+{% include "footer.html" %}
+     <!-- ##### All Javascript Script ##### -->
+    <!-- jQuery-2.2.4 js -->
+    <script src="{{ url_for('static', filename='js/jquery/jquery-2.2.4.min.js') }}"></script>
+    <!-- Popper js -->
+    <script src="{{ url_for('static', filename='js/bootstrap/popper.min.js') }}"></script>
+    <!-- Bootstrap js -->
+    <script src="{{ url_for('static', filename='js/bootstrap/bootstrap.min.js') }}"></script>
+    <!-- All Plugins js -->
+    <script src="{{ url_for('static', filename='js/plugins/plugins.js') }}"></script>
+    <!-- Active js -->
+    <script src="{{ url_for('static', filename='js/active.js') }}"></script>
+
+
+
+    <!-- Modal Script -->
+    <script>
+        let selectedTrackId = null;
+
+        /** ------------------------------
+         *  MODAL CONTROL FUNCTIONS
+         * ------------------------------ */
+        function openModal(el) {
+            // Store which song was clicked (for Add to Playlist)
+            if (el && el.getAttribute('data-track-id')) {
+                selectedTrackId = el.getAttribute('data-track-id');
+            }
+
+            document.getElementById("playlistModal").style.display = "flex";
+        }
+
+        function closeModal() {
+            document.getElementById("playlistModal").style.display = "none";
+        }
+
+        function closeModal2() {
+            document.getElementById("modal2").style.display = "none";
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const modal1 = document.getElementById("playlistModal");
+            const modal2 = document.getElementById("modal2");
+
+            if (event.target === modal1) modal1.style.display = "none";
+            if (event.target === modal2) modal2.style.display = "none";
+        };
+
+        /** ------------------------------
+         *  ADD TO PLAYLIST FUNCTION
+         * ------------------------------ */
+        async function addToPlaylist(playlistId) {
+            if (!selectedTrackId) {
+                alert("No track selected.");
+                return;
+            }
+
+            // Show loading modal
+            startLoading();
+
+            try {
+                const response = await fetch('/add_to_playlist', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        playlist_id: playlistId,
+                        track_id: selectedTrackId
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(`✅ ${result.message}`);
+                } else {
+                    alert(`⚠️ ${result.error || "Something went wrong"}`);
+                }
+            } catch (error) {
+                console.error(error);
+                alert("⚠️ Unable to add song right now.");
+            }
+
+            stopLoading();
+            closeModal();
+        }
+
+        /** ------------------------------
+         *  LOADING / STATUS HANDLERS
+         * ------------------------------ */
+        function startLoading() {
+            // Close playlist modal
+            document.getElementById("playlistModal").style.display = "none";
+
+            // Open loading modal
+            const modal2 = document.getElementById("modal2");
+            modal2.style.display = "block";
+
+            // Animate loader
+            const loader = document.querySelector(".loader");
+            if (loader) loader.style.animation = "moveBackAndForth 1s infinite ease-in-out";
+
+            // Update status text
+            const statusText = document.getElementById("status-text");
+            if (statusText) statusText.innerText = "Adding song to playlist...";
+        }
+
+        function stopLoading() {
+            // Stop loader
+            const loader = document.querySelector(".loader");
+            if (loader) loader.style.animation = "none";
+
+            // Reset cursor
+            document.body.style.cursor = 'default';
+
+            // Update status
+            const statusText = document.getElementById("status-text");
+            if (statusText) statusText.innerText = "Done!";
+        }
+    </script>
+
+
+    </body>
+
+</html>
+

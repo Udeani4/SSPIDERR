@@ -1,0 +1,660 @@
+{% include "header.html" %}
+    <!-- ##### Hero Area Start ##### -->
+    <section class="hero-area">
+        <div class="hero-slides owl-carousel">
+            <!-- Single Hero Slide -->
+            <div class="single-hero-slide d-flex align-items-center justify-content-center">
+                <!-- Slide Img -->
+                <div class="slide-img bg-img" style="background-image: url('{{ album_art }}');background-size: contain;
+                background-repeat: no-repeat;
+                background-position: center;
+                background-color: black;"></div>
+                <!-- Slide Content -->
+                <div class="container" style="text-align: center;">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="hero-slides-content text-center">
+                                <h6 data-animation="fadeInUp" data-delay="100ms">Hottest album</h6>
+                                <h2 data-animation="fadeInUp" data-delay="300ms">{{ album_name }} <span>{{ album_name }}</span></h2>
+                                <div class = "all-button-group">
+                                    <a data-animation="fadeInUp" data-delay="500ms" href="{{ url_for('album_page', album_id=album_id) }}" class="btn oneMusic-btn mt-50">Discover <i class="fa fa-angle-double-right"></i></a>
+                                    {% if not current_user.is_authenticated: %}
+                                        <div class="button-group">
+                                            <a data-animation="fadeInUp" data-delay="650ms" href="{{ url_for('login_page') }}" class="btn oneMusic-btn small-btn animate__animated animate__fadeInUp" style="animation-delay: 0.5s;">Login</a>
+                                            <a data-animation="fadeInUp" data-delay="750ms" href="{{ url_for('register_page') }}" class="btn oneMusic-btn small-btn animate__animated animate__fadeInUp" style="animation-delay: 0.6s;">Register</a>
+                                        </div>
+                                    {% else: %}
+                                        <a data-animation="fadeInUp" data-delay="850ms" href="{{ url_for('loader_page') }}" class="btn oneMusic-btn mt-30">Upload Local Songs <i class="fa fa-angle-double-right"></i></a>
+                                    {% endif %}
+                                </div>
+                                 
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Single Hero Slide -->
+            <div class="single-hero-slide d-flex align-items-center justify-content-center">
+                <!-- Slide Img -->
+                <div class="slide-img bg-img" style="background-image: url('{{ song_art }}');background-size: contain;
+                background-repeat: no-repeat;
+                background-position: center;
+                background-color: black;"></div>
+                <!-- Slide Content -->
+                <div class="container" style="text-align: center;">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="hero-slides-content text-center">
+                                <h6 data-animation="fadeInUp" data-delay="100ms">Hottest Song</h6>
+                                <h2 data-animation="fadeInUp" data-delay="300ms">{{ song_name }} <span>{{ song_name }}</span></h2>
+                                <div class = "all-button-group">
+                                    <a data-animation="fadeInUp" data-delay="500ms" href="{{ url_for('song_page', song_id=song_id ) }}" class="btn oneMusic-btn mt-50">Discover <i class="fa fa-angle-double-right"></i></a>
+
+                                    {% if not current_user.is_authenticated: %}
+                                        <div class="button-group">
+                                            <a data-animation="fadeInUp" data-delay="650ms" href="{{ url_for('login_page') }}" class="btn oneMusic-btn small-btn animate__animated animate__fadeInUp" style="animation-delay: 0.5s;">Login</a>
+                                            <a data-animation="fadeInUp" data-delay="750ms" href="{{ url_for('register_page') }}" class="btn oneMusic-btn small-btn animate__animated animate__fadeInUp" style="animation-delay: 0.6s;">Register</a>
+                                        </div>
+                                    {% else: %}
+                                        <a data-animation="fadeInUp" data-delay="850ms" href="{{ url_for('loader_page') }}" class="btn oneMusic-btn mt-30">Upload Local Songs <i class="fa fa-angle-double-right"></i></a>
+                                    {% endif %}
+                                </div>
+                               
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Single Hero Slide -->
+            <div class="single-hero-slide d-flex align-items-center justify-content-center">
+                <!-- Slide Img -->
+                <div class="slide-img bg-img" style="background-image: url('{{ artist_art }}');background-size: contain;
+                background-repeat: no-repeat;
+                background-position: center;
+                background-color: black;"></div>
+                <!-- Slide Content -->
+                <div class="container" style="text-align: center;">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="hero-slides-content text-center">
+                                <h6 data-animation="fadeInUp" data-delay="100ms">Hottest Artist</h6>
+                                <h2 data-animation="fadeInUp" data-delay="300ms">{{ artist_name }} <span>{{ artist_name }}</span></h2>
+                                <div class = "all-button-group">
+                                    <a data-animation="fadeInUp" data-delay="500ms" href="{{ url_for('artist_page', artist=artist_name) }}" class="btn oneMusic-btn mt-50">Discover <i class="fa fa-angle-double-right"></i></a>
+                                    {% if not current_user.is_authenticated: %}
+                                        <div class="button-group">
+                                            <a data-animation="fadeInUp" data-delay="650ms" href="{{ url_for('login_page') }}" class="btn oneMusic-btn small-btn animate__animated animate__fadeInUp" style="animation-delay: 0.5s;">Login</a>
+                                            <a data-animation="fadeInUp" data-delay="750ms" href="{{ url_for('register_page') }}" class="btn oneMusic-btn small-btn animate__animated animate__fadeInUp" style="animation-delay: 0.6s;">Register</a>
+                                        </div>
+                                    {% else: %}
+                                        <a data-animation="fadeInUp" data-delay="850ms" href="{{ url_for('loader_page') }}" class="btn oneMusic-btn mt-30">Upload Local Songs <i class="fa fa-angle-double-right"></i></a>
+                                    {% endif %}
+                                </div>
+                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    
+    <!-- ##### Hero Area End ##### -->
+
+    <!-- ##### Latest Albums Area Start ##### -->
+    <section class="latest-albums-area section-padding-100">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="section-heading style-2">
+                        <a href="{{ url_for('see_whats_new') }}" class="see-new-link">See what’s new</a>
+                        <h2>BILLBOARD TOP ALBUMS</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="row justify-content-center">
+                <div class="col-12 col-lg-9">
+                    <div class="ablums-text text-center mb-70">
+                        <p>Check out the best tracks from the hottest albums on Billboard.
+Right now, {{ top_albums[0]['artist_name'] }}'s <strong>{{ top_albums[0]['album_name'] }}</strong>, {{ top_albums[1]['artist_name'] }}'s <strong>{{ top_albums[1]['album_name'] }}</strong>, and {{ top_albums[2]['artist_name'] }}'s <strong>{{ top_albums[2]['album_name'] }}</strong> are lighting up the charts and making waves across the globe with over {downloads} downloads worldwide. These tracks are setting the standard for what’s trending in music right now.
+Browse, discover, and easily add them to your favorite playlist — your next favorite song might just be one click away.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="albums-slideshow owl-carousel">
+                        {% for albums in top_albums %}
+                            <!-- Single Album -->
+                            <div class="single-album">
+                                <img src="{{ albums['artwork_medium'] }}" alt="album cover">
+                                <div class="album-info">
+                                    <a href="{{ url_for('album_page', album_id=albums['album_id']) }}">
+                                        <h5>{{ loop.index }}. {{ albums['album_name'] }}</h5>
+                                    </a>
+                                    <a href="{{ url_for('artist_page', artist=albums['artist_name']) }}" style="text-decoration: none;">
+                                      <p style="margin: 0; transition: color 0.3s;" onmouseover="this.style.color='skyblue'" onmouseout="this.style.color=''" >
+                                        {{ albums['artist_name'] }}
+                                      </p>
+                                    </a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- ##### Latest Albums Area End ##### -->
+
+    <!-- ##### Get new songs for your playlist ##### -->
+    <section class="oneMusic-buy-now-area has-fluid bg-gray section-padding-100">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="section-heading style-2">
+                        <a href="{{ url_for('see_whats_new') }}" class="see-new-link" style="padding-bottom: 100px">See what’s new</a>
+                        <h2>Get New songs for your playlist</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+
+                <!-- Single Album Area -->
+                <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+                    <div class="single-album-area wow fadeInUp" data-wow-delay="100ms">
+                        <div class="album-thumb">
+                            <img src="{{ url_for('static', filename='img/core-img/afrobeat-img2.png') }}" alt="">
+                            <!-- Album Price -->
+                            <div class="album-price">
+                                <p>Top Tracks</p>
+                            </div>
+                            <!-- Play Icon -->
+                            <div class="play-icon">
+                                <a href="#" class="video--play--btn"><span class="icon-play-button"></span></a>
+                            </div>
+                        </div>
+                        <div class="album-info">
+                            <a href="{{ url_for('afro_beats') }}">
+                                <h5>Top Naija Hits</h5>
+                            </a>
+                            <p>Afrobeats</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Single Album Area -->
+                <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+                    <div class="single-album-area wow fadeInUp" data-wow-delay="200ms">
+                        <div class="album-thumb">
+                            <img src="static/img/bg-img/b2.jpg" alt="">
+                        </div>
+                        <div class="album-info">
+                            <a href="{{ url_for('US_top_40_songs') }}">
+                                <h5>US TOP 40 hits </h5>
+                            </a>
+                            <p>iheartradio</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Single Album Area -->
+                <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+                    <div class="single-album-area wow fadeInUp" data-wow-delay="300ms">
+                        <div class="album-thumb">
+                            <img src="{{ artist_art }}" alt="static/img/bg-img/b3.jpg">
+                        </div>
+                        <div class="album-info">
+                            <a href="{{ url_for('artist_page', artist=artist_name) }}">
+                                <h5>Top Artists</h5>
+                            </a>
+                            <p>{{ artist_name }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Single Album Area -->
+                <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+                    <div class="single-album-area wow fadeInUp" data-wow-delay="400ms">
+                        <div class="album-thumb">
+                            <img src="static/img/bg-img/b4.jpg" alt="">
+                        </div>
+                        <div class="album-info">
+                            <a href="{{ url_for('AI_suggested_songs') }}">
+                                <h5>Suggestions</h5>
+                            </a>
+                            <p>AI Selections</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Single Album Area -->
+                <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+                    <div class="single-album-area wow fadeInUp" data-wow-delay="500ms">
+                        <div class="album-thumb">
+                            <img src="static/img/bg-img/b1.jpg" alt="">
+                            <!-- Album Price -->
+                            <div class="album-price">
+                                <p>$0.90</p>
+                            </div>
+                            <!-- Play Icon -->
+                            <div class="play-icon">
+                                <a href="#" class="video--play--btn"><span class="icon-play-button"></span></a>
+                            </div>
+                        </div>
+                        <div class="album-info">
+                            <a href="{{ url_for('award_winning_songs') }}">
+                                <h5>Award-Winning Tracks</h5>
+                            </a>
+                            <p>Grammy Awards</p>
+                        </div>
+                    </div>
+                </div>
+
+                
+            <div class="row">
+                <div class="col-12">
+                    <div class="load-more-btn text-center wow fadeInUp" data-wow-delay="300ms">
+                        <a href="#" class="btn oneMusic-btn">Load More <i class="fa fa-angle-double-right"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- ##### Buy Now Area End ##### -->
+
+    {% if current_user.is_authenticated %}
+        <!-- ##### Featured Artist Area Start ##### -->
+        <section class="featured-artist-area section-padding-100 bg-img bg-overlay bg-fixed" style="background-image: url(static/img/bg-img/bg-4.jpg);">
+            <div class="container">
+                <div class="row align-items-end">
+
+                        <div class="col-12 col-md-5 col-lg-4">
+                            <div class="featured-artist-thumb" >
+                                <img src="{{ feature_artists_info['Artist Image'] }}" alt="static/img/bg-img/fa.jpg" >
+                            </div>
+                        </div>
+
+
+                    <div class="col-12 col-md-7 col-lg-8">
+                        <div class="featured-artist-content">
+                            <!-- Section Heading -->
+                            <div class="section-heading white text-left mb-30">
+                                <a href="{{ url_for('artist_page', artist=feature_artists_info['Artist Name']) }}"><p>{{ feature_artists_info['Artist Name'] }}</p></a>
+                                <a href="{{ url_for('album_page', album_id=feature_artists_info['Album ID']) }}"><h2>{{ feature_artists_info['Album Name'] }}</h2></a>
+                            </div>
+                            <p class="description">{{ artist_description['description'] | safe }}</p>
+                            <div class="song-play-area">
+                                <div class="song-name">
+                                    <a href="{{ url_for('song_page', song_id=top_artist_album_track[0]['id']) }}">
+                                       <p>01. {{ top_artist_album_track[0]['name'] }}</p>
+                                    </a>
+                                </div>
+                                <audio preload="auto" controls>
+                                    <source src="{{ url_for('static', filename='audio/dummy-audio.mp3') }}">
+                                </audio>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- ##### Featured Artist Area End ##### -->
+    {% endif %}
+
+    <!-- ##### Miscellaneous Area Start ##### -->
+    <section class="miscellaneous-area section-padding-100-0">
+        <div class="container">
+            <div class="row">
+                <!-- ***** Weeks Top ***** -->
+                <div class="col-12 col-lg-6">
+                    <div class="weeks-top-area mb-100">
+                        <div class="section-heading text-left mb-50 wow fadeInUp" data-wow-delay="50ms">
+                            <p>Weekly Update</p>
+                            <h2>This week’s top 10</h2>
+                        </div>
+
+                        <!-- Single Top Item -->
+                        {% for track in this_weeks_hits %}
+                            <div class="single-new-item d-flex align-items-center justify-content-between wow fadeInUp" data-wow-delay="150ms" style="padding-top:0px; padding-bottom: 15px">
+
+                                <!-- Left side (image + text) -->
+
+                                    <div class="first-part d-flex align-items-center" style="flex: 1; min-width: 0;">
+                                        <div class="thumbnail" style="flex-shrink: 0; width: 65px; height: 65px; overflow: hidden; border-radius: 0px;">
+                                            <img src="{{ track['image'] }}" alt="Album Art">
+                                        </div>
+                                        <div class="content-" style="margin-left: 10px; overflow: hidden; padding-left: 20px">
+                                            <a href="{{ url_for('song_page', song_id=track['spotify_song_id']) }}">
+                                                <h6 style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;">
+                                                    {{ track['name'] | upper }}
+                                                </h6>
+                                                <p style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;">
+                                                    {{ track['artist'] }}
+                                                </p>
+                                            </a>
+
+                                        </div>
+                                    </div>
+
+
+                                <!-- Right side (audio + button) -->
+                                <div style="display: flex; align-items: center; gap: 15px; flex-shrink: 0;">
+                                    <a href="{{ track['itunes_url'] }}">
+                                        <audio preload="auto" controls class="compact-audio new-hits-area">
+                                            <source src="{{ track['itunes_url'] }}">
+                                        </audio>
+                                    </a>
+
+                                    {% if current_user.is_authenticated %}
+                                        <a href="#" data-track-id="{{ track['spotify_song_id'] }}" onclick="openModal(this)" class="open-btn">
+                                            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                                                <i class="icon-cloud-computing" style="font-size: 30px; color: #000;"></i>
+                                                <span style="font-size: 12px; color: #333; font-weight: 500;">Add to Playlist</span>
+                                            </div>
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+
+                    </div>
+                </div>
+
+                <!-- ***** New Hits Songs ***** -->
+                <div class="col-12 col-lg-6">
+                    <div class="new-hits-area mb-100">
+                        <div class="section-heading text-left mb-50 wow fadeInUp" data-wow-delay="50ms">
+                            <p>Latest Release</p>
+                            <h2>Best 2025 Hits</h2>
+                        </div>
+                       <!-- Single Top Item -->
+                        {% for track in best_2025_hits %}
+                            <div class="single-new-item d-flex align-items-center justify-content-between wow fadeInUp" data-wow-delay="150ms">
+
+                                <!-- Left side (image + text) -->
+
+                                    <div class="first-part d-flex align-items-center" style="flex: 1; min-width: 0;">
+                                        <div class="thumbnail" style="flex-shrink: 0;">
+                                            <img src="{{ track['image'] }}" alt="Album Art">
+                                        </div>
+                                        <a href="{{ url_for('song_page', song_id=track['id']) }}">
+                                            <div class="content-" style="margin-left: 10px; overflow: hidden;">
+                                                <h6 style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;">
+                                                    {{ track['name'] }}
+                                                </h6>
+                                                <p style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;">
+                                                    {{ track['artist'] }}
+                                                </p>
+                                            </div>
+                                        </a>
+                                    </div>
+
+
+                                <!-- Right side (audio + button) -->
+                                <div style="display: flex; align-items: center; gap: 15px; flex-shrink: 0;">
+                                    <a href="{{ track['itunes_url'] }}">
+                                        <audio preload="auto" controls>
+                                            <source src="{{ track['itunes_url'] }}">
+                                        </audio>
+                                    </a>
+                                    {% if current_user.is_authenticated %}
+                                        <a href="#" class="open-btn" data-track-id="{{ track['id'] }}" onclick="openModal(this)">
+                                            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                                                <i class="icon-cloud-computing" style="font-size: 30px; color: #000;"></i>
+                                                <span style="font-size: 12px; color: #333; font-weight: 500;">Add to Playlist</span>
+                                            </div>
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+
+                    </div>
+                </div>
+
+                <!-- ***** Popular Artists ***** -->
+                <div class="col-12 col-lg-6">
+                    <div class="popular-artists-area mb-100">
+                        <div class="section-heading text-left mb-50 wow fadeInUp" data-wow-delay="50ms">
+                            <p>Most Downloads</p>
+                            <h2>Popular Artist</h2>
+                        </div>
+
+                        {% for artist in artist_section_dict %}
+                            <!-- Single Artist -->
+                            <div class="single-artists d-flex align-items-center wow fadeInUp" data-wow-delay="100ms">
+                                <div class="thumbnail">
+                                    <img src="{{ artist_section_dict[artist] }}" alt="static/img/bg-img/pa1.jpg" class="artist-img">
+                                </div>
+                                <div class="content-">
+                                    <a href = "{{ url_for('artist_page', artist=artist) }}">
+                                        <p>{{ artist }}</p>
+                                    </a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- ##### Miscellaneous Area End ##### -->
+
+    <!-- Modal -->
+    <div class="modal" id="playlistModal">
+      <div class="modal-content">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <h3>Choose a Playlist</h3>
+
+        <!-- Playlist Items -->
+        {% for playlist in playlist_list %}
+          <div class="playlist"
+               data-playlist-id="{{ playlist['id'] }}"
+               onclick="addToPlaylist('{{ playlist['id'] }}')">
+            <img src="{{ playlist['image'] }}" alt="{{ playlist['name'] }}">
+            <span class="playlist-name">{{ playlist['name'] }}</span>
+          </div>
+        {% endfor %}
+
+        <!-- Create Playlist Button -->
+        <div class="create-btn-wrapper-popup">
+          <button class="open-btn-popup"
+                  onclick="location.href='{{ url_for('create_playlist') }}'">
+            Create Playlist
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal 2: Loading -->
+    <div id="modal2" class="modal2">
+      <div class="modal-content2">
+        <span class="close-btn" onclick="closeModal2()">&times;</span>
+        <h2 id="status-text">Loading Songs...</h2>
+        <div class="loading-bar">
+          <div class="loader"></div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ##### Contact Area Start ##### -->
+    <section class="contact-area section-padding-100 bg-img bg-overlay bg-fixed has-bg-img" style="background-image: url(static/img/bg-img/bg-2.jpg);">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="section-heading white wow fadeInUp" data-wow-delay="100ms">
+                        <p>See what’s new</p>
+                        <h2>Get In Touch</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <!-- Contact Form Area -->
+                    <div class="contact-form-area">
+                        <form action="{{ url_for('contact') }}" method="post">
+                            <div class="row">
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="form-group wow fadeInUp" data-wow-delay="100ms">
+                                        <input type="text" class="form-control" id="name" name="name" placeholder="Name">
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="form-group wow fadeInUp" data-wow-delay="200ms">
+                                        <input type="email" class="form-control" id="email" name="email" placeholder="E-mail">
+                                    </div>
+                                </div>
+                                <div class="col-lg-4">
+                                    <div class="form-group wow fadeInUp" data-wow-delay="300ms">
+                                        <input type="text" class="form-control" id="subject" name="subject" placeholder="Subject">
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-group wow fadeInUp" data-wow-delay="400ms">
+                                        <textarea name="message" class="form-control" id="message" cols="30" rows="10" placeholder="Message"></textarea>
+                                    </div>
+                                </div>
+                                <div class="col-12 text-center wow fadeInUp" data-wow-delay="500ms">
+                                    <button class="btn oneMusic-btn mt-30" type="submit">Send <i class="fa fa-angle-double-right"></i></button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- ##### Contact Area End ##### -->
+
+
+{% include "footer.html" %}
+
+    <!-- ##### All Javascript Script ##### -->
+    <!-- jQuery-2.2.4 js -->
+    <script src="static/js/jquery/jquery-2.2.4.min.js"></script>
+    <!-- Popper js -->
+    <script src="static/js/bootstrap/popper.min.js"></script>
+    <!-- Bootstrap js -->
+    <script src="static/js/bootstrap/bootstrap.min.js"></script>
+    <!-- All Plugins js -->
+    <script src="static/js/plugins/plugins.js"></script>
+    <!-- Active js -->
+    <script src="static/js/active.js"></script>
+
+
+    <!-- Modal Script -->
+    <script>
+        let selectedTrackId = null;
+
+        /** ------------------------------
+         *  MODAL CONTROL FUNCTIONS
+         * ------------------------------ */
+        function openModal(el) {
+            // Store which song was clicked (for Add to Playlist)
+            if (el && el.getAttribute('data-track-id')) {
+                selectedTrackId = el.getAttribute('data-track-id');
+            }
+
+            document.getElementById("playlistModal").style.display = "flex";
+        }
+
+        function closeModal() {
+            document.getElementById("playlistModal").style.display = "none";
+        }
+
+        function closeModal2() {
+            document.getElementById("modal2").style.display = "none";
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const modal1 = document.getElementById("playlistModal");
+            const modal2 = document.getElementById("modal2");
+
+            if (event.target === modal1) modal1.style.display = "none";
+            if (event.target === modal2) modal2.style.display = "none";
+        };
+
+        /** ------------------------------
+         *  ADD TO PLAYLIST FUNCTION
+         * ------------------------------ */
+        async function addToPlaylist(playlistId) {
+            if (!selectedTrackId) {
+                alert("No track selected.");
+                return;
+            }
+
+            // Show loading modal
+            startLoading();
+
+            try {
+                const response = await fetch('/add_to_playlist', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        playlist_id: playlistId,
+                        track_id: selectedTrackId
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(`✅ ${result.message}`);
+                } else {
+                    alert(`⚠️ ${result.error || "Something went wrong"}`);
+                }
+            } catch (error) {
+                console.error(error);
+                alert("⚠️ Unable to add song right now.");
+            }
+
+            stopLoading();
+            closeModal();
+        }
+
+        /** ------------------------------
+         *  LOADING / STATUS HANDLERS
+         * ------------------------------ */
+        function startLoading() {
+            // Close playlist modal
+            document.getElementById("playlistModal").style.display = "none";
+
+            // Open loading modal
+            const modal2 = document.getElementById("modal2");
+            modal2.style.display = "block";
+
+            // Animate loader
+            const loader = document.querySelector(".loader");
+            if (loader) loader.style.animation = "moveBackAndForth 1s infinite ease-in-out";
+
+            // Update status text
+            const statusText = document.getElementById("status-text");
+            if (statusText) statusText.innerText = "Adding song to playlist...";
+        }
+
+        function stopLoading() {
+            // Stop loader
+            const loader = document.querySelector(".loader");
+            if (loader) loader.style.animation = "none";
+
+            // Reset cursor
+            document.body.style.cursor = 'default';
+
+            // Update status
+            const statusText = document.getElementById("status-text");
+            if (statusText) statusText.innerText = "Done!";
+        }
+    </script>
+
+</body>
+
+</html>
