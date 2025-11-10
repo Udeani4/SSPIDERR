@@ -192,48 +192,63 @@ http://www.tooplate.com/view/2101-insertion
       z-index: 1;
     }
 
-    /* Animating the albums/tracks */
     /* Base hidden state */
     .tm-album-col,
     .music-item {
-      opacity: 0;                      /* start hidden */
-      transform: translateY(40px);
-      transition: all 0.8s ease-in-out;
+      opacity: 0;                       /* start hidden */
+      transform: translate(0);           /* reset */
+      transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); /* smooth easing */
     }
 
-    /* When "animate" class is added */
+    /* Album cards start slightly to the right with subtle scale down */
+    .tm-album-col {
+      transform: translateX(40px) scale(0.95);
+    }
+
+    /* Music items start slightly above with subtle scale down */
+    .music-item {
+      transform: translateY(-40px) scale(0.95);
+    }
+
+    /* Animate class triggers the motion */
     .tm-album-col.animate {
       opacity: 1;
-      transform: translateX(0);
-      animation: slideInRight 0.8s ease forwards;
+      transform: translateX(0) scale(1);
+      animation: slideInRight 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
     }
 
     .music-item.animate {
       opacity: 1;
-      transform: translateY(0);
-      animation: slideInDown 0.8s ease forwards;
+      transform: translateY(0) scale(1);
+      animation: slideInDown 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
     }
 
-    /* Keyframes */
+    /* Keyframes for smooth entry */
     @keyframes slideInRight {
-      from {
+      0% {
         opacity: 0;
-        transform: translateX(80px);
+        transform: translateX(40px) scale(0.95);
       }
-      to {
+      60% {
+        transform: translateX(-10px) scale(1.02); /* slight overshoot */
+      }
+      100% {
         opacity: 1;
-        transform: translateX(0);
+        transform: translateX(0) scale(1);
       }
     }
 
     @keyframes slideInDown {
-      from {
+      0% {
         opacity: 0;
-        transform: translateY(-40px);
+        transform: translateY(-40px) scale(0.95);
       }
-      to {
+      60% {
+        transform: translateY(10px) scale(1.02); /* subtle bounce */
+      }
+      100% {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0) scale(1);
       }
     }
 
@@ -251,20 +266,20 @@ http://www.tooplate.com/view/2101-insertion
     }
 
     .tm-albums-container {
-      max-width: 260px;
+      max-width: 100%; /* or remove this line */
       margin: 80px auto;
     }
 
     /* Responsive adjustments */
     @media (min-width: 576px) {
       .tm-albums-container {
-        max-width: none;
+        max-width: 100%;
       }
     }
 
     @media (min-width: 768px) {
       .tm-albums-container {
-        max-width: 540px;
+        max-width: 100%;
       }
     }
 
@@ -856,22 +871,6 @@ http://www.tooplate.com/view/2101-insertion
     });
   </script>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      const observer = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("animate");
-          }
-        });
-      }, { threshold: 0.2 });
-
-      // Observe albums and tracks
-      document.querySelectorAll(".tm-album-col, .music-item").forEach(el => {
-        observer.observe(el);
-      });
-    });
-  </script>
   <!-- Modal Script -->
     <script>
         function openModal() {
@@ -953,18 +952,28 @@ http://www.tooplate.com/view/2101-insertion
       });
     });
   </script>
-      <script>
-          window.addEventListener('load', () => {
-          const elements = document.querySelectorAll('.music-item, .album-item, .artist-item');
 
-          elements.forEach((el, index) => {
-            setTimeout(() => {
-              el.classList.add('visible');
-            }, index * 200); // delay each one slightly
-          });
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Create an IntersectionObserver to detect when elements enter the viewport
+      const observer = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          // When an element is visible
+          if (entry.isIntersecting) {
+            entry.target.classList.add("animate");  // trigger animation
+            observer.unobserve(entry.target);       // stop observing once animated
+          }
         });
-      </script>
+      }, {
+        threshold: 0.2 // trigger when 20% of the element is visible
+      });
+
+      // Observe both album cards and music items
+      document.querySelectorAll(".tm-album-col, .music-item").forEach(el => {
+        observer.observe(el);
+      });
+    });
+  </script>
 
 </body>
-
 </html>

@@ -3,7 +3,7 @@
     <div class="row tm-albums-container grid">
         {% for album in full_chart_info %}
             <!-- Album 1 -->
-            <div class="col-sm-6 col-12 col-md-6 col-lg-3 col-xl-3 tm-album-col album-item">
+            <div class="col-sm-6 col-12 col-md-6 col-lg-3 col-xl-3 tm-album-col album-item animate">
               <figure class="effect-sadie">
                 <div class="album-cover">
                   <img src="{{ album['image'] }}" alt="Alive Album" class="album-image">
@@ -13,7 +13,7 @@
                   <h6 class="album-artist-name">{{ album['artist_name'] }}</h6>
                 </div>
                 <figcaption>
-                  <h2>{{ album['album_name'] }}</h2>
+                  <h2 style="opacity:0.3">{{ loop.index }}</h2>
                   <p>{{ album['description'] }}</p>
                 </figcaption>
               </figure>
@@ -24,7 +24,7 @@
      <div class="row tm-albums-container grid">
         {% for artist in full_chart_info %}
             <!-- Album 2 -->
-            <div class="col-sm-6 col-12 col-md-6 col-lg-3 col-xl-3 tm-album-col artist-item">
+            <div class="col-sm-6 col-12 col-md-6 col-lg-3 col-xl-3 tm-album-col artist-item animate">
               <figure class="effect-sadie">
                 <div class="album-cover">
                   <img src="{{ artist['artist_image'] }}" alt="Album Two" class="img-fluid">
@@ -34,7 +34,16 @@
                   <h6 class="album-artist-name">{{ artist['artist_name'] }}</h6>
                 </div>
                 <figcaption>
-                  <h2>{{ artist['artist_name'] }}</h2>
+                  <h2 style="
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    opacity: 0.5;
+                    margin: 0;
+                    text-align: center;
+                    font-size: 50px;
+                  ">{{ loop.index }}</h2>
                   <p>{{ artist['artist_description'] }}</p>
                 </figcaption>
               </figure>
@@ -42,16 +51,16 @@
         {% endfor %}
     </div>
     {% else %}
-      <div class="music-list">
+      <div class="music-list" style="padding-top:60px">
         {% for song in full_chart_info %}
           <!-- Music List Item -->
-          <div class="music-item">
+          <div class="music-item animate">
             <div class="music-cover">
               <img src="{{ song['image'] }}" alt="{{ song['track_name'] }} - {{ song['track_artist'] }}">
             </div>
 
             <div class="music-info" style="flex-grow: 1;">
-              <h5 class="song-title">{{ song['track_name'] }}</h5>
+              <h5 class="song-title">{{ loop.index }}. {{ song['track_name'] }}</h5>
               <p class="artist-name">{{ song['track_artist'] }}</p>
             </div>
 
