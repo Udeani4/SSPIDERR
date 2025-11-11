@@ -2403,6 +2403,16 @@ def billboard_scraper(endpoint="hot-100", selected_date=None):
 
 @app.route("/see-whats-new")
 def see_whats_new():
+    # LOGGED IN SECTION
+    if current_user.is_authenticated:
+        # For modal playlist
+        access_token = get_valid_spotify_token(current_user)
+        if not access_token:
+            return None  # User not logged in or no valid token
+        sp = spotipy.Spotify(auth=access_token)
+
+        playlist_list = get_user_playlists(current_user, sp, 1, "playlist", "small")
+        return render_template("see_whats_new.html", playlist_list=playlist_list)
     return render_template("see_whats_new.html")
 
 @app.route('/see-whats-new-results', methods=['GET'] )
@@ -2449,7 +2459,10 @@ def see_whats_new_results():
             lastfm_album_data = requests.get(lastfm_url).json().get("album")
 
             description = lastfm_album_data.get("wiki", {}).get("summary") if lastfm_album_data else None
-            short_description = description[:250] + "..." if len(description) > 250 else description
+            if description:
+                short_description = description[:250] + "..." if len(description) > 250 else description
+            else:
+                short_description = "No Description Currently Available!"
 
             full_chart_info.append({
                 'album_name': album_name,

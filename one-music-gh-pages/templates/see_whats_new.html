@@ -770,24 +770,30 @@ http://www.tooplate.com/view/2101-insertion
 
   <!-- Modal -->
     <div class="modal" id="playlistModal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeModal()">&times;</span>
-            <h3 style="font-family: 'Archivo Narrow', 'sans-serif'; color: #000000; line-height: 1.3; font-weight: 700;">Choose a Playlist</h3>
+      <div class="modal-content">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <h3>Choose a Playlist</h3>
 
-            <!-- Playlist Items -->
-            {% for playlist in playlist_list: %}
-                <div class="playlist" onclick="startLoading()">
-                    <img src="{{ playlist['image'] }}" alt="Chill Vibes">
-                    <span class="playlist-name">{{ playlist['name'] }}</span>
-                </div>
-            {% endfor %}
+        <!-- Playlist Items -->
+        {% for playlist in playlist_list %}
+          <div class="playlist"
+               data-playlist-id="{{ playlist['id'] }}"
+               onclick="addToPlaylist('{{ playlist['id'] }}')">
+            <img src="{{ playlist['image'] }}" alt="{{ playlist['name'] }}">
+            <span class="playlist-name">{{ playlist['name'] }}</span>
+          </div>
+        {% endfor %}
 
-            <!-- Add more as needed -->
-            <div class="create-btn-wrapper-popup">
-                <button class="open-btn-popup" onclick="location.href='{{ url_for('create_playlist') }}'">Create Playlist</button>
-            </div>
+        <!-- Create Playlist Button -->
+        <div class="create-btn-wrapper-popup">
+          <button class="open-btn-popup"
+                  onclick="location.href='{{ url_for('create_playlist') }}'">
+            Create Playlist
+          </button>
         </div>
+      </div>
     </div>
+
     <!-- Modal 2: Loading -->
     <div id="modal2" class="modal2">
       <div class="modal-content2">
@@ -873,52 +879,107 @@ http://www.tooplate.com/view/2101-insertion
 
   <!-- Modal Script -->
     <script>
-        function openModal() {
-          document.getElementById("playlistModal").style.display = "flex";
+        let selectedTrackId = null;
+
+        /** ------------------------------
+         *  MODAL CONTROL FUNCTIONS
+         * ------------------------------ */
+        function openModal(el) {
+            // Store which song was clicked (for Add to Playlist)
+            if (el && el.getAttribute('data-track-id')) {
+                selectedTrackId = el.getAttribute('data-track-id');
+            }
+
+            document.getElementById("playlistModal").style.display = "flex";
         }
 
         function closeModal() {
-          document.getElementById("playlistModal").style.display = "none";
+            document.getElementById("playlistModal").style.display = "none";
         }
 
         function closeModal2() {
-          document.getElementById("modal2").style.display = "none";
+            document.getElementById("modal2").style.display = "none";
         }
 
-
-        function startLoading() {
-          // Close Modal 1
-          document.getElementById("playlistModal").style.display = "none";
-
-          // Open Modal 2
-          document.getElementById("modal2").style.display = "block";
-
-          // Reset loader animation before starting
-          const loader = document.querySelector(".loader");
-          loader.style.animation = "moveBackAndForth 1s infinite ease-in-out";
-
-          // Reset status text
-          document.getElementById("status-text").innerText = "Loading Songs...";
-
-          // Simulate loading time (e.g., 3 seconds)
-          setTimeout(function() {
-            document.getElementById("status-text").innerText = "Songs Loaded!";
-            document.querySelector(".loader").style.animation = "none"; // Stop animation
-          }, 3000);
-        }
-
-        // Close if clicking outside either modal
+        // Close modals when clicking outside
         window.onclick = function(event) {
-          const modal1 = document.getElementById("playlistModal");
-          const modal2 = document.getElementById("modal2");
+            const modal1 = document.getElementById("playlistModal");
+            const modal2 = document.getElementById("modal2");
 
-          if (event.target === modal1) {
-            modal1.style.display = "none";
-          }
-          if (event.target === modal2) {
-            modal2.style.display = "none";
-          }
+            if (event.target === modal1) modal1.style.display = "none";
+            if (event.target === modal2) modal2.style.display = "none";
         };
+
+        /** ------------------------------
+         *  ADD TO PLAYLIST FUNCTION
+         * ------------------------------ */
+        async function addToPlaylist(playlistId) {
+            if (!selectedTrackId) {
+                alert("No track selected.");
+                return;
+            }
+
+            // Show loading modal
+            startLoading();
+
+            try {
+                const response = await fetch('/add_to_playlist', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        playlist_id: playlistId,
+                        track_id: selectedTrackId
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(`✅ ${result.message}`);
+                } else {
+                    alert(`⚠️ ${result.error || "Something went wrong"}`);
+                }
+            } catch (error) {
+                console.error(error);
+                alert("⚠️ Unable to add song right now.");
+            }
+
+            stopLoading();
+            closeModal();
+        }
+
+        /** ------------------------------
+         *  LOADING / STATUS HANDLERS
+         * ------------------------------ */
+        function startLoading() {
+            // Close playlist modal
+            document.getElementById("playlistModal").style.display = "none";
+
+            // Open loading modal
+            const modal2 = document.getElementById("modal2");
+            modal2.style.display = "block";
+
+            // Animate loader
+            const loader = document.querySelector(".loader");
+            if (loader) loader.style.animation = "moveBackAndForth 1s infinite ease-in-out";
+
+            // Update status text
+            const statusText = document.getElementById("status-text");
+            if (statusText) statusText.innerText = "Adding song to playlist...";
+        }
+
+        function stopLoading() {
+            // Stop loader
+            const loader = document.querySelector(".loader");
+            if (loader) loader.style.animation = "none";
+
+            // Reset cursor
+            document.body.style.cursor = 'default';
+
+            // Update status
+            const statusText = document.getElementById("status-text");
+            if (statusText) statusText.innerText = "Done!";
+        }
     </script>
 
   <script>
