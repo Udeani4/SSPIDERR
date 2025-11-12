@@ -1244,9 +1244,11 @@ with app.app_context():
 @app.route('/news-blog', methods=["GET", "POST"])
 def news_blog():
     # --- Get news from BlogPost --- #
-    result = db.session.execute(db.select(BlogPost))
-    news_post = result.scalars().all()
+    news_post = db.session.execute(
+        db.select(BlogPost).order_by(BlogPost.date.desc())
+    ).scalars().all()
 
+    news_post=news_post[:75]
     # --- Pagination setup ---
     per_page = 5  # number of posts per page
     page = request.args.get('page', 1, type=int)

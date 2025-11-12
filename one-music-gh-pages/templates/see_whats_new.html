@@ -38,62 +38,112 @@ http://www.tooplate.com/view/2101-insertion
     <link rel="stylesheet" href="{{ url_for('static', filename='css/tooplate-style.css') }}">
     <style>
     /* Music list row */
+        .music-list {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 1rem;
+        }
 
+        /* Music item box */
         .music-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: #f5f5f5;
-      padding: 10px 15px;
-      border-radius: 8px;
-      margin-bottom: 10px;
-    }
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          background: white;
+          border-radius: 10px;
+          padding: 10px 15px;
+          width: 80%;
+          max-width: 800px;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+          transition: transform 0.2s ease;
+        }
 
-    .music-cover img {
-      width: 60px;
-      height: 60px;
-      border-radius: 8px;
-      object-fit: cover;
-      margin-right: 15px;
-    }
+        .music-item:hover {
+          transform: scale(1.02);
+        }
 
-    .music-info {
-      flex-grow: 1;
-    }
+        /* Cover image */
+        .music-cover img {
+          width: 70px;
+          height: 70px;
+          object-fit: cover;
+          border-radius: 8px;
+        }
 
-    .song-title {
-      color: #007bff; /* blue */
-      margin: 0;
-      font-size: 16px;
-      font-weight: bold;
-    }
+        /* Info section */
+        .music-info {
+          flex-grow: 1;
+          margin: 0 15px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
 
-    .artist-name {
-      margin: 0;
-      color: #666;
-      font-size: 14px;
-    }
+        .song-title {
+          font-size: 1rem;
+          color: #0074e8;
+          margin: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .artist-name {
+          font-size: 0.9rem;
+          color: #555;
+          margin: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        /* Add to playlist button */
+        .add-btn {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          background: #16c65f;
+          color: white;
+          padding: 10px 15px;
+          border-radius: 10px;
+          text-align: center;
+          font-weight: 500;
+          min-width: 120px;
+          max-width: 130px;
+        }
+
+        .add-btn i {
+          font-size: 1.2rem;
+          margin-bottom: 5px;
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 600px) {
+          .music-item {
+            flex-direction: row;
+            align-items: center;
+            width: 95%;
+          }
+
+          .add-btn {
+            min-width: 100px;
+            padding: 8px 10px;
+          }
+
+          .music-cover img {
+            width: 60px;
+            height: 60px;
+          }
+
+          .song-title, .artist-name {
+            font-size: 0.9rem;
+          }
+        }
 
     .music-actions {
       text-align: right;
-    }
-
-    .buy-btn {
-      background: #007bff;
-      color: white;
-      padding: 6px 12px;
-      text-decoration: none;
-      border-radius: 6px;
-      margin-right: 10px;
-    }
-
-    .buy-btn:hover {
-      background: #0056b3;
-    }
-
-    .price {
-      color: #007bff;
-      font-weight: bold;
     }
 
     /* Album card style */
