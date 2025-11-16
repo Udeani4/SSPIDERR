@@ -314,44 +314,139 @@ def get_billboard_top_artists(limit=100):
     return artists
 
 
+def get_deezer_top_albums(limit=50):
+    """
+    Fetch top albums from Deezer Chart API.
+    """
+    url = f"https://api.deezer.com/chart/0/albums?limit={limit}"
+    response = requests.get(url)
+    data = response.json()
+
+    if "data" not in data:
+        raise Exception("Error fetching chart data:", data)
+
+    return data["data"]
+
+
+def get_deezer_album_details(album_id):
+    """
+    Fetch complete album information including release date.
+    """
+    url = f"https://api.deezer.com/album/{album_id}"
+    response = requests.get(url)
+    return response.json()
+
+
+def build_deezer_album_dataset(limit=50):
+    """
+    Fetch Deezer top albums and merge chart data with full metadata.
+    """
+    print("Fetching top albums...")
+
+    top_albums = get_deezer_top_albums(limit=limit)
+
+    full_data_list = []
+
+    for album in top_albums:
+        album_id = album["id"]
+        title = album["title"]
+
+        print(f"Fetching details for: {title} (ID {album_id})")
+
+        full_details = get_deezer_album_details(album_id)
+
+        # Combine chart-level and album-level data
+        combined = {
+            "album_id": album_id,
+            "artist_id": album["artist"]["id"],
+            "album_name": title,
+            "artist_name": album["artist"]["name"],
+            "genre": "N/A",
+            "artwork_url_original": album["cover_xl"],
+            "artwork_small": album["cover_small"],
+            "artwork_medium": album["cover_medium"],
+            "artwork_full": album["cover_big"],
+            "position": album["position"],
+            "release_date": full_details.get("release_date", "N/A"),
+            "tracks_count": full_details.get("nb_tracks", 0),
+            "duration": full_details.get("duration", 0),
+            "fans": full_details.get("fans", 0),
+        }
+
+        full_data_list.append(combined)
+
+    return full_data_list
+
+DEEZER_TOP_SONGS_URL = "https://api.deezer.com/chart/0/tracks?limit=100"
+
+def build_deezer_song_dataset(limit=100):
+    # Fetch Deezer top songs
+    response = requests.get(f"https://api.deezer.com/chart/0/tracks?limit={limit}")
+    deezer_json = response.json()
+
+    # Match old iTunes structure: song_contents = song_json["feed"]["results"]
+    song_contents = []
+
+    for track in deezer_json.get("data", []):
+        # Convert Deezer fields → Your old iTunes fields
+        item = {
+            "song_name": track.get("title"),                          # iTunes "name"
+            "artwork_url_original": track.get("album", {})
+                               .get("cover_xl"),
+            "artwork_small": track.get("album", {})
+                               .get("cover_small"),
+            "artwork_medium": track.get("album", {})
+                                .get("cover_medium"),
+            "artwork_full": track.get("album", {})
+                                .get("cover_big"),
+            "song_id": track.get("id"),                               # iTunes "id"
+            "artist_Name": track.get("artist", {}).get("name"),   # optional but useful
+        }
+        song_contents.append(item)
+    return song_contents
+
 
 def top_albums_info():
     album_info_contents = []
     # Fetch Top Album
     album_result = requests.get(i_tunes_top_albums_url)
-    album_json = album_result.json()
-    album_contents = album_json["feed"]["results"]
+    if album_result:
+        album_json = album_result.json()
+        album_contents = album_json["feed"]["results"]
 
-    if album_contents:
-        album_top_10 = album_contents[:10]
+        if album_contents:
+            album_top_10 = album_contents[:10]
 
-        for albums in album_top_10:
-            album_name = albums['name']
-            album_artist_name = albums['artistName']
-            i_tunes_album_id = albums['id']
-            album_date = albums['releaseDate']
-            album_genre = albums['genres'][0]['name']
-            album_art_url = albums['artworkUrl100']
-            album_artist_id = albums['artistId']
+            for albums in album_top_10:
+                album_name = albums['name']
+                album_artist_name = albums['artistName']
+                i_tunes_album_id = albums['id']
+                album_date = albums['releaseDate']
+                album_genre = albums['genres'][0]['name']
+                album_art_url = albums['artworkUrl100']
+                album_artist_id = albums['artistId']
 
-            # create resizes
-            album_art_full = get_artwork_url(album_art_url, 1000)
-            album_art_med = get_artwork_url(album_art_url, 300)
-            album_art_small = get_artwork_url(album_art_url, 100)
+                # create resizes
+                album_art_full = get_artwork_url(album_art_url, 1000)
+                album_art_med = get_artwork_url(album_art_url, 300)
+                album_art_small = get_artwork_url(album_art_url, 100)
 
-            album_info_contents.append({
-                "album_name": album_name,
-                "artist_name": album_artist_name,
-                "album_id": i_tunes_album_id,
-                "artist_id": album_artist_id,
-                "release_date": album_date,
-                "genre": album_genre,
-                "artwork_url_original": album_art_url,
-                "artwork_small": album_art_small,
-                "artwork_medium": album_art_med,
-                "artwork_full": album_art_full
-            })
-            print(f"album id: {i_tunes_album_id}")
+                album_info_contents.append({
+                    "album_name": album_name,
+                    "artist_name": album_artist_name,
+                    "album_id": i_tunes_album_id,
+                    "artist_id": album_artist_id,
+                    "release_date": album_date,
+                    "genre": album_genre,
+                    "artwork_url_original": album_art_url,
+                    "artwork_small": album_art_small,
+                    "artwork_medium": album_art_med,
+                    "artwork_full": album_art_full
+                })
+                print(f"album id: {i_tunes_album_id}")
+    else:
+        album_info_contents = build_deezer_album_dataset(50)
+
     return album_info_contents
 
 def top_artist_info(artist_name):
@@ -764,27 +859,43 @@ def latest_albums(sp):
 def home():
     # Fetch Top Album
     album_result = requests.get(i_tunes_top_albums_url)
-    album_json = album_result.json()
-    print(album_json)
-    album_contents = album_json["feed"]["results"]
-    if album_contents:
+    if album_result:
+        album_json = album_result.json()
+        print(album_json)
+        album_contents=album_json["feed"]["results"]
         album_name = album_contents[0]['name']  # use [0] for #1 album
         album_art_url = album_contents[0]['artworkUrl100']
         album_art = get_artwork_url(album_art_url, 1000)
         top_album_id = album_contents[0]['id']
         print(album_art)
+    else:
+        album_contents = build_deezer_album_dataset(50)
+        if album_contents:
+            album_name = album_contents[0]['album_name']  # use [0] for #1 album
+            album_art = album_contents[0]['artwork_url_original']
+            top_album_id = album_contents[0]['album_id']
+            print(album_art)
 
     # Fetch Top Song
     song_result = requests.get(i_tunes_top_songs_url)
-    song_json = song_result.json()
-    print(song_json)
-    song_contents = song_json["feed"]["results"]
-    if song_contents:
-        song_name = song_contents[0]['name']  # use [0] for #1 song
-        song_art_url = song_contents[0]['artworkUrl100']
-        song_art = get_artwork_url(song_art_url, 1000)
-        song_id = song_contents[0]['id']
-        print(f'song id: {song_id}')
+    if song_result:
+        song_json = song_result.json()
+        print(song_json)
+        song_contents = song_json["feed"]["results"]
+        if song_contents:
+            song_name = song_contents[0]['name']  # use [0] for #1 song
+            song_art_url = song_contents[0]['artworkUrl100']
+            song_art = get_artwork_url(song_art_url, 1000)
+            song_id = song_contents[0]['id']
+            print(f'song id: {song_id}')
+    else:
+        songs = build_deezer_song_dataset(100)
+        if songs:
+            song_name = songs[0]["song_name"]
+            song_art = songs[0]["artwork_url_original"]
+            song_id = songs[0]["song_id"]
+            print(song_name, song_id)
+
     # Fetch Top Artist
     top_artist_name = get_billboard_top_artists(limit=1)  # Top artist this week
     top_artist_name=top_artist_name[0]
@@ -1415,9 +1526,17 @@ def song_page(song_id):
         print(f"iTunes lookup failed: {e}. Using Spotify lookup...")
         # 2. Fallback to Spotify track details
         spotify_result = sp.track(song_id)
-        song_name = spotify_result.get("name")
-        artist_name = spotify_result["artists"][0]["name"] if spotify_result.get("artists") else None
-        song_genre = None  # Spotify doesn’t include genre for tracks directly
+        if spotify_result:
+            song_name = spotify_result.get("name")
+            artist_name = spotify_result["artists"][0]["name"] if spotify_result.get("artists") else None
+            song_genre = None  # Spotify doesn’t include genre for tracks directly
+        else:
+            deezer_track = requests.get(f"https://api.deezer.com/track/{song_id}").json()
+
+            song_name = deezer_track.get("title")
+            artist_name = deezer_track["artist"]["name"] if deezer_track.get("artist") else None
+            album_name = deezer_track["album"]["title"] if deezer_track.get("album") else None
+            album_cover = deezer_track["album"]["cover_big"] if deezer_track.get("album") else None
 
     # 3. Spotify data (search track by name + artist)
     spotify_song_data = None
@@ -1821,19 +1940,36 @@ def album_page(album_id):
             # --- iTunes lookup ---
             itunes_url = f"https://itunes.apple.com/lookup?id={album_id}&entity=album"
             itunes_data = requests.get(itunes_url).json()
-            if not itunes_data.get("results"):
-                raise ValueError("Album not found in iTunes")
+            if itunes_data:
+                if not itunes_data.get("results"):
+                    raise ValueError("Album not found in iTunes")
 
-            itunes_album = itunes_data["results"][0]
-            album_name = itunes_album.get("collectionName")
-            artist_name = itunes_album.get("artistName")
+                itunes_album = itunes_data["results"][0]
+                album_name = itunes_album.get("collectionName")
+                artist_name = itunes_album.get("artistName")
 
-            result = sp.search(q=f"album:{album_name} artist:{artist_name}", type="album", limit=1)
-            if result["albums"]["items"]:
-                spotify_album_data = result["albums"]["items"][0]
-                spot_album_id = spotify_album_data.get('id')
-                tracks_data = sp.album_tracks(spot_album_id)
-                spot_album_data = sp.album(spot_album_id)
+                result = sp.search(q=f"album:{album_name} artist:{artist_name}", type="album", limit=1)
+                if result["albums"]["items"]:
+                    spotify_album_data = result["albums"]["items"][0]
+                    spot_album_id = spotify_album_data.get('id')
+                    tracks_data = sp.album_tracks(spot_album_id)
+                    spot_album_data = sp.album(spot_album_id)
+            else:
+                url = f"https://api.deezer.com/album/{album_id}"
+                data = requests.get(url).json()
+
+                if data.get("error"):
+                    print("Error:", data["error"])
+                    return None
+
+                album_name = data.get("title")
+                artist_name = data["artist"]["name"] if data.get("artist") else None
+                result = sp.search(q=f"album:{album_name} artist:{artist_name}", type="album", limit=1)
+                if result["albums"]["items"]:
+                    spotify_album_data = result["albums"]["items"][0]
+                    spot_album_id = spotify_album_data.get('id')
+                    tracks_data = sp.album_tracks(spot_album_id)
+                    spot_album_data = sp.album(spot_album_id)
 
         else:
             # --- Spotify lookup ---
@@ -1845,7 +1981,6 @@ def album_page(album_id):
             )
             tracks_data = sp.album_tracks(album_id)
             spot_album_data = sp.album(album_id)
-
 
     except Exception as e:
         print(f"Album lookup failed: {e}. Attempting fallback search...")
