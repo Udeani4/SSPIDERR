@@ -339,12 +339,33 @@ def get_deezer_album_details(album_id):
 
 def build_deezer_album_dataset(limit=50):
     """
-    Fetch Deezer top albums and merge chart data with full metadata.
+    Fetch Deezer top albums with pagination and merge with full metadata.
     """
-    print("Fetching top albums...")
+    print(f"Fetching {limit} Deezer top albums with pagination...")
 
-    top_albums = get_deezer_top_albums(limit=limit)
+    full_chart_list = []
+    page_size = 100   # Maximum allowed by Deezer
+    index = 0
 
+    # --- PAGINATION LOOP ---
+    while len(full_chart_list) < limit:
+        fetch_limit = min(page_size, limit - len(full_chart_list))
+
+        url = f"https://api.deezer.com/chart/0/albums?index={index}&limit={fetch_limit}"
+        response = requests.get(url).json()
+
+        if not response.get("data"):
+            break  # no more data
+
+        full_chart_list.extend(response["data"])
+        index += fetch_limit
+
+    # Trim to exact limit
+    top_albums = full_chart_list[:limit]
+
+    print(f"Fetched {len(top_albums)} albums.")
+
+    # --- BUILD FULL METADATA ---
     full_data_list = []
 
     for album in top_albums:
@@ -355,18 +376,17 @@ def build_deezer_album_dataset(limit=50):
 
         full_details = get_deezer_album_details(album_id)
 
-        # Combine chart-level and album-level data
         combined = {
             "album_id": album_id,
             "artist_id": album["artist"]["id"],
             "album_name": title,
             "artist_name": album["artist"]["name"],
             "genre": "N/A",
-            "artwork_url_original": album["cover_xl"],
-            "artwork_small": album["cover_small"],
-            "artwork_medium": album["cover_medium"],
-            "artwork_full": album["cover_big"],
-            "position": album["position"],
+            "artwork_url_original": album.get("cover_xl"),
+            "artwork_small": album.get("cover_small"),
+            "artwork_medium": album.get("cover_medium"),
+            "artwork_full": album.get("cover_big"),
+            "position": album.get("position"),
             "release_date": full_details.get("release_date", "N/A"),
             "tracks_count": full_details.get("nb_tracks", 0),
             "duration": full_details.get("duration", 0),
@@ -1928,19 +1948,19 @@ def album_page(album_id):
     print(f"album_page:: spotify app: {sp}, source: {source}")
 
     # Heuristic: iTunes IDs are numeric, Spotify IDs are alphanumeric
-    is_itunes_id = album_id.isdigit()
-
+    is_numeric_id = album_id.isdigit()
+    print(f"is_itunes_id: {is_numeric_id}")
     itunes_album = None
     spotify_album_data = None
     album_name = None
     artist_name = None
 
     try:
-        if is_itunes_id:
+        if is_numeric_id:
             # --- iTunes lookup ---
             itunes_url = f"https://itunes.apple.com/lookup?id={album_id}&entity=album"
             itunes_data = requests.get(itunes_url).json()
-            if itunes_data:
+            if itunes_data.get("resultCount", 0) > 0:
                 if not itunes_data.get("results"):
                     raise ValueError("Album not found in iTunes")
 
@@ -1964,6 +1984,8 @@ def album_page(album_id):
 
                 album_name = data.get("title")
                 artist_name = data["artist"]["name"] if data.get("artist") else None
+                album_image = data.get("cover_xl")
+
                 result = sp.search(q=f"album:{album_name} artist:{artist_name}", type="album", limit=1)
                 if result["albums"]["items"]:
                     spotify_album_data = result["albums"]["items"][0]
@@ -1985,7 +2007,7 @@ def album_page(album_id):
     except Exception as e:
         print(f"Album lookup failed: {e}. Attempting fallback search...")
         # --- fallback search (cross-platform) ---
-        if not is_itunes_id:
+        if not is_numeric_id:
             # Spotify failed → try iTunes
             itunes_url = f"https://itunes.apple.com/search?term={album_id}&entity=album&limit=1"
             itunes_data = requests.get(itunes_url).json()
@@ -2023,13 +2045,23 @@ def album_page(album_id):
     )
     lastfm_album_data = requests.get(lastfm_url).json().get("album")
 
+    try:
+        # First try iTunes artwork
+        artwork = get_artwork_url(itunes_album["artworkUrl100"], 1000)
+    except Exception:
+        # If iTunes fails → fallback to Spotify
+        try:
+            artwork = spotify_album_data["images"][0]["url"]
+        except Exception:
+            artwork = album_image
+
 
     # 4. Merge into one dict
     album_data = {
         "album_name": album_name,
         "artist_name": artist_name,
         "itunes": {
-            "artwork": get_artwork_url(itunes_album.get("artworkUrl100"), 1000) if itunes_album else spotify_album_data["images"][0]['url'],
+            "artwork": artwork,
             "release_date": itunes_album.get("releaseDate") if itunes_album else spotify_album_data["release_date"],
             # "genre": itunes_album.get("primaryGenreName"),
             # "itunes_url": itunes_album.get("collectionViewUrl")
