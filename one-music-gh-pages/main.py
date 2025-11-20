@@ -339,29 +339,19 @@ def get_deezer_album_details(album_id):
 
 def build_deezer_album_dataset(limit=50):
     """
-    Fetch Deezer top albums with pagination and merge with full metadata.
+    Fetch Deezer top albums WITHOUT pagination and merge full metadata.
     """
-    print(f"Fetching {limit} Deezer top albums with pagination...")
+    print(f"Fetching {limit} Deezer top albums (non-paginated)...")
 
-    full_chart_list = []
-    page_size = 100   # Maximum allowed by Deezer
-    index = 0
+    # --- SINGLE REQUEST (no pagination) ---
+    url = f"https://api.deezer.com/chart/0/albums?limit={limit}"
+    response = requests.get(url).json()
 
-    # --- PAGINATION LOOP ---
-    while len(full_chart_list) < limit:
-        fetch_limit = min(page_size, limit - len(full_chart_list))
+    if not response.get("data"):
+        print("No data returned from Deezer.")
+        return []
 
-        url = f"https://api.deezer.com/chart/0/albums?index={index}&limit={fetch_limit}"
-        response = requests.get(url).json()
-
-        if not response.get("data"):
-            break  # no more data
-
-        full_chart_list.extend(response["data"])
-        index += fetch_limit
-
-    # Trim to exact limit
-    top_albums = full_chart_list[:limit]
+    top_albums = response["data"][:limit]
 
     print(f"Fetched {len(top_albums)} albums.")
 
@@ -396,6 +386,7 @@ def build_deezer_album_dataset(limit=50):
         full_data_list.append(combined)
 
     return full_data_list
+
 
 DEEZER_TOP_SONGS_URL = "https://api.deezer.com/chart/0/tracks?limit=100"
 
