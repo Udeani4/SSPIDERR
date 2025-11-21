@@ -1,0 +1,89 @@
+{% include "header.html" %}
+        <!-- ##### Hero Area Start ##### -->
+        <section class="hero-area">
+            <div class="hero-slides owl-carousel">
+                <!-- Single Hero Slide -->
+                <div class="single-hero-slide d-flex align-items-center justify-content-center">
+                    <!-- Slide Img -->
+                    <div class="slide-img bg-img" style="background-image: url({{ url_for('static', filename='img/bg-img/about_page_new_release.jpg') }}); background-size: contain;
+                background-repeat: no-repeat;
+                background-position: center;
+                background-color: black;"></div>
+                    <!-- Slide Content -->
+                    <div class="container" style="text-align: center">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="hero-slides-content text-center" style="padding: 50px 0 0px 0;">
+
+                                    <h2 style="font-size: 3rem; font-weight: bold; line-height: 1.2;" data-animation="fadeInUp" data-delay="300ms">NEW RELEASES<span>NEW RELEASES</span></h2>
+
+                                    <h2 data-animation="fadeInUp" data-delay="100ms"></h2>
+
+                                    <p class="text-visible" data-animation="fadeInUp" data-delay="100ms" style="padding-top: 40px;
+                                    max-width: 700px;
+                                    margin: 0 auto;
+                                    font-size: 1.3rem;
+                                    color: #fff;
+                                    text-align: center;
+                                    line-height: 1.7;
+                                    font-weight: 500;
+                                    letter-spacing: 0.3px;
+                                    text-shadow: 0 3px 12px rgba(0,0,0,0.45);">Stay updated with the best and latest releases across the web. Get them in your playlists</p>
+                                    <h6 data-animation="fadeInUp" data-delay="100ms"></h6>
+
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <section>
+<!--            Short description-->
+            <section class="latest-albums-area section-padding-100">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="section-heading style-2">
+                                <p></p>
+                                <h2>WALK WITH ME</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row justify-content-center">
+                        <div class="col-12 col-lg-9">
+                            <div class="ablums-text text-center mb-70">
+                                <p class="description">Overview fall in here</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+
+        </section>
+{% include "footer.html" %}
+         <!-- ##### All Javascript Script ##### -->
+    <!-- jQuery-2.2.4 js -->
+    <script src="{{ url_for('static', filename='js/jquery/jquery-2.2.4.min.js') }}"></script>
+    <!-- Popper js -->
+    <script src="{{ url_for('static', filename='js/bootstrap/popper.min.js') }}"></script>
+    <!-- Bootstrap js -->
+    <script src="{{ url_for('static', filename='js/bootstrap/bootstrap.min.js') }}"></script>
+    <!-- All Plugins js -->
+    <script src="{{ url_for('static', filename='js/plugins/plugins.js') }}"></script>
+    <!-- Active js -->
+    <script src="{{ url_for('static', filename='js/active.js') }}"></script>
+
+     <!-- Modal Script -->
+
+
+</body>
+
+</html>
+

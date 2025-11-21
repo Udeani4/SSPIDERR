@@ -9,6 +9,7 @@ import feedparser
 from dateutil import parser as date_parser
 import requests
 import time
+import shutil
 import threading
 from bs4 import BeautifulSoup
 from dominate.svg import title
@@ -1216,9 +1217,34 @@ def afro_beats():
                            top_afro_artist_info=top_afro_artist_info
                            )
 
-@app.route('/about-us')
-def about_us():
+@app.route('/about-us', defaults={'name': None})
+@app.route('/about-us/<name>', methods=["GET", "POST"])
+def about_us(name):
+
+    # When clicking "About" in header
+    if name is None:
+        return render_template('event.html')
+
+    # When clicking "Overview" inside About page
+    if name == "overview":
+        return render_template('about_overview.html')
+    if name == "discover":
+        return render_template('about_discover.html')
+    if name == "new_releases":
+        return render_template('about_new_releases.html')
+    if name == "newsroom":
+        return render_template('about_newsroom.html')
+    if name == "local_spotify":
+        return render_template('about_local_spotify.html')
+    if name == "playlist_hub":
+        return render_template('about_playlist_hub.html')
+    # Any other section
     return render_template('event.html')
+
+
+# @app.route('/overview')
+# def about_overview_page():
+#     return render_template('about_overview.html')
 
 DEFAULT_IMAGE = '/static/img/music_blog_def_image.jpeg'
 
@@ -2790,8 +2816,6 @@ def song_processing_stream(playlist_id):
         except Exception as e:
             return None, None, None, f"⚠️ Failed to recognize {os.path.basename(file_path)}: {e}"
 
-
-
     async def batch_recognize(folder_path):
         shazam = Shazam()
         files = [f for f in os.listdir(folder_path) if f.endswith(AUDIO_EXTS)]
@@ -2803,7 +2827,7 @@ def song_processing_stream(playlist_id):
         song_fraction = len(files) # This is needed incase we want to limit the songs that can be uploaded
         batch_fraction = 10
 
-        for i, file in enumerate(files[:song_fraction], 1):
+        for i, file in enumerate(files, 1):
             full_path = os.path.join(folder_path, file)
             print(f"\n🔍 [{i}/{song_fraction}] Recognizing: {file}")
 
@@ -2997,6 +3021,16 @@ def song_processing_stream(playlist_id):
 
             # ✅ after the generator is exhausted, send a final "done"
         yield "event: done\ndata: {\"message\": \"🎉 All processing complete\"}\n\n"
+
+
+        if os.path.exists(UPLOAD_FOLDER):
+            shutil.rmtree(UPLOAD_FOLDER)
+            print("Folder deleted successfully!")
+        else:
+            print("Folder does not exist.")
+
+        # stop execution here without freezing the rest of the program
+        threading.Event().wait() # This will help stop the looping for now till we figure something out
     return Response(stream_with_context(sse_wrapper(generate())), mimetype="text/event-stream")
 
 
