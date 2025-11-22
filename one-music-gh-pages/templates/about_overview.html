@@ -1,4 +1,124 @@
 {% include "header.html" %}
+<style>
+       /* ----------------------------------------
+       OVERVIEW PAGE BEAUTIFICATION
+    ---------------------------------------- */
+
+    .overview-wrapper {
+        background: #f7f8fc;
+        padding-bottom: 40px;
+    }
+
+    /* ------------ INTRO SECTION ------------ */
+
+    .intro-section {
+        background: linear-gradient(135deg, #ffffff, #eef1f8);
+        padding-top: 100px !important;
+        padding-bottom: 80px !important;
+        border-bottom: 1px solid #e3e7ef;
+    }
+
+    .intro-tagline {
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: #7a7a7a;
+    }
+
+    .intro-title {
+        font-size: 38px;
+        font-weight: 800;
+        color: #1f1f1f;
+        letter-spacing: 0.5px;
+    }
+
+    /* Box under intro */
+    .overview-text-box {
+        background: #fff;
+        padding: 35px;
+        border-radius: 16px;
+        box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+        transition: 0.35s ease;
+    }
+
+    .overview-text-box:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 22px 45px rgba(0,0,0,0.12);
+    }
+
+    .overview-description {
+        font-size: 17px;
+        line-height: 1.8;
+        color: #555;
+    }
+
+    /* ------------ FEATURE SECTIONS ------------ */
+
+    .feature-section {
+        padding-top: 70px !important;
+        padding-bottom: 70px !important;
+    }
+
+    .alt-section {
+        background: #ffffff;
+    }
+
+    /* Titles */
+    .feature-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #222;
+        margin-bottom: 15px;
+    }
+
+    .feature-description {
+        font-size: 16px;
+        line-height: 1.75;
+        color: #5c5c5c;
+    }
+
+    /* ------------ IMAGE DESIGN ------------ */
+
+    .overview-image-box {
+        max-width: 380px;
+        margin: auto;
+        padding: 10px;
+    }
+
+    .overview-img {
+        width: 100%;
+        border-radius: 16px;
+        object-fit: cover;
+        box-shadow: 0 6px 25px rgba(0,0,0,0.12);
+        transition: 0.35s ease;
+    }
+    .overview-image-box {
+        display: flex;
+        gap: 15px;                /* space between images */
+        justify-content: center;  /* center them */
+        align-items: center;
+        width: 100%;
+    }
+
+    .overview-image-box .overview-img {
+        width: 50%;               /* each takes half */
+        height: auto;
+        object-fit: cover;        /* crops nicely if sizes differ */
+        border-radius: 12px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    }
+
+    .overview-img:hover {
+        transform: scale(1.04) translateY(-6px);
+        box-shadow: 0 14px 38px rgba(0,0,0,0.18);
+    }
+
+    /* Spacers */
+    .mt-30 {
+        margin-top: 30px;
+    }
+
+</style>
         <!-- ##### Hero Area Start ##### -->
         <section class="hero-area">
             <div class="hero-slides owl-carousel">
@@ -42,31 +162,180 @@
 
         </section>
 
-        <section>
-<!--            Short description-->
-            <section class="latest-albums-area section-padding-100">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="section-heading style-2">
-                                <p></p>
-                                <h2>WALK WITH ME</h2>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row justify-content-center">
-                        <div class="col-12 col-lg-9">
-                            <div class="ablums-text text-center mb-70">
-                                <p class="description">Overview fall in here</p>
-                            </div>
+      <section class="overview-wrapper">
+
+        <!-- ================= INTRODUCTION SECTION ================= -->
+        <section class="latest-albums-area section-padding-100 intro-section">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12 text-center">
+                        <div class="section-heading style-2">
+                            <p class="intro-tagline">Your music space, reimagined</p>
+                            <h2 class="intro-title">WELCOME TO SSPIDERR</h2>
                         </div>
                     </div>
                 </div>
-            </section>
 
-
-
+                <div class="row justify-content-center mt-30">
+                    <div class="col-12 col-lg-9">
+                        <div class="overview-text-box text-center mb-70">
+                            <p class="overview-description">
+                                SSPIDERR brings all your music needs together in one simple, powerful platform.
+                                From discovering the latest global releases to managing your Spotify playlists,
+                                SSPIDERR provides the tools, updates, and insights you need to enjoy music—your way.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
+
+
+        <!-- ================= FEATURE SECTIONS ================= -->
+
+        <!-- Upload Local Songs to Spotify -->
+        <section class="latest-albums-area section-padding-50 feature-section">
+            <div class="container">
+                <div class="row align-items-center">
+
+                    <div class="col-12 col-lg-6">
+                        <h3 class="feature-title">Upload Local Songs to Spotify</h3>
+                        <p class="feature-description">
+                            Easily transfer music saved on your device into your Spotify library.
+                            Our smart matching system identifies tracks and helps you organize them
+                            into playlists without stress.
+                        </p>
+                    </div>
+
+                    <div class="col-12 col-lg-6 text-center">
+                        <div class="overview-image-box">
+                            <img src="{{ url_for('static', filename='img/bg-img/about_overview_upload_to_spotify.webp') }}"
+                                 alt="Upload local songs"
+                                 class="overview-img">
+                            <img src="{{ url_for('static', filename='img/bg-img/about_overview_upload_loader.png') }}"
+                                 alt="Upload local songs"
+                                 class="overview-img">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Latest & Top Charts -->
+        <section class="latest-albums-area section-padding-50 feature-section alt-section">
+            <div class="container">
+                <div class="row align-items-center flex-row-reverse">
+
+                    <div class="col-12 col-lg-6">
+                        <h3 class="feature-title">Explore Latest & Top Music Charts</h3>
+                        <p class="feature-description">
+                            Stay updated with real-time music rankings. View trending albums,
+                            fast-rising artists, and top tracks from around the world, all in one place.
+                        </p>
+                    </div>
+
+                    <div class="col-12 col-lg-6 text-center">
+                        <div class="overview-image-box">
+                            <img src="{{ url_for('static', filename='img/bg-img/about_overview_top_chart.jpg') }}"
+                                 alt="Upload local songs"
+                                 class="overview-img">
+                            <img src="{{ url_for('static', filename='img/bg-img/about_overview_top_chart_cards.png') }}"
+                                 alt="Upload local songs"
+                                 class="overview-img">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Add to Spotify -->
+        <section class="latest-albums-area section-padding-50 feature-section">
+            <div class="container">
+                <div class="row align-items-center">
+
+                    <div class="col-12 col-lg-6">
+                        <h3 class="feature-title">Add Songs to Your Spotify Playlist</h3>
+                        <p class="feature-description">
+                            Found a song you love? Instantly add it to any of your playlists.
+                            SSPIDERR connects directly with your Spotify account for seamless updates.
+                        </p>
+                    </div>
+
+                    <div class="col-12 col-lg-6 text-center">
+                        <div class="overview-image-box">
+                            <img src="{{ url_for('static', filename='img/bg-img/about_overview_add_spotify.jpg') }}"
+                                 alt="Upload local songs"
+                                 class="overview-img">
+                            <img src="{{ url_for('static', filename='img/bg-img/about_overview_add_playlist.png') }}"
+                                 alt="Upload local songs"
+                                 class="overview-img">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Newsroom -->
+        <section class="latest-albums-area section-padding-50 feature-section alt-section">
+            <div class="container">
+                <div class="row align-items-center flex-row-reverse">
+
+                    <div class="col-12 col-lg-6">
+                        <h3 class="feature-title">Join the Music Newsroom</h3>
+                        <p class="feature-description">
+                            Get instant access to fresh music updates, industry trends, album
+                            announcements, and artist highlights. Your source for staying in the loop.
+                        </p>
+                    </div>
+
+                    <div class="col-12 col-lg-6 text-center">
+                        <div class="overview-image-box">
+                            <img src="{{ url_for('static', filename='img/bg-img/about_overview_news_room.jpg') }}"
+                                 alt="Upload local songs"
+                                 class="overview-img">
+                            <img src="{{ url_for('static', filename='img/bg-img/about_overview_news_page.png') }}"
+                                 alt="Upload local songs"
+                                 class="overview-img">
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Artist / Album Info -->
+        <section class="latest-albums-area section-padding-50 feature-section">
+            <div class="container">
+                <div class="row align-items-center">
+
+                    <div class="col-12 col-lg-6">
+                        <h3 class="feature-title">Learn More About Artists, Tracks, and Albums</h3>
+                        <p class="feature-description">
+                            Dive deeper into your favorites. SSPIDERR gives you instant access to
+                            profiles, backgrounds, statistics, discographies, and more.
+                        </p>
+                    </div>
+
+                    <div class="col-12 col-lg-6 text-center">
+                        <div class="overview-image-box">
+                            <div class="overview-image-box">
+                            <img src="{{ url_for('static', filename='img/bg-img/abourt_overview_album_info.png') }}"
+                                 alt="Upload local songs"
+                                 class="overview-img">
+                            <img src="{{ url_for('static', filename='img/bg-img/about_overview_artist_info.png') }}"
+                                 alt="Upload local songs"
+                                 class="overview-img">
+                        </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+      </section>
+
+
 {% include "footer.html" %}
          <!-- ##### All Javascript Script ##### -->
     <!-- jQuery-2.2.4 js -->
