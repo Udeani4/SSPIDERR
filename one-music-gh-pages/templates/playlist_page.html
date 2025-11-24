@@ -15,9 +15,9 @@
                             <div class="col-12">
                                 <div class="hero-slides-content text-center" style="padding: 50px 0 0px 0;">
 
-                                    <h2 style="font-size: 3rem; font-weight: bold; line-height: 1.2;" data-animation="fadeInUp" data-delay="300ms">{{ playlist['name'] }} <span>{{ playlist['name'] }}</span></h2>
+                                    <h2 style="font-size: 3rem; font-weight: bold; line-height: 1.2;" data-animation="fadeInUp" data-delay="300ms">{{ playlist1['name'] }} <span>{{ playlist1['name'] }}</span></h2>
 
-                                    <h6 data-animation="fadeInUp" data-delay="100ms">{{ playlist['description'] }}</h6>
+                                    <h6 data-animation="fadeInUp" data-delay="100ms">{{ playlist1['description'] }}</h6>
 
                                     <div class="single-page-stat">
                                         <h6 data-animation="fadeInUp" data-delay="100ms">STATS</h6>
@@ -61,14 +61,7 @@
                                     </div>
 
                                 </div>
-                                {% if current_user.is_authenticated: %}
-                                    <div class="oneMusic-buttons-area mb-100">
-                                        <a href="#" class="btn oneMusic-btn custom-btn m-2" onclick="openModal()">
-                                            <i class="icon-cloud-computing" style="font-size: 20px;"></i>
-                                            <span style="font-size: 14px; font-weight: 500;">Add to Playlist</span>
-                                        </a>
-                                    </div>
-                                {% endif %}
+
                             </div>
                         </div>
                     </div>
@@ -85,7 +78,7 @@
             <div class="col-12 col-lg-6" style="padding-top:100px">
                 <div class="new-hits-area mb-100">
                     <div class="section-heading text-left mb-50 wow fadeInUp" data-wow-delay="50ms">
-                        <p>{{ playlist['name'] }}</p>
+                        <p>{{ playlist1['name'] }}</p>
                         <h2>Songs List</h2>
                     </div>
 
@@ -128,12 +121,14 @@
 
                 <!-- Playlist Items -->
                 {% for playlist in playlist_list %}
+                  {% if playlist['id'] != playlist1['id'] %}
                   <div class="playlist"
                        data-playlist-id="{{ playlist['id'] }}"
                        onclick="addToPlaylist('{{ playlist['id'] }}')">
                     <img src="{{ playlist['image'] }}" alt="{{ playlist['name'] }}">
                     <span class="playlist-name">{{ playlist['name'] }}</span>
                   </div>
+                  {% endif %}
                 {% endfor %}
 
                 <!-- Create Playlist Button -->

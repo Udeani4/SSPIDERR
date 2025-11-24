@@ -1063,7 +1063,7 @@ def playlist_page(playlist_id):
     # total_duration_str = f"{hours}h {minutes}m {seconds}s"
 
     return render_template('playlist_page.html',
-                           playlist=playlist1,
+                           playlist1=playlist1,
                            playlist_tracks=playlist_tracks,
                            avg_popularity = avg_popularity,
                            total_duration = total_duration,
@@ -1434,10 +1434,14 @@ def news_blog():
 
 @app.route('/blog-post/<int:post_id>', methods=["GET", "POST"])
 def blog_post(post_id):
-    # post = db.get_or_404(BlogPost, post_id) # Wont work because i am using created_id column oto select rather than id itself
-    result = db.session.execute(db.select(BlogPost).where(BlogPost.created_id == post_id))
-    post = result.scalar_one_or_none()
+    post = db.session.scalar(
+        db.select(BlogPost).where(BlogPost.created_id == post_id).limit(1)
+    )
+    if post is None:
+        abort(404)
+
     form = CommentForm()
+
     if form.validate_on_submit():
         if not current_user.is_authenticated:
             flash("You need to login or register to comment.", 'error')
@@ -1445,12 +1449,15 @@ def blog_post(post_id):
 
         new_comment = Comment(
             text=form.comment_text.data,
-            comment_author=current_user,  # relationship to User
-            parent_post=post  # relationship to BlogPost
+            comment_author=current_user,
+            parent_post=post
         )
 
         db.session.add(new_comment)
         db.session.commit()
+
+        # FIXED: pass post_id correctly
+        return redirect(url_for('blog_post', post_id=post_id))
     return render_template("blog_post.html", post=post, form=form)
 
 
