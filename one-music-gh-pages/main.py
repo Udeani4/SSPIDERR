@@ -1387,10 +1387,22 @@ def load_news_to_db():
 with app.app_context():
     load_news_to_db()
 
+def trim_news_table():
+    subquery = (
+        db.session.query(BlogPost.id)
+        .order_by(BlogPost.date.desc())
+        .offset(100)
+    )
+    db.session.query(BlogPost).filter(BlogPost.id.in_(subquery)).delete(synchronize_session=False)
+    db.session.commit()
+    print("Old records trimmed.")
 
 
 @app.route('/news-blog', methods=["GET", "POST"])
 def news_blog():
+    # --- Delete excess record -- #
+    trim_news_table()
+
     # --- Get news from BlogPost --- #
     news_post = db.session.execute(
         db.select(BlogPost).order_by(BlogPost.date.desc())
