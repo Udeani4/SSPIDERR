@@ -24,7 +24,7 @@ from flask_login import UserMixin, login_user, LoginManager, current_user, logou
 from flask_sqlalchemy import SQLAlchemy
 from numpy.ma.core import default_fill_value
 from sqlalchemy.orm import relationship, DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import Integer, String, Text, func, delete, DateTime, ForeignKey
+from sqlalchemy import Integer, String, Text, func, delete, DateTime, ForeignKey, BigInteger, JSON
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -253,6 +253,141 @@ class UnsentSpotifySongs(db.Model):
     spotify_playlist_id: Mapped[str] = mapped_column(String(50))
     spotify_user_id: Mapped[str] = mapped_column(String(50))
 
+class GetBillboardTopArtists(db.Model):
+    artists: Mapped[str]=mapped_column(String(500))
+
+class BuildDeezerAlbumDataset(db.Model):
+    __tablename__ = "deezer_albums"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    album_id: Mapped[int] = mapped_column(BigInteger)
+    artist_id: Mapped[int] = mapped_column(BigInteger)
+
+    album_name: Mapped[str] = mapped_column(String(255), index=True)
+    artist_name: Mapped[str] = mapped_column(String(255))
+
+    artwork_url_original: Mapped[str] = mapped_column(String(500))
+    artwork_small: Mapped[str] = mapped_column(String(500))
+    artwork_medium: Mapped[str] = mapped_column(String(500))
+    artwork_full: Mapped[str] = mapped_column(String(500))
+
+    position: Mapped[int] = mapped_column(Integer)
+    release_date: Mapped[str] = mapped_column(String(50))
+
+    tracks_count: Mapped[int] = mapped_column(Integer, default=0)
+    duration: Mapped[int] = mapped_column(Integer, default=0)
+    fans: Mapped[int] = mapped_column(Integer, default=0)
+
+class BuildDeezerSongDataset(db.Model):
+    __tablename__ = "deezer_songs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    song_id: Mapped[int] = mapped_column(BigInteger)
+    song_name: Mapped[str] = mapped_column(String(255), index=True)
+    artist_name: Mapped[str] = mapped_column(String(255))
+    artwork_url_original: Mapped[str] = mapped_column(String(500))
+    artwork_small: Mapped[str] = mapped_column(String(500))
+    artwork_medium: Mapped[str] = mapped_column(String(500))
+    artwork_full: Mapped[str] = mapped_column(String(500))
+
+class TopAlbumsInfo(db.Model):
+    __tablename__ = "top_albums_info"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+
+    album_id: Mapped[int] = mapped_column(BigInteger)
+    artist_id: Mapped[int] = mapped_column(BigInteger)
+
+    album_name: Mapped[str] = mapped_column(String(255))
+    artist_name: Mapped[str] = mapped_column(String(255))
+
+    release_date: Mapped[str] = mapped_column(String(50))
+    genre: Mapped[str] = mapped_column(String(100))
+
+    artwork_url_original: Mapped[str] = mapped_column(String(500))
+    artwork_small: Mapped[str] = mapped_column(String(500))
+    artwork_medium: Mapped[str] = mapped_column(String(500))
+    artwork_full: Mapped[str] = mapped_column(String(500))
+
+# class TopArtistInfo(db.Model):
+#     __tablename__ = "top_artist_info"
+#
+#     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+#
+#     album_id: Mapped[int] = mapped_column(BigInteger)
+#     album_name: Mapped[str] = mapped_column(String(255))
+#     release_date: Mapped[str] = mapped_column(String(50))
+#     album_cover: Mapped[str] = mapped_column(String(500))
+#     spotify_link: Mapped[str] = mapped_column(String(500))
+#
+#     artist_name: Mapped[str] = mapped_column(String(255))
+#     followers: Mapped[int] = mapped_column(Integer)
+#     popularity: Mapped[int] = mapped_column(Integer)
+#
+#     artist_image: Mapped[str] = mapped_column(String(500))
+
+class GetLiveGlobalTopTrack(db.Model):
+    __tablename__ = "live_global_top_tracks"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(255))
+    artist: Mapped[str] = mapped_column(String(255))
+    url: Mapped[str] = mapped_column(String(500))
+    image: Mapped[str] = mapped_column(String(500))
+    spotify_song_id: Mapped[str] = mapped_column(String(100))
+    itunes_url: Mapped[str] = mapped_column(String(500))
+
+class LatestAlbum(db.Model):
+    __tablename__ = "latest_albums"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    album_id: Mapped[int] = mapped_column(BigInteger)
+    album_name: Mapped[str] = mapped_column(String(255))
+    artist_name: Mapped[str] = mapped_column(String(255))
+    album_image: Mapped[str] = mapped_column(String(500))
+    release_date: Mapped[str] = mapped_column(String(50))
+    main_artist: Mapped[str] = mapped_column(String(255))
+
+class GetSpotifyPlaylistTracks(db.Model):
+    __tablename__ = "spotify_playlist_tracks"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    track_id: Mapped[str] = mapped_column(String(100))
+    name: Mapped[str] = mapped_column(String(255))
+    artist: Mapped[str] = mapped_column(String(500))
+    album: Mapped[str] = mapped_column(String(255))
+
+    image: Mapped[str] = mapped_column(String(500))
+    itunes_url: Mapped[str] = mapped_column(String(500))
+    playlist_id: Mapped[str] = mapped_column(String(100))
+
+class HomeData(db.Model):
+    __tablename__ = "home_data"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    album_id: Mapped[int] = mapped_column(BigInteger)
+
+    album_art: Mapped[str] = mapped_column(String(500))
+    album_name: Mapped[str] = mapped_column(String(255))
+
+    song_art: Mapped[str] = mapped_column(String(500))
+    song_name: Mapped[str] = mapped_column(String(255))
+    song_id: Mapped[str] = mapped_column(String(100))
+
+    artist_art: Mapped[str] = mapped_column(String(500))
+    artist_name: Mapped[str] = mapped_column(String(255))
+
+    # Complex data → stored as JSON
+    top_albums: Mapped[dict | list] = mapped_column(JSON)
+    feature_artists_info: Mapped[dict | list] = mapped_column(JSON)
+    artist_description: Mapped[str] = mapped_column(String(2000))
+    top_artist_album_track: Mapped[dict | list] = mapped_column(JSON)
+
+    best_2025_hits: Mapped[dict | list] = mapped_column(JSON)
+    this_weeks_hits: Mapped[dict | list] = mapped_column(JSON)
+
+    artist_section_dict: Mapped[dict | list] = mapped_column(JSON)
+
 with app.app_context():
     Songs.__table__.drop(db.engine)
     # BlogPost.__table__.drop(db.engine)
@@ -311,7 +446,11 @@ def get_billboard_top_artists(limit=100):
     for tag in artists_tags[:limit]:  # slice according to limit
         name = html.unescape(tag.get_text(strip=True))
         artists.append(name)
-
+        new_billboard_artists=GetBillboardTopArtists(
+            artists=name
+        )
+        db.session.add(new_billboard_artists)
+    db.session.commit()
     return artists
 
 
@@ -386,6 +525,23 @@ def build_deezer_album_dataset(limit=50):
 
         full_data_list.append(combined)
 
+        new_deezer_albums=BuildDeezerAlbumDataset(
+            album_id= album_id,
+            artist_id= album["artist"]["id"],
+            album_name= title,
+            artist_name= album["artist"]["name"],
+            artwork_url_original= album.get("cover_xl"),
+            artwork_small= album.get("cover_small"),
+            artwork_medium= album.get("cover_medium"),
+            artwork_full= album.get("cover_big"),
+            position= album.get("position"),
+            release_date= full_details.get("release_date", "N/A"),
+            tracks_count= full_details.get("nb_tracks", 0),
+            duration= full_details.get("duration", 0),
+            fans= full_details.get("fans", 0),
+        )
+        db.session.add(new_deezer_albums)
+    db.session.commit()
     return full_data_list
 
 
@@ -415,6 +571,17 @@ def build_deezer_song_dataset(limit=100):
             "artist_Name": track.get("artist", {}).get("name"),   # optional but useful
         }
         song_contents.append(item)
+        new_deezer_songs = BuildDeezerSongDataset(
+            song_name= track.get("title"),
+            artwork_url_original= track.get("album", {}).get("cover_xl"),
+            artwork_small= track.get("album", {}).get("cover_small"),
+            artwork_medium= track.get("album", {}).get("cover_medium"),
+            artwork_full= track.get("album", {}).get("cover_big"),
+            song_id= track.get("id"),
+            artist_Name= track.get("artist", {}).get("name")
+        )
+        db.session.add(new_deezer_songs)
+    db.session.commit()
     return song_contents
 
 
@@ -456,6 +623,19 @@ def top_albums_info():
                     "artwork_full": album_art_full
                 })
                 print(f"album id: {i_tunes_album_id}")
+                new_top_albums = TopAlbumsInfo(
+                    album_name= album_name,
+                    artist_name= album_artist_name,
+                    album_id= i_tunes_album_id,
+                    artist_id= album_artist_id,
+                    release_date= album_date,
+                    artwork_url_original= album_art_url,
+                    artwork_small= album_art_small,
+                    artwork_medium= album_art_med,
+                    artwork_full= album_art_full
+                )
+                db.session.add(new_top_albums)
+        db.session.commit()
     else:
         album_info_contents = build_deezer_album_dataset(50)
 
@@ -493,11 +673,12 @@ def top_artist_info(artist_name):
                 "Album Cover": latest_album["images"][0]["url"],
                 "Spotify Link": latest_album["external_urls"]["spotify"],
                 "Artist Name": artist["name"],
-                "Genres": artist["genres"],
+                "Genres": artist["genres"], # Dont include in database
                 "Followers": artist["followers"]["total"],
                 "Popularity": artist["popularity"],
                 "Artist Image": artist["images"][0]["url"]
             }
+
     return required_artist_info
 
 
@@ -718,8 +899,9 @@ def get_spotify_playlist_tracks(playlist_id):
             "artist": ", ".join([a['name'] for a in track.get('artists', [])]),
             "album": track.get('album', {}).get('name'),
             "image": track.get('album', {}).get('images', [{}])[-1].get('url'),
-            "id": track.get('id'),
-            "itunes_url": track_itunes_url
+            "track_id": track.get('id'),
+            "itunes_url": track_itunes_url,
+            "playlist_id": playlist_id
         })
 
     return tracks
@@ -957,6 +1139,7 @@ def home():
         artist_description = get_artist_description(top_artist_name,last_fm_api_key)
         print(artist_description)
         top_artist_album_track = get_album_tracks_sorted(feature_artists_info['Album Name'])
+
 
         return render_template('index.html', playlist_list=playlist_list,
                                album_art=album_art,

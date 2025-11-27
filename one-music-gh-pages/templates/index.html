@@ -384,7 +384,7 @@
                                         <div class="thumbnail" style="flex-shrink: 0;">
                                             <img src="{{ track['image'] }}" alt="Album Art">
                                         </div>
-                                        <a href="{{ url_for('song_page', song_id=track['id']) }}">
+                                        <a href="{{ url_for('song_page', song_id=track['track_id']) }}">
                                             <div class="content-" style="margin-left: 10px; overflow: hidden;">
                                                 <h6 style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;">
                                                     {{ track['name'] }}
