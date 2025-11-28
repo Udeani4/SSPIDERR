@@ -277,7 +277,7 @@
 
                         <div class="col-12 col-md-5 col-lg-4">
                             <div class="featured-artist-thumb" >
-                                <img src="{{ feature_artists_info['Artist Image'] }}" alt="static/img/bg-img/fa.jpg" >
+                                <img src="{{ feature_artists_info['artist_image'] }}" alt="static/img/bg-img/fa.jpg" >
                             </div>
                         </div>
 
@@ -286,8 +286,8 @@
                         <div class="featured-artist-content">
                             <!-- Section Heading -->
                             <div class="section-heading white text-left mb-30">
-                                <a href="{{ url_for('artist_page', artist=feature_artists_info['Artist Name']) }}"><p>{{ feature_artists_info['Artist Name'] }}</p></a>
-                                <a href="{{ url_for('album_page', album_id=feature_artists_info['Album ID']) }}"><h2>{{ feature_artists_info['Album Name'] }}</h2></a>
+                                <a href="{{ url_for('artist_page', artist=feature_artists_info['artist_name']) }}"><p>{{ feature_artists_info['artist_name'] }}</p></a>
+                                <a href="{{ url_for('album_page', album_id=feature_artists_info['album_id']) }}"><h2>{{ feature_artists_info['album_name'] }}</h2></a>
                             </div>
                             <p class="description">{{ artist_description['description'] | safe }}</p>
                             <div class="song-play-area">
