@@ -283,8 +283,8 @@ class SchedulerStatus(db.Model):
 
 with app.app_context():
     Songs.__table__.drop(db.engine)
-    HomeData.__table__.drop(db.engine)
-    SchedulerStatus.__table__.drop(db.engine)
+    # HomeData.__table__.drop(db.engine)
+    # SchedulerStatus.__table__.drop(db.engine)
     # BlogPost.__table__.drop(db.engine)
     # Comment.__table__.drop(db.engine)
     db.create_all() #This is where the table is created
@@ -298,6 +298,7 @@ class CommentForm(FlaskForm):
 def logout():
     logout_user()
     return redirect(url_for('home'))
+
 
 
 def should_run_24h_task():
@@ -928,6 +929,7 @@ def latest_albums(sp):
 
 @app.route('/', methods=['GET','POST'])
 def home():
+    print(f"Is current user authenticated: {current_user.is_authenticated}")
     home_data_exist = HomeData.query.first()
     if should_run_24h_task() or not home_data_exist:
         # Fetch Top Album
@@ -1005,7 +1007,6 @@ def home():
             artist_section_dict[artist] = img_url  # assign key-value pair
         print(artist_section_dict)
 
-        HomeData.query.delete()
         # load to database
         new_home_data = HomeData(
             album_art=album_art,
@@ -1023,6 +1024,20 @@ def home():
         )
         db.session.add(new_home_data)
         db.session.commit()
+        return render_template('index.html',
+                               album_art=album_art,
+                               album_name=album_name,
+                               song_art=song_art,
+                               song_name=song_name,
+                               song_id=song_id,
+                               artist_art=artist_art,
+                               artist_name=top_artist_name,
+                               top_albums=top_albums,
+                               best_2025_hits=best_ten_hits_2025,
+                               this_weeks_hits=this_weeks_10_hits,
+                               artist_section_dict=artist_section_dict,
+                               album_id=top_album_id
+                               )
     else:
         # Get the latest saved home data
         data = HomeData.query.order_by(HomeData.id.desc()).first()
@@ -1047,69 +1062,91 @@ def home():
         top_artist_name = data.artist_name
         top_album_id = data.album_id
 
-    # LOGGED IN SECTION
-    if current_user.is_authenticated:
-        if should_run_24h_task() or not home_data_exist: #This is
-            # For modal playlist
-            access_token = get_valid_spotify_token(current_user)
-            if not access_token:
-                return None  # User not logged in or no valid token
-            sp = spotipy.Spotify(auth=access_token)
+        # LOGGED IN SECTION
+        if current_user.is_authenticated:
+            logged_in_data = HomeData.query.filter(HomeData.playlist_list.isnot(None)).first()
+            if not logged_in_data:
+                print(f"You have reached if current_user.is_authenticated. Artist name {top_artist_name}")
+                # For modal playlist
+                access_token = get_valid_spotify_token(current_user)
+                if not access_token:
+                    return None  # User not logged in or no valid token
+                sp = spotipy.Spotify(auth=access_token)
 
-            playlist_list = get_user_playlists(current_user, sp, 1, "playlist", "small")
-            feature_artists_info = top_artist_info(top_artist_name)
-            artist_description = get_artist_description(top_artist_name,last_fm_api_key)
-            print(artist_description)
-            top_artist_album_track = get_album_tracks_sorted(feature_artists_info['album_name'])
+                playlist_list = get_user_playlists(current_user, sp, 1, "playlist", "small")
+                feature_artists_info = top_artist_info(top_artist_name)
+                artist_description = get_artist_description(top_artist_name, last_fm_api_key)
+                print(artist_description)
+                top_artist_album_track = get_album_tracks_sorted(feature_artists_info['album_name'])
 
-            # Delete initial home data
-            HomeData.query.delete()
+                print(f"Playlist List: {playlist_list}")
+                print(f"artist description: {artist_description}")
+                # Delete initial home data
 
-            new_home_data = HomeData(
-                album_art=album_art,
-                album_name=album_name,
-                song_art=song_art,
-                song_name=song_name,
-                song_id=song_id,
-                artist_art=artist_art,
-                artist_name=top_artist_name,
-                top_albums=top_albums,
-                feature_artists_info=feature_artists_info,
-                artist_description=artist_description,
-                top_artist_album_track=top_artist_album_track,
-                best_2025_hits=best_ten_hits_2025,
-                this_weeks_hits=this_weeks_10_hits,
-                artist_section_dict=artist_section_dict,
-                album_id=top_album_id,
-                playlist_list=playlist_list
-            )
-            db.session.add(new_home_data)
-            db.session.commit()
-        else:
-            import json
-            data = HomeData.query.first()
+                new_home_data = HomeData(
+                    album_art=album_art,
+                    album_name=album_name,
+                    song_art=song_art,
+                    song_name=song_name,
+                    song_id=song_id,
+                    artist_art=artist_art,
+                    artist_name=top_artist_name,
+                    top_albums=top_albums,
+                    feature_artists_info=feature_artists_info,
+                    artist_description=artist_description,
+                    top_artist_album_track=top_artist_album_track,
+                    best_2025_hits=best_ten_hits_2025,
+                    this_weeks_hits=this_weeks_10_hits,
+                    artist_section_dict=artist_section_dict,
+                    album_id=top_album_id,
+                    playlist_list=playlist_list
+                )
+                db.session.add(new_home_data)
+                db.session.commit()
 
-            # 5️⃣ Convert JSON fields back to Python objects (we will do it directly because our JSON data is not text. It is already stored as a list
-            top_albums = data.top_albums
-            feature_artists_info = data.feature_artists_info
-            artist_description = data.artist_description  # string, no conversion needed
-            top_artist_album_track = data.top_artist_album_track
-            best_ten_hits_2025 = data.best_2025_hits
-            this_weeks_10_hits = data.this_weeks_hits
-            artist_section_dict = data.artist_section_dict
-            playlist_list = data.playlist_list
+            else:
+                import json
+                data = HomeData.query.first()
 
-            # 6️⃣ Reconstruct variables exactly as your template expects
-            album_art = data.album_art
-            album_name = data.album_name
-            song_art = data.song_art
-            song_name = data.song_name
-            song_id = data.song_id
-            artist_art = data.artist_art
-            top_artist_name = data.artist_name
-            top_album_id = data.album_id
+                # 5️⃣ Convert JSON fields back to Python objects (we will do it directly because our JSON data is not text. It is already stored as a list
+                top_albums = data.top_albums
+                feature_artists_info = data.feature_artists_info
+                artist_description = data.artist_description  # string, no conversion needed
+                top_artist_album_track = data.top_artist_album_track
+                best_ten_hits_2025 = data.best_2025_hits
+                this_weeks_10_hits = data.this_weeks_hits
+                artist_section_dict = data.artist_section_dict
+                playlist_list = data.playlist_list
 
-        return render_template('index.html', playlist_list=playlist_list,
+                # 6️⃣ Reconstruct variables exactly as your template expects
+                album_art = data.album_art
+                album_name = data.album_name
+                song_art = data.song_art
+                song_name = data.song_name
+                song_id = data.song_id
+                artist_art = data.artist_art
+                top_artist_name = data.artist_name
+                top_album_id = data.album_id
+
+            return render_template('index.html', playlist_list=playlist_list,
+                                       album_art=album_art,
+                                       album_name=album_name,
+                                       song_art=song_art,
+                                       song_name=song_name,
+                                       song_id=song_id,
+                                       artist_art=artist_art,
+                                       artist_name=top_artist_name,
+                                       top_albums=top_albums,
+                                       feature_artists_info=feature_artists_info,
+                                       artist_description=artist_description,
+                                       top_artist_album_track=top_artist_album_track,
+                                       best_2025_hits=best_ten_hits_2025,
+                                       this_weeks_hits=this_weeks_10_hits,
+                                       artist_section_dict=artist_section_dict,
+                                       album_id=top_album_id
+                                       )
+
+        return render_template('index.html',
                                album_art=album_art,
                                album_name=album_name,
                                song_art=song_art,
@@ -1118,29 +1155,13 @@ def home():
                                artist_art=artist_art,
                                artist_name=top_artist_name,
                                top_albums=top_albums,
-                               feature_artists_info=feature_artists_info,
-                               artist_description=artist_description,
-                               top_artist_album_track = top_artist_album_track,
                                best_2025_hits=best_ten_hits_2025,
                                this_weeks_hits=this_weeks_10_hits,
                                artist_section_dict=artist_section_dict,
                                album_id=top_album_id
         )
 
-    return render_template('index.html',
-                           album_art=album_art,
-                           album_name=album_name,
-                           song_art=song_art,
-                           song_name=song_name,
-                           song_id=song_id,
-                           artist_art=artist_art,
-                           artist_name=top_artist_name,
-                           top_albums=top_albums,
-                           best_2025_hits=best_ten_hits_2025,
-                           this_weeks_hits=this_weeks_10_hits,
-                           artist_section_dict=artist_section_dict,
-                           album_id=top_album_id
-    )
+
 
 @app.route('/add_to_playlist', methods=['POST'])
 def add_to_playlist():
