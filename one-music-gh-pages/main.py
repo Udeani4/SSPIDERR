@@ -253,38 +253,63 @@ class UnsentSpotifySongs(db.Model):
     spotify_playlist_id: Mapped[str] = mapped_column(String(50))
     spotify_user_id: Mapped[str] = mapped_column(String(50))
 
+# class HomeData(db.Model):
+#     __tablename__ = "home_data"
+#
+#     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+#
+#     album_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+#     album_art: Mapped[str | None] = mapped_column(String(500), nullable=True)
+#     album_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+#
+#     song_art: Mapped[str | None] = mapped_column(String(500), nullable=True)
+#     song_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+#     song_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+#     artist_art: Mapped[str | None] = mapped_column(String(500), nullable=True)
+#     artist_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+#
+#     # JSON fields — SQLAlchemy will automatically handle dict/list conversion
+#     top_albums: Mapped[dict | list | None] = mapped_column(JSON, nullable=True)
+#     feature_artists_info: Mapped[dict | list | None] = mapped_column(JSON, nullable=True)
+#     artist_description: Mapped[str | None] = mapped_column(String(2000), nullable=True)
+#     top_artist_album_track: Mapped[dict | list | None] = mapped_column(JSON, nullable=True)
+#     best_2025_hits: Mapped[dict | list | None] = mapped_column(JSON, nullable=True)
+#     this_weeks_hits: Mapped[dict | list | None] = mapped_column(JSON, nullable=True)
+#     artist_section_dict: Mapped[dict | list | None] = mapped_column(JSON, nullable=True)
+#
+#     # 🔗 Relationship to User
+#     user_id: Mapped[int | None] = mapped_column(
+#         Integer,
+#         db.ForeignKey("sspiderr_users.id"),
+#         nullable=True
+#     )
+#     user = relationship("User", back_populates="home_data")
+
 class HomeData(db.Model):
     __tablename__ = "home_data"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    id = mapped_column(Integer, primary_key=True, autoincrement=True)
+    album_id = mapped_column(BigInteger, nullable=True)
+    album_art = mapped_column(String(500), nullable=True)
+    album_name = mapped_column(String(255), nullable=True)
 
-    album_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
-    album_art: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    album_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    song_art = mapped_column(String(500), nullable=True)
+    song_name = mapped_column(String(255), nullable=True)
+    song_id = mapped_column(String(100), nullable=True)
+    artist_art = mapped_column(String(500), nullable=True)
+    artist_name = mapped_column(String(255), nullable=True)
 
-    song_art: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    song_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    song_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    artist_art: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    artist_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # All JSON fields must be REAL dict/list, NOT strings
+    top_albums = mapped_column(JSON, nullable=True)
+    feature_artists_info = mapped_column(JSON, nullable=True)
+    artist_description = mapped_column(JSON, nullable=True)   # FIXED
+    top_artist_album_track = mapped_column(JSON, nullable=True)
+    best_2025_hits = mapped_column(JSON, nullable=True)
+    this_weeks_hits = mapped_column(JSON, nullable=True)
+    artist_section_dict = mapped_column(JSON, nullable=True)
 
-    # JSON fields — SQLAlchemy will automatically handle dict/list conversion
-    top_albums: Mapped[dict | list | None] = mapped_column(JSON, nullable=True)
-    feature_artists_info: Mapped[dict | list | None] = mapped_column(JSON, nullable=True)
-    artist_description: Mapped[str | None] = mapped_column(String(2000), nullable=True)
-    top_artist_album_track: Mapped[dict | list | None] = mapped_column(JSON, nullable=True)
-    best_2025_hits: Mapped[dict | list | None] = mapped_column(JSON, nullable=True)
-    this_weeks_hits: Mapped[dict | list | None] = mapped_column(JSON, nullable=True)
-    artist_section_dict: Mapped[dict | list | None] = mapped_column(JSON, nullable=True)
-
-    # 🔗 Relationship to User
-    user_id: Mapped[int | None] = mapped_column(
-        Integer,
-        db.ForeignKey("sspiderr_users.id"),
-        nullable=True
-    )
+    user_id = mapped_column(Integer, db.ForeignKey("sspiderr_users.id"), nullable=True)
     user = relationship("User", back_populates="home_data")
-
 
 
 class SchedulerStatus(db.Model):
@@ -294,8 +319,8 @@ class SchedulerStatus(db.Model):
 
 with app.app_context():
     Songs.__table__.drop(db.engine)
-    HomeData.__table__.drop(db.engine)
-    SchedulerStatus.__table__.drop(db.engine)
+    # HomeData.__table__.drop(db.engine)
+    # SchedulerStatus.__table__.drop(db.engine)
     # BlogPost.__table__.drop(db.engine)
     # Comment.__table__.drop(db.engine)
     db.create_all() #This is where the table is created
@@ -940,13 +965,14 @@ def latest_albums(sp):
 
 @app.route('/', methods=['GET','POST'])
 def home():
-    print(f"Is current user authenticated: {current_user.is_authenticated}")
+    print(f"Is current user authenticated: {current_user.is_authenticated}, Current User Id: {current_user.id if current_user.is_authenticated else None}")
     current_user_id = current_user.id if current_user.is_authenticated else None
     # Get the latest saved home data
     home_data_exist = HomeData.query.filter_by(user_id=current_user_id).order_by(HomeData.id.desc()).first()
     # home_data_exist = HomeData.query.first()
 
-    if should_run_24h_task() or not home_data_exist:
+    if should_run_24h_task() or (not home_data_exist and current_user_id is None):
+        print("enter-1st if")
         # Fetch Top Album
         album_result = requests.get(i_tunes_top_albums_url)
         if album_result:
@@ -1055,11 +1081,12 @@ def home():
                                album_id=top_album_id
                                )
     else:
-        user_id_exist = HomeData.query
-        if current_user_id and not HomeData.user_id:
-           # update the latest
-
-
+        print("enter-1st else")
+        latest_data = HomeData.query.filter_by(user_id=current_user_id).order_by(HomeData.id.desc()).first()
+        if current_user_id and latest_data and latest_data.user_id is None:
+           # update the latest data
+           latest_data.user_id = current_user_id
+           db.session.commit()
 
         # Get the latest saved home data
         data = HomeData.query.filter_by(user_id=current_user_id).order_by(HomeData.id.desc()).first()
@@ -1083,8 +1110,10 @@ def home():
 
         # LOGGED IN SECTION
         if current_user.is_authenticated:
+            print("enter-1st else 1st if")
             # data = HomeData.query.order_by(HomeData.id.desc()).first()
             if not data.feature_artists_info:
+                print("enter-1st else 1st if 1st if")
                 print(f"You have reached if current_user.is_authenticated. Artist name {top_artist_name}")
                 # For modal playlist
                 access_token = get_valid_spotify_token(current_user)
@@ -1124,6 +1153,7 @@ def home():
                 db.session.commit()
 
             else:
+                print("enter-1st else 1st if 1st else")
                 access_token = get_valid_spotify_token(current_user)
                 if not access_token:
                     return None  # User not logged in or no valid token
