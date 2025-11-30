@@ -201,7 +201,7 @@ class User(UserMixin, db.Model):
     # NEW relationships — these do NOT affect existing data
     posts = relationship("BlogPost", back_populates="author")
     comments = relationship("Comment", back_populates="comment_author")
-
+    home_data = relationship("HomeData", back_populates="user", uselist=False)
 
 class Playlist(db.Model):
     __tablename__ = "user_playlist"
@@ -257,24 +257,35 @@ class HomeData(db.Model):
     __tablename__ = "home_data"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    album_id: Mapped[int] = mapped_column(BigInteger, nullable=True)
-    album_art: Mapped[str] = mapped_column(String(500), nullable=True)
-    album_name: Mapped[str] = mapped_column(String(255), nullable=True)
 
-    song_art: Mapped[str] = mapped_column(String(500), nullable=True)
-    song_name: Mapped[str] = mapped_column(String(255), nullable=True)
-    song_id: Mapped[str] = mapped_column(String(100), nullable=True)
-    artist_art: Mapped[str] = mapped_column(String(500), nullable=True)
-    artist_name: Mapped[str] = mapped_column(String(255), nullable=True)
-    # Complex data → stored as JSON
-    top_albums: Mapped[dict | list] = mapped_column(JSON, nullable=True)
-    feature_artists_info: Mapped[dict | list] = mapped_column(JSON, nullable=True)
-    artist_description: Mapped[str] = mapped_column(String(2000), nullable=True)
-    top_artist_album_track: Mapped[dict | list] = mapped_column(JSON, nullable=True)
-    best_2025_hits: Mapped[dict | list] = mapped_column(JSON, nullable=True)
-    this_weeks_hits: Mapped[dict | list] = mapped_column(JSON, nullable=True)
-    playlist_list: Mapped[dict | list] = mapped_column(JSON, nullable=True)
-    artist_section_dict: Mapped[dict | list] = mapped_column(JSON, nullable=True)
+    album_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    album_art: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    album_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    song_art: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    song_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    song_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    artist_art: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    artist_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    # JSON fields — SQLAlchemy will automatically handle dict/list conversion
+    top_albums: Mapped[dict | list | None] = mapped_column(JSON, nullable=True)
+    feature_artists_info: Mapped[dict | list | None] = mapped_column(JSON, nullable=True)
+    artist_description: Mapped[str | None] = mapped_column(String(2000), nullable=True)
+    top_artist_album_track: Mapped[dict | list | None] = mapped_column(JSON, nullable=True)
+    best_2025_hits: Mapped[dict | list | None] = mapped_column(JSON, nullable=True)
+    this_weeks_hits: Mapped[dict | list | None] = mapped_column(JSON, nullable=True)
+    artist_section_dict: Mapped[dict | list | None] = mapped_column(JSON, nullable=True)
+
+    # 🔗 Relationship to User
+    user_id: Mapped[int | None] = mapped_column(
+        Integer,
+        db.ForeignKey("sspiderr_users.id"),
+        nullable=True
+    )
+    user = relationship("User", back_populates="home_data")
+
+
 
 class SchedulerStatus(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -283,8 +294,8 @@ class SchedulerStatus(db.Model):
 
 with app.app_context():
     Songs.__table__.drop(db.engine)
-    # HomeData.__table__.drop(db.engine)
-    # SchedulerStatus.__table__.drop(db.engine)
+    HomeData.__table__.drop(db.engine)
+    SchedulerStatus.__table__.drop(db.engine)
     # BlogPost.__table__.drop(db.engine)
     # Comment.__table__.drop(db.engine)
     db.create_all() #This is where the table is created
@@ -930,7 +941,11 @@ def latest_albums(sp):
 @app.route('/', methods=['GET','POST'])
 def home():
     print(f"Is current user authenticated: {current_user.is_authenticated}")
-    home_data_exist = HomeData.query.first()
+    current_user_id = current_user.id if current_user.is_authenticated else None
+    # Get the latest saved home data
+    home_data_exist = HomeData.query.filter_by(user_id=current_user_id).order_by(HomeData.id.desc()).first()
+    # home_data_exist = HomeData.query.first()
+
     if should_run_24h_task() or not home_data_exist:
         # Fetch Top Album
         album_result = requests.get(i_tunes_top_albums_url)
@@ -1020,7 +1035,8 @@ def home():
             best_2025_hits=best_ten_hits_2025,
             this_weeks_hits=this_weeks_10_hits,
             artist_section_dict=artist_section_dict,
-            album_id=top_album_id
+            album_id=top_album_id,
+            user_id=current_user.id if current_user.is_authenticated else None
         )
         db.session.add(new_home_data)
         db.session.commit()
@@ -1039,11 +1055,14 @@ def home():
                                album_id=top_album_id
                                )
     else:
-        # Get the latest saved home data
-        data = HomeData.query.order_by(HomeData.id.desc()).first()
+        user_id_exist = HomeData.query
+        if current_user_id and not HomeData.user_id:
+           # update the latest
 
-        if not data:
-            return "No home data available", 404
+
+
+        # Get the latest saved home data
+        data = HomeData.query.filter_by(user_id=current_user_id).order_by(HomeData.id.desc()).first()
 
         # Convert JSON fields back to Python lists/dicts
         import json
@@ -1064,8 +1083,8 @@ def home():
 
         # LOGGED IN SECTION
         if current_user.is_authenticated:
-            logged_in_data = HomeData.query.filter(HomeData.playlist_list.isnot(None)).first()
-            if not logged_in_data:
+            # data = HomeData.query.order_by(HomeData.id.desc()).first()
+            if not data.feature_artists_info:
                 print(f"You have reached if current_user.is_authenticated. Artist name {top_artist_name}")
                 # For modal playlist
                 access_token = get_valid_spotify_token(current_user)
@@ -1099,34 +1118,25 @@ def home():
                     this_weeks_hits=this_weeks_10_hits,
                     artist_section_dict=artist_section_dict,
                     album_id=top_album_id,
-                    playlist_list=playlist_list
+                    user_id=current_user.id if current_user.is_authenticated else None
                 )
                 db.session.add(new_home_data)
                 db.session.commit()
 
             else:
-                import json
-                data = HomeData.query.first()
+                access_token = get_valid_spotify_token(current_user)
+                if not access_token:
+                    return None  # User not logged in or no valid token
+                sp = spotipy.Spotify(auth=access_token)
 
+                import json
                 # 5️⃣ Convert JSON fields back to Python objects (we will do it directly because our JSON data is not text. It is already stored as a list
-                top_albums = data.top_albums
                 feature_artists_info = data.feature_artists_info
                 artist_description = data.artist_description  # string, no conversion needed
                 top_artist_album_track = data.top_artist_album_track
-                best_ten_hits_2025 = data.best_2025_hits
-                this_weeks_10_hits = data.this_weeks_hits
-                artist_section_dict = data.artist_section_dict
-                playlist_list = data.playlist_list
-
+                # The spotify playlist data has to be gotten live, not from the database
+                playlist_list = get_user_playlists(current_user, sp, 1, "playlist", "small")
                 # 6️⃣ Reconstruct variables exactly as your template expects
-                album_art = data.album_art
-                album_name = data.album_name
-                song_art = data.song_art
-                song_name = data.song_name
-                song_id = data.song_id
-                artist_art = data.artist_art
-                top_artist_name = data.artist_name
-                top_album_id = data.album_id
 
             return render_template('index.html', playlist_list=playlist_list,
                                        album_art=album_art,
@@ -1160,7 +1170,6 @@ def home():
                                artist_section_dict=artist_section_dict,
                                album_id=top_album_id
         )
-
 
 
 @app.route('/add_to_playlist', methods=['POST'])
