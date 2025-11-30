@@ -1699,9 +1699,6 @@ def delete_comment(comment_id):
     return redirect(request.referrer or url_for("blog_post", post_id=comment.post_id))
 
 
-@app.route('/contact-us')
-def contact_us():
-    return render_template('contact.html')
 
 @app.route('/login-page', methods=["GET","POST"])
 def login_page():
@@ -2726,7 +2723,7 @@ def contact():
     if request.method == "POST":
         data = request.form
         send_email(data["name"], data["email"], data["subject"], data["message"])
-        return render_template("contact.html", msg_sent=True)
+        return redirect(url_for('contact'))
     return render_template("contact.html", msg_sent=False)
 
 

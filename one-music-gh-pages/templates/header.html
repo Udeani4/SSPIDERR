@@ -75,7 +75,7 @@
                                             {% endif %}
                                             <li><a href="{{ url_for('about_us') }}">About</a></li>
                                             <li><a href="{{ url_for('news_blog') }}">News</a></li>
-                                            <li><a href="{{ url_for('contact_us') }}">Contact</a></li>
+                                            <li><a href="{{ url_for('contact') }}">Contact</a></li>
                                             <li><a href="{{ url_for('elements') }}">Elements</a></li>
                                             {% if not current_user.is_authenticated: %}
                                                 <li><a href="{{ url_for('login_page') }}">Login</a></li>
@@ -103,7 +103,7 @@
                                     </li>
                                     <li><a href="{{ url_for('about_us') }}">About</a></li>
                                     <li><a href="{{ url_for('news_blog') }}">News</a></li>
-                                    <li><a href="{{ url_for('contact_us') }}">Contact</a></li>
+                                    <li><a href="{{ url_for('contact') }}">Contact</a></li>
                                 </ul>
 
                                 <!-- Login/Register & Cart Button -->
