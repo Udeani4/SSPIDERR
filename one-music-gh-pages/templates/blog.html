@@ -1,8 +1,42 @@
 {%include "header.html" %}
+<style>
+    .music-widget {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .music-widget img {
+        width: 100%;
+        display: block;
+    }
+
+    .music-overlay {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        color: white;
+        z-index: 10;
+    }
+
+    .music-tag {
+        font-size: 28px;
+        letter-spacing: 6px;
+        font-weight: 700;
+        margin: 0 0 5px 0;
+    }
+
+    .music-sub {
+        font-size: 15px;
+        margin-bottom: 20px;
+    }
+    .style-colour {
+        color: white;
+    }
+</style>
     <!-- ##### Breadcumb Area Start ##### -->
     <section class="breadcumb-area bg-img bg-overlay" style="background-image: url(static/img/bg-img/breadcumb3.jpg);">
-        <div class="bradcumbContent">
-            <p>See what’s new</p>
+        <div class="bradcumbContent style-2">
+            <a href="{{ url_for('see_whats_new') }}" class="see-new-link">See what’s new</a>
             <h2>Latest News</h2>
         </div>
     </section>
@@ -78,68 +112,82 @@
 
                 <div class="col-12 col-lg-3">
                     <div class="blog-sidebar-area">
+<!--                 DO NOT DELETE BELOW. VERY IMPORTANT-->
+<!--                        &lt;!&ndash; Widget Area &ndash;&gt;-->
+<!--                        <div class="single-widget-area mb-30">-->
+<!--                            <div class="widget-title">-->
+<!--                                <h5>Categories</h5>-->
+<!--                            </div>-->
+<!--                            <div class="widget-content">-->
+<!--                                <ul>-->
+<!--                                    <li><a href="#">Music</a></li>-->
+<!--                                    <li><a href="#">Events &amp; Press</a></li>-->
+<!--                                    <li><a href="#">Festivals</a></li>-->
+<!--                                    <li><a href="#">Lyfestyle</a></li>-->
+<!--                                    <li><a href="#">Uncategorized</a></li>-->
+<!--                                </ul>-->
+<!--                            </div>-->
+<!--                        </div>-->
 
-                        <!-- Widget Area -->
-                        <div class="single-widget-area mb-30">
-                            <div class="widget-title">
-                                <h5>Categories</h5>
+<!--                        &lt;!&ndash; Widget Area &ndash;&gt;-->
+<!--                        <div class="single-widget-area mb-30">-->
+<!--                            <div class="widget-title">-->
+<!--                                <h5>Archive</h5>-->
+<!--                            </div>-->
+<!--                            <div class="widget-content">-->
+<!--                                <ul>-->
+<!--                                    <li><a href="#">February 2018</a></li>-->
+<!--                                    <li><a href="#">March 2018</a></li>-->
+<!--                                    <li><a href="#">April 2018</a></li>-->
+<!--                                    <li><a href="#">May 2018</a></li>-->
+<!--                                    <li><a href="#">June 2018</a></li>-->
+<!--                                </ul>-->
+<!--                            </div>-->
+<!--                        </div>-->
+
+<!--                        &lt;!&ndash; Widget Area &ndash;&gt;-->
+<!--                        <div class="single-widget-area mb-30">-->
+<!--                            <div class="widget-title">-->
+<!--                                <h5>Tags</h5>-->
+<!--                            </div>-->
+<!--                            <div class="widget-content">-->
+<!--                                <ul class="tags">-->
+<!--                                    <li><a href="#">music</a></li>-->
+<!--                                    <li><a href="#">events</a></li>-->
+<!--                                    <li><a href="#">artists</a></li>-->
+<!--                                    <li><a href="#">press</a></li>-->
+<!--                                    <li><a href="#">mp3</a></li>-->
+<!--                                    <li><a href="#">videos</a></li>-->
+<!--                                    <li><a href="#">concerts</a></li>-->
+<!--                                    <li><a href="#">performers</a></li>-->
+<!--                                </ul>-->
+<!--                            </div>-->
+<!--                        </div>-->
+
+<!--                        &lt;!&ndash; Widget Area &ndash;&gt;-->
+<!--                        <div class="single-widget-area mb-30">-->
+<!--                            <a href="#"><img src="{{ album_art }}" alt=""></a>-->
+<!--                        </div>-->
+
+<!--                        &lt;!&ndash; Widget Area &ndash;&gt;-->
+<!--                        <div class="single-widget-area mb-30">-->
+<!--                            <a href="#"><img src="{{ song_art }}" alt=""></a>-->
+<!--                        </div>-->
+                            <!-- Widget Area -->
+                        <div class="single-widget-area mb-30 music-widget">
+                            <div class="music-overlay">
+                                <h3 class="music-tag style-colour">OUT NOW</h3>
+                                <p class="music-sub style-colour">{{ album_name }}</p>
                             </div>
-                            <div class="widget-content">
-                                <ul>
-                                    <li><a href="#">Music</a></li>
-                                    <li><a href="#">Events &amp; Press</a></li>
-                                    <li><a href="#">Festivals</a></li>
-                                    <li><a href="#">Lyfestyle</a></li>
-                                    <li><a href="#">Uncategorized</a></li>
-                                </ul>
-                            </div>
+                            <a href="{{ url_for('album_page', album_id=album_id) }}"><img src="{{ album_art }}" alt="{{ album_name }}"></a>
                         </div>
-
-                        <!-- Widget Area -->
-                        <div class="single-widget-area mb-30">
-                            <div class="widget-title">
-                                <h5>Archive</h5>
+                        <div class="single-widget-area mb-30 music-widget">
+                            <div class="music-overlay">
+                                <h3 class="music-tag style-colour">OUT NOW</h3>
+                                <p class="music-sub style-colour">{{ song_name }}</p>
                             </div>
-                            <div class="widget-content">
-                                <ul>
-                                    <li><a href="#">February 2018</a></li>
-                                    <li><a href="#">March 2018</a></li>
-                                    <li><a href="#">April 2018</a></li>
-                                    <li><a href="#">May 2018</a></li>
-                                    <li><a href="#">June 2018</a></li>
-                                </ul>
-                            </div>
+                            <a href="{{ url_for('song_page', song_id=song_id) }}"><img src="{{ song_art }}" alt="{{ song_name }}"></a>
                         </div>
-
-                        <!-- Widget Area -->
-                        <div class="single-widget-area mb-30">
-                            <div class="widget-title">
-                                <h5>Tags</h5>
-                            </div>
-                            <div class="widget-content">
-                                <ul class="tags">
-                                    <li><a href="#">music</a></li>
-                                    <li><a href="#">events</a></li>
-                                    <li><a href="#">artists</a></li>
-                                    <li><a href="#">press</a></li>
-                                    <li><a href="#">mp3</a></li>
-                                    <li><a href="#">videos</a></li>
-                                    <li><a href="#">concerts</a></li>
-                                    <li><a href="#">performers</a></li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <!-- Widget Area -->
-                        <div class="single-widget-area mb-30">
-                            <a href="#"><img src="static/img/bg-img/add.gif" alt=""></a>
-                        </div>
-
-                        <!-- Widget Area -->
-                        <div class="single-widget-area mb-30">
-                            <a href="#"><img src="static/img/bg-img/add2.gif" alt=""></a>
-                        </div>
-
                     </div>
                 </div>
             </div>
@@ -152,8 +200,8 @@
         <div class="container">
             <div class="row">
                 <div class="col-12">
-                    <div class="section-heading white">
-                        <p>See what’s new</p>
+                    <div class="section-heading white style-2">
+                        <a href="{{ url_for('see_whats_new') }}" class="see-new-link">See what’s new</a>
                         <h2>Get In Touch</h2>
                     </div>
                 </div>

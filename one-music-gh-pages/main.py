@@ -307,6 +307,7 @@ class HomeData(db.Model):
     best_2025_hits = mapped_column(JSON, nullable=True)
     this_weeks_hits = mapped_column(JSON, nullable=True)
     artist_section_dict = mapped_column(JSON, nullable=True)
+    new_time_tag = db.Column(db.DateTime(timezone=True), nullable=True)
 
     user_id = mapped_column(Integer, db.ForeignKey("sspiderr_users.id"), nullable=True)
     user = relationship("User", back_populates="home_data")
@@ -962,6 +963,8 @@ def latest_albums(sp):
     albums_data = sorted(albums_data, key=lambda x: x["release_date"], reverse=True)
     return albums_data
 
+# get time tag for Home Data
+new_time_tag = datetime.now(timezone.utc)
 
 @app.route('/', methods=['GET','POST'])
 def home():
@@ -1062,7 +1065,8 @@ def home():
             this_weeks_hits=this_weeks_10_hits,
             artist_section_dict=artist_section_dict,
             album_id=top_album_id,
-            user_id=current_user.id if current_user.is_authenticated else None
+            user_id=current_user.id if current_user.is_authenticated else None,
+            new_time_tag=new_time_tag
         )
         db.session.add(new_home_data)
         db.session.commit()
@@ -1082,7 +1086,8 @@ def home():
                                )
     else:
         print("enter-1st else")
-        latest_data = HomeData.query.filter_by(user_id=current_user_id).order_by(HomeData.id.desc()).first()
+        # latest_data = HomeData.query.filter_by(user_id=current_user_id).order_by(HomeData.id.desc()).first()
+        latest_data = HomeData.query.filter_by(new_time_tag=new_time_tag).order_by(HomeData.id.desc()).first()
         if current_user_id and latest_data and latest_data.user_id is None:
            # update the latest data
            latest_data.user_id = current_user_id
@@ -1147,7 +1152,8 @@ def home():
                     this_weeks_hits=this_weeks_10_hits,
                     artist_section_dict=artist_section_dict,
                     album_id=top_album_id,
-                    user_id=current_user.id if current_user.is_authenticated else None
+                    user_id=current_user.id if current_user.is_authenticated else None,
+                    new_time_tag=new_time_tag
                 )
                 db.session.add(new_home_data)
                 db.session.commit()
@@ -1646,12 +1652,27 @@ def news_blog():
     # Convert to dictionary for easier Jinja access
     post_dict = {post.created_id: count for post, count in posts_with_counts}
 
+    notice_data = HomeData.query.order_by(HomeData.id.desc()).first()
+    if notice_data:
+        album_name = notice_data.album_name
+        album_id = notice_data.album_id
+        album_art = notice_data.album_art if notice_data else "static/img/bg-img/add.gif"
+        song_name = notice_data.song_name
+        song_id = notice_data.song_id
+        song_art = notice_data.song_art if notice_data else "static/img/bg-img/add2.gif"
+
     return render_template(
         'blog.html',
         news_feed=paginated_news,
         page=page,
         total_pages=total_pages,
-        comment_counts=post_dict
+        comment_counts=post_dict,
+        album_name=album_name,
+        album_id=album_id,
+        album_art=album_art,
+        song_name=song_name,
+        song_id=song_id,
+        song_art=song_art
     )
 
 
