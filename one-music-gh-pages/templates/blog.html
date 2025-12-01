@@ -176,15 +176,19 @@
                             <!-- Widget Area -->
                         <div class="single-widget-area mb-30 music-widget">
                             <div class="music-overlay">
-                                <h3 class="music-tag style-colour">OUT NOW</h3>
-                                <p class="music-sub style-colour">{{ album_name }}</p>
+                                <a href="{{ url_for('album_page', album_id=album_id) }}">
+                                    <h3 class="music-tag style-colour">OUT NOW</h3>
+                                    <p class="music-sub style-colour">{{ album_name }}</p>
+                                </a>
                             </div>
                             <a href="{{ url_for('album_page', album_id=album_id) }}"><img src="{{ album_art }}" alt="{{ album_name }}"></a>
                         </div>
                         <div class="single-widget-area mb-30 music-widget">
                             <div class="music-overlay">
-                                <h3 class="music-tag style-colour">OUT NOW</h3>
-                                <p class="music-sub style-colour">{{ song_name }}</p>
+                                <a href="{{ url_for('song_page', song_id=song_id) }}">
+                                    <h3 class="music-tag style-colour">OUT NOW</h3>
+                                    <p class="music-sub style-colour">{{ song_name }}</p>
+                                </a>
                             </div>
                             <a href="{{ url_for('song_page', song_id=song_id) }}"><img src="{{ song_art }}" alt="{{ song_name }}"></a>
                         </div>
