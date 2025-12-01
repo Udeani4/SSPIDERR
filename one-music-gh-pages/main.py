@@ -253,38 +253,6 @@ class UnsentSpotifySongs(db.Model):
     spotify_playlist_id: Mapped[str] = mapped_column(String(50))
     spotify_user_id: Mapped[str] = mapped_column(String(50))
 
-# class HomeData(db.Model):
-#     __tablename__ = "home_data"
-#
-#     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-#
-#     album_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
-#     album_art: Mapped[str | None] = mapped_column(String(500), nullable=True)
-#     album_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
-#
-#     song_art: Mapped[str | None] = mapped_column(String(500), nullable=True)
-#     song_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
-#     song_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
-#     artist_art: Mapped[str | None] = mapped_column(String(500), nullable=True)
-#     artist_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
-#
-#     # JSON fields — SQLAlchemy will automatically handle dict/list conversion
-#     top_albums: Mapped[dict | list | None] = mapped_column(JSON, nullable=True)
-#     feature_artists_info: Mapped[dict | list | None] = mapped_column(JSON, nullable=True)
-#     artist_description: Mapped[str | None] = mapped_column(String(2000), nullable=True)
-#     top_artist_album_track: Mapped[dict | list | None] = mapped_column(JSON, nullable=True)
-#     best_2025_hits: Mapped[dict | list | None] = mapped_column(JSON, nullable=True)
-#     this_weeks_hits: Mapped[dict | list | None] = mapped_column(JSON, nullable=True)
-#     artist_section_dict: Mapped[dict | list | None] = mapped_column(JSON, nullable=True)
-#
-#     # 🔗 Relationship to User
-#     user_id: Mapped[int | None] = mapped_column(
-#         Integer,
-#         db.ForeignKey("sspiderr_users.id"),
-#         nullable=True
-#     )
-#     user = relationship("User", back_populates="home_data")
-
 class HomeData(db.Model):
     __tablename__ = "home_data"
 

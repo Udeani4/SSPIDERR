@@ -175,7 +175,15 @@
           });
         });
     </script>
-
+    <script>
+        Dropzone.options.myAwesomeDropzone = {
+            init: function () {
+                this.on("queuecomplete", function () {
+                    window.location.href = "/loader-page";
+                });
+            }
+        };
+    </script>
 
 
 </body>
