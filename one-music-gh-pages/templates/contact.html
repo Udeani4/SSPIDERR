@@ -7,7 +7,15 @@
         </div>
     </section>
     <!-- ##### Breadcumb Area End ##### -->
-
+    {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div id="flash-message" class="flash {{ category }}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
     <!-- ##### Contact Area Start ##### -->
     <section class="contact-area section-padding-100-0">
         <div class="container">

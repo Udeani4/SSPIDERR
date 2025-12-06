@@ -1062,7 +1062,10 @@ def home():
            db.session.commit()
 
         # Get the latest saved home data
-        data = HomeData.query.filter_by(user_id=current_user_id).order_by(HomeData.id.desc()).first()
+        if not latest_data:
+            data = HomeData.query.order_by(HomeData.id.desc()).first() # Testing, remove if not ok
+        else:
+            data = HomeData.query.filter_by(user_id=current_user_id).order_by(HomeData.id.desc()).first()
 
         # Convert JSON fields back to Python lists/dicts
         import json
@@ -2712,6 +2715,7 @@ def contact():
     if request.method == "POST":
         data = request.form
         send_email(data["name"], data["email"], data["subject"], data["message"])
+        flash("Message sent successfully! Thank you for the feedback.", "success")
         return redirect(url_for('contact'))
     return render_template("contact.html", msg_sent=False)
 

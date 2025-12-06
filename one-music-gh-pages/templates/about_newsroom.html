@@ -260,7 +260,24 @@
     <script src="{{ url_for('static', filename='js/active.js') }}"></script>
 
      <!-- Modal Script -->
+<script>
+    // animate the dots in "Calibrating ..."
+    let count = 1;
+    setInterval(() => {
+        document.getElementById("dots").textContent = ".".repeat(count);
+        count = count === 3 ? 1 : count + 1;
+    }, 500);
 
+    // hide overlay when page finishes loading
+    window.addEventListener("load", function () {
+        const overlay = document.getElementById("loading-overlay");
+        overlay.style.opacity = 0;
+
+        setTimeout(() => {
+            overlay.style.display = "none";
+        }, 500);
+    });
+</script>
 
 </body>
 
