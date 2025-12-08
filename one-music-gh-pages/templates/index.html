@@ -1,4 +1,5 @@
 {% include "header.html" %}
+<div id="loading-state">{{ loading_state }}</div>
     <!-- ##### Hero Area Start ##### -->
     <section class="hero-area">
         <div class="hero-slides owl-carousel">
@@ -666,12 +667,46 @@
     // hide overlay when page finishes loading
     window.addEventListener("load", function () {
         const overlay = document.getElementById("loading-overlay");
-        overlay.style.opacity = 0;
-
-        setTimeout(() => {
-            overlay.style.display = "none";
-        }, 500);
+        const loading = document.getElementById("loading-state");
+        console.log(loading)
+        if(loading.innerText=='True'){
+            overlay.style.opacity = 1;
+        } else if(loading.innerText=='False'){
+            overlay.style.opacity = 0;
+            setTimeout(() => {
+                overlay.style.display = "none";
+            }, 500);
+        } else {
+            overlay.style.opacity = 0;
+            setTimeout(() => {
+                overlay.style.display = "none";
+            }, 500);
+        }
     });
+</script>
+<script>
+// Show overlay immediately when any link or form is used
+document.addEventListener('DOMContentLoaded', function () {
+
+    const overlay = document.getElementById('loading-overlay');
+
+    // When any link is clicked
+    document.querySelectorAll('a').forEach(a => {
+        a.addEventListener('click', function (e) {
+            // do not show loader for hash navigation (#)
+            if (a.getAttribute('href') && !a.getAttribute('href').startsWith('#')) {
+                overlay.classList.remove('hidden');
+            }
+        });
+    });
+
+    // When any form is submitted
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function () {
+            overlay.classList.remove('hidden');
+        });
+    });
+});
 </script>
 
 </body>

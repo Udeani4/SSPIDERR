@@ -188,6 +188,15 @@ class Comment(db.Model):
     post_id: Mapped[int] = mapped_column(Integer, ForeignKey("blog_posts.id", ondelete="CASCADE"), nullable=False)
     parent_post: Mapped["BlogPost"] = relationship("BlogPost", back_populates="comments")
 
+class ReviewComment(db.Model):
+    __tablename__ = "review_comments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=False), nullable=False, server_default=func.now())
+
+    author_id: Mapped[int] = mapped_column(Integer, ForeignKey("sspiderr_users.id", ondelete="SET NULL"), nullable=True)
+    review_author: Mapped["User"] = relationship("User", back_populates="review_comments")
 
 # Create a User table for all your registered users
 class User(UserMixin, db.Model):
@@ -202,6 +211,8 @@ class User(UserMixin, db.Model):
     posts = relationship("BlogPost", back_populates="author")
     comments = relationship("Comment", back_populates="comment_author")
     home_data = relationship("HomeData", back_populates="user", uselist=False)
+    review_comments = relationship("ReviewComment", back_populates="review_author")
+
 
 class Playlist(db.Model):
     __tablename__ = "user_playlist"
@@ -1405,29 +1416,54 @@ def afro_beats():
                            top_afro_artist_info=top_afro_artist_info
                            )
 
-@app.route('/about-us', defaults={'name': None})
+
+
+
+
+@app.route('/about-us', defaults={'name': None}, methods=["GET", "POST"])
 @app.route('/about-us/<name>', methods=["GET", "POST"])
 def about_us(name):
 
-    # When clicking "About" in header
-    if name is None:
-        return render_template('event.html')
+    # 1. Handle POST FIRST so it doesn't get skipped
+    if request.method == "POST":
+        review_comment = request.form.get("search")
 
-    # When clicking "Overview" inside About page
+        new_review_comment = ReviewComment(
+            text=review_comment,
+            author_id=current_user.id
+        )
+        db.session.add(new_review_comment)
+        db.session.commit()
+        flash("Your review has been saved.", 'success')
+
+        return redirect(url_for('about_us'))
+
+    # 2. Now handle GET page routing
+    if name is None:
+        review_data = ReviewComment.query.order_by(ReviewComment.created_at).all()
+        return render_template('event.html', sorted_data=review_data)
+
     if name == "overview":
         return render_template('about_overview.html')
+
     if name == "discover":
         return render_template('about_discover.html')
+
     if name == "new_releases":
         return render_template('about_new_releases.html')
+
     if name == "newsroom":
         return render_template('about_newsroom.html')
+
     if name == "local_spotify":
         return render_template('about_local_spotify.html')
+
     if name == "playlist_hub":
         return render_template('about_playlist_hub.html')
-    # Any other section
-    return render_template('event.html')
+
+    # 3. Any other invalid section fallback
+    return redirect(url_for('about_us'))
+
 
 
 # @app.route('/overview')
@@ -1691,7 +1727,6 @@ def delete_comment(comment_id):
     return redirect(request.referrer or url_for("blog_post", post_id=comment.post_id))
 
 
-
 @app.route('/login-page', methods=["GET","POST"])
 def login_page():
     if request.method == "POST":
@@ -1940,6 +1975,7 @@ def _parse_release_date(release_date, precision):
 
 @app.route('/artist-page/<artist>', methods=['GET','POST'])
 def artist_page(artist):
+    loading_state = True
     sp, source = get_spotify_client_for_request(current_user)
 
     # 1. iTunes lookup (best-effort)
@@ -2000,7 +2036,7 @@ def artist_page(artist):
         for a in albums:
             albums_by_id[a["id"]] = a
         spotify_albums = list(albums_by_id.values())
-
+        print(f"loading_state:{loading_state}")
         # collect tracks from those albums, avoiding duplicates
         seen_track_ids = set()
         collected_tracks = []
@@ -2153,7 +2189,8 @@ def artist_page(artist):
             "url": album['external_urls']['spotify'],
             "image": album['images'][-1]['url'] if album['images'] else url_for('static', filename='img/core-img/insertion-140x140-05.jpg')
         })
-
+    loading_state=False
+    print(f"loading_state:{loading_state}")
     if current_user.is_authenticated:
         # For modal playlist
         access_token = get_valid_spotify_token(current_user)
@@ -2168,13 +2205,16 @@ def artist_page(artist):
                                artist_top_tracks=artist_top_tracks,
                                related_artists_data=related_artists_data,
                                artist_albums=artist_albums,
-                               artist_latest_album_info=artist_latest_album_info)#CONTINUE FROM HERE: RENDER IN ARTIST PAGE
+                               artist_latest_album_info=artist_latest_album_info,
+                               loading_state=loading_state)#CONTINUE FROM HERE: RENDER IN ARTIST PAGE
     return render_template("artist.html",
                            artist_data=artist_data,
                            artist_top_tracks=artist_top_tracks,
                            related_artists_data=related_artists_data,
                            artist_albums=artist_albums,
-                           artist_latest_album_info=artist_latest_album_info)
+                           artist_latest_album_info=artist_latest_album_info,
+                           loading_state=loading_state)
+
 
 
 

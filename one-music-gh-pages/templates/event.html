@@ -201,23 +201,23 @@
     <section class="newsletter-testimonials-area">
         <div class="container">
             <div class="row">
-
-                <!-- Newsletter Area -->
-                <div class="col-12 col-lg-6">
-                    <div class="newsletter-area mb-100">
-                        <div class="section-heading text-left mb-50">
-                            <p>See what’s new</p>
-                            <h2>Subscribe to newsletter</h2>
-                        </div>
-                        <div class="newsletter-form">
-                            <form action="#">
-                                <input type="search" name="search" id="newsletterSearch" style="padding-left:20px" placeholder="E-mail">
-                                <button type="submit" class="btn oneMusic-btn">Subscribe <i class="fa fa-angle-double-right"></i></button>
-                            </form>
+                {% if current_user.is_authenticated %}
+                    <!-- Comments Area -->
+                    <div class="col-12 col-lg-6">
+                        <div class="newsletter-area mb-100">
+                            <div class="section-heading text-left mb-50">
+                                <p>Tell us what you think</p>
+                                <h2>Submit a Review Comment</h2>
+                            </div>
+                            <div class="newsletter-form">
+                                <form action="{{ url_for('about_us') }}" method="post">
+                                    <input type="search" name="search" id="newsletterSearch" style="padding-left:20px" placeholder="Comment">
+                                    <button type="submit" class="btn oneMusic-btn">Submit <i class="fa fa-angle-double-right"></i></button>
+                                </form>
+                            </div>
                         </div>
                     </div>
-                </div>
-
+                {% endif %}
                 <!-- Testimonials Area -->
                 <div class="col-12 col-lg-6">
                     <div class="testimonials-area mb-100 bg-img bg-overlay" style="background-image: url(img/bg-img/bg-3.jpg);">
@@ -226,32 +226,40 @@
                             <h2>Testimonial</h2>
                         </div>
                         <!-- Testimonial Slide -->
+
                         <div class="testimonials-slide owl-carousel">
-                            <!-- Single Slide -->
-                            <div class="single-slide">
-                                <p>Nam tristique ex vel magna tincidunt, ut porta nisl finibus. Vivamus eu dolor eu quam varius rutrum. Fusce nec justo id sem aliquam fringilla nec non lacus. Suspendisse eget lobortis nisi, ac cursus odio. Vivamus nibh velit, rutrum.</p>
-                                <div class="testimonial-info d-flex align-items-center">
-                                    <div class="testimonial-thumb">
-                                        <img src="static/img/bg-img/t1.jpg" alt="">
+                            {% if sorted_data %}
+                                <!-- Single Slide -->
+                                {% for review in sorted_data %}
+                                    <div class="single-slide">
+                                        <p>{{ review.text }}</p>
+                                        <div class="testimonial-info d-flex align-items-center">
+                                            <div class="testimonial-thumb">
+                                                <img src="{{ review.review_author.email | gravatar }}" alt="">
+                                            </div>
+                                            <p>{{ review.review_author.email.split('@')[0] }}</p>
+                                        </div>
                                     </div>
-                                    <p>William Smith, Customer</p>
+                                {% endfor %}
+                            {% else %}
+                                <!-- Single Slide -->
+                                <div class="single-slide">
+                                    <p>No reviews yet!</p>
                                 </div>
-                            </div>
-                            <!-- Single Slide -->
-                            <div class="single-slide">
-                                <p>Nam tristique ex vel magna tincidunt, ut porta nisl finibus. Vivamus eu dolor eu quam varius rutrum. Fusce nec justo id sem aliquam fringilla nec non lacus. Suspendisse eget lobortis nisi, ac cursus odio. Vivamus nibh velit, rutrum.</p>
-                                <div class="testimonial-info d-flex align-items-center">
-                                    <div class="testimonial-thumb">
-                                        <img src="static/img/bg-img/t1.jpg" alt="">
-                                    </div>
-                                    <p>Nazrul Islam, Developer</p>
-                                </div>
-                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
-
             </div>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div id="flash-message" class="flash {{ category }}">
+                    {{ message }}
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
         </div>
     </section>
     <!-- ##### Newsletter & Testimonials Area End ##### -->
