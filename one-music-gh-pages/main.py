@@ -3125,8 +3125,12 @@ def song_processing_stream(playlist_id):
         sent_recognised_stmt = delete(SentSpotifySongs).where(
             SentSpotifySongs.spotify_user_id == current_user.spotify_user_id
         )
-
         db.session.execute(sent_recognised_stmt)
+
+        unsent_recognised_stmt = delete(UnsentSpotifySongs).where(
+            UnsentSpotifySongs.spotify_playlist_id == current_user.spotify_user_id
+        )
+        db.session.execute(unsent_recognised_stmt)
 
         for rec in recognized:
             recognised_song = RecognisedSongs(
@@ -3289,8 +3293,9 @@ def song_processing_stream(playlist_id):
         else:
             print("Folder does not exist.")
 
+        return redirect(url_for('show_song_processing', playlist_id=playlist_id))
         # stop execution here without freezing the rest of the program
-        threading.Event().wait() # This will help stop the looping for now till we figure something out
+        # threading.Event().wait() # This will help stop the looping for now till we figure something out
     return Response(stream_with_context(sse_wrapper(generate())), mimetype="text/event-stream")
 
 
