@@ -1782,18 +1782,6 @@ def register_page():
         return redirect(url_for("home"))  # Don't include `.html` here
     return render_template('register.html', current_user=current_user)
 
-@app.route('/loader-page')
-def loader_page():
-    # For modal playlist
-    access_token = get_valid_spotify_token(current_user)
-    if not access_token:
-        return None  # User not logged in or no valid token
-    sp = spotipy.Spotify(auth=access_token)
-
-    playlist_list = get_user_playlists(current_user, sp, 1, "playlist", "small")
-
-    return render_template('loader-page.html', playlist_list=playlist_list)  # Loads templates/index.html
-
 @app.route('/song-page/<song_id>', methods=['GET', 'POST'])
 def song_page(song_id):
     sp, source = get_spotify_client_for_request(current_user)
@@ -2981,8 +2969,22 @@ def elements():
     return render_template('elements.html')
 
 
+@app.route('/loader-page')
+def loader_page():
+    # Refresh removes any upload folder
+    # if os.path.exists(UPLOAD_FOLDER):
+    #     shutil.rmtree(UPLOAD_FOLDER)
+    #     print("Folder deleted successfully!")
 
+    # For modal playlist
+    access_token = get_valid_spotify_token(current_user)
+    if not access_token:
+        return None  # User not logged in or no valid token
+    sp = spotipy.Spotify(auth=access_token)
 
+    playlist_list = get_user_playlists(current_user, sp, 1, "playlist", "small")
+
+    return render_template('loader-page.html', playlist_list=playlist_list)  # Loads templates/index.html
 
 
 # Create a folder for uploaded songs
@@ -2998,35 +3000,40 @@ def allowed_file(filename):
     ext = os.path.splitext(filename)[1].lower()
     return ext in ALLOWED_EXTENSIONS
 
-@app.route("/upload-song", methods=["GET", "POST"])
+@app.route("/upload-song", methods=["POST"])
 def file_upload():
-    if request.method == "POST":
-        file = request.files.get("file")  # Dropzone sends each file here
-        if not file:
-            flash("No file uploaded!", "error")
-            return {"success": False}, 400
+    file = request.files.get("file")  # Dropzone sends each file here
 
-        filename = secure_filename(file.filename)
-        filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+    if not file:
+        return {"success": False, "message": "No file uploaded!"}, 400
 
-        # 1. Reject ZIP files outright
-        if filename.lower().endswith(".zip"):
-            flash("ZIP files are not allowed. Upload only music files.", "error")
-            return {"success": False}, 400
+    filename = secure_filename(file.filename)
+    filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
 
-        # 2. Allow only music formats
-        if not allowed_file(filename):
-            flash(f"File {filename} is not a supported music format.", "error")
-            return {"success": False}, 400
+    if filename.lower().endswith(".zip"):
+        return {
+            "success": False,
+            "message": "ZIP files are not allowed. Upload only music files."
+        }, 400
 
-        # 3. Save file if valid
-        try:
-            file.save(filepath)
-            flash(f"All files uploaded successfully!", "success")
-            return {"success": True, "filename": filename}
-        except Exception as e:
-            flash(f"Upload failed: {str(e)}", "error")
-            return {"success": False}, 500
+    if not allowed_file(filename):
+        return {
+            "success": False,
+            "message": f"File {filename} is not a supported music format."
+        }, 400
+
+    try:
+        file.save(filepath)
+        return {
+            "success": True,
+            "filename": filename
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "message": str(e)
+        }, 500
+
 
 
 
@@ -3052,6 +3059,112 @@ def show_song_processing(playlist_id):
     return render_template("song_processing.html", playlist_id=playlist_id)
 
 
+
+
+# These functions are newly introduced to reduce the wight on the generate() function
+def get_recognised_tracks(db, playlist_id):
+    tracks_dict = {}
+
+    stmt = db.select(RecognisedSongs.track).where(
+        RecognisedSongs.spotify_playlist_id == playlist_id
+    )
+    result = db.session.execute(stmt).scalars().all()
+
+    for i, line in enumerate(result, 1):
+        parts = line.strip().split("::")
+        tracks_dict[f"Track {i}"] = [parts[1], parts[2]]
+
+    return tracks_dict
+
+def get_spotify_client(current_user):
+    access_token = get_valid_spotify_token(current_user)
+    if not access_token:
+        return None
+    return spotipy.Spotify(auth=access_token)
+
+def search_tracks_and_collect_uris(
+    sp, tracks_dict, db, playlist_id, current_user
+):
+    song_uris = []
+
+    for value in tracks_dict.values():
+        title, artist = value
+
+        try:
+            query = f"track:{title} artist:{artist}"
+            query2 = f"{title} {artist}"
+
+            result = sp.search(q=query, type="track", limit=3)
+            result2 = sp.search(q=query2, type="track", limit=3)
+
+            if result["tracks"]["items"]:
+                uri = result["tracks"]["items"][0]["uri"]
+                song_uris.append(uri)
+
+                db.session.add(
+                    SentSpotifySongs(
+                        track=f"{title} by {artist}",
+                        spotify_playlist_id=playlist_id,
+                        spotify_user_id=current_user.spotify_user_id
+                    )
+                )
+
+                yield {"type": "sent", "message": f"🎵 Sent: {title} by {artist}"}
+
+            elif result2["tracks"]["items"]:
+                uri = result2["tracks"]["items"][0]["uri"]
+                song_uris.append(uri)
+
+                db.session.add(
+                    SentSpotifySongs(
+                        track=f"{title} by {artist}",
+                        spotify_playlist_id=playlist_id,
+                        spotify_user_id=current_user.spotify_user_id
+                    )
+                )
+
+            else:
+                db.session.add(
+                    UnsentSpotifySongs(
+                        track=f"{title} by {artist}",
+                        spotify_playlist_id=playlist_id,
+                        spotify_user_id=current_user.spotify_user_id
+                    )
+                )
+
+                yield {"type": "failed", "message": f"❌ Not found: {title} by {artist}"}
+
+            db.session.commit()
+
+        except Exception as e:
+            print(f"🚨 Error processing '{title}' by '{artist}': {e}")
+            time.sleep(5)
+
+        time.sleep(0.3)
+
+        if len(song_uris) % 100 == 0:
+            time.sleep(2)
+
+    return song_uris
+
+
+def upload_tracks_to_playlist(sp, playlist_id, song_uris):
+    for i in range(0, len(song_uris), 50):
+        batch = song_uris[i:i + 50]
+        try:
+            sp.playlist_add_items(playlist_id=playlist_id, items=batch)
+            yield {
+                "type": "sent",
+                "message": f"✅ Added {len(batch)} songs to Spotify"
+            }
+            print(f"✅ Added {len(batch)} songs to Spotify")
+        except Exception as e:
+            yield {
+                "type": "failed",
+                "message": f"🚨 Failed batch upload: {e}"
+            }
+            print(f"🚨 Failed batch upload: {e}")
+            time.sleep(10)
 
 
 # 2. SSE stream route (the one I gave you)
@@ -3110,13 +3223,13 @@ def song_processing_stream(playlist_id):
 
         # Remove previous logs
         recognised_stmt = delete(RecognisedSongs).where(
-            RecognisedSongs.spotify_playlist_id == playlist_id
+            RecognisedSongs.spotify_user_id == current_user.spotify_user_id
         )
 
         db.session.execute(recognised_stmt)
 
         unrecognised_stmt = delete(UnrecognisedSongs).where(
-            UnrecognisedSongs.spotify_playlist_id == playlist_id
+            UnrecognisedSongs.spotify_user_id == current_user.spotify_user_id
         )
 
         db.session.execute(unrecognised_stmt)
@@ -3128,7 +3241,7 @@ def song_processing_stream(playlist_id):
         db.session.execute(sent_recognised_stmt)
 
         unsent_recognised_stmt = delete(UnsentSpotifySongs).where(
-            UnsentSpotifySongs.spotify_playlist_id == current_user.spotify_user_id
+            UnsentSpotifySongs.spotify_user_id == current_user.spotify_user_id
         )
         db.session.execute(unsent_recognised_stmt)
 
@@ -3156,117 +3269,51 @@ def song_processing_stream(playlist_id):
         yield {"type": "recognised", "message": f"Finished batch. ✅ {len(recognized)} recognised"}
         yield {"type": "not_recognised", "message": f"❌ {len(failed)} failed"}
 
-
     def generate():
         loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
 
         async def run_and_collect():
             async for event in batch_recognize(UPLOAD_FOLDER):
-                yield event  # just pass the event through, no DB saving here
+                yield event
 
-        # Now iterate the async generator in sync code
         async_gen = run_and_collect()
+
         try:
             while True:
                 try:
+                    # Ask async generator for next item and wait for it
                     event = loop.run_until_complete(async_gen.__anext__())
+
+                    # Send to client immediately
                     yield f"data: {event}\n\n"
+
                 except StopAsyncIteration:
-                    break  # ✅ now it works, because it's inside the while
+                    # Async generator finished
+                    break
+
+        except GeneratorExit:
+            # Client disconnected
+            pass
+
         finally:
             loop.close()
 
-        tracks_dict = {}
-
-        stmt = db.select(RecognisedSongs.track).where(
-            RecognisedSongs.spotify_playlist_id == playlist_id
+        tracks_dict = get_recognised_tracks(db, playlist_id)
+        sp = get_spotify_client(current_user)
+        gen = search_tracks_and_collect_uris(
+            sp, tracks_dict, db, playlist_id, current_user
         )
-        result = db.session.execute(stmt).scalars().all()
 
-        for i, line in enumerate(result, 1):
-            parts = line.strip().split("::")
-            needed_tracks = [parts[1], parts[2]]  # get second and third items
-            tracks_dict[f"Track {i}"] = needed_tracks
+        try:
+            while True:
+                message = next(gen)
+                yield message  # stream progress to client
+        except StopIteration as e:
+            song_uris = e.value  # ← THIS is the returned list
 
-        # NOW LET US ADD TRACKS TO SPOTIFY
-
-        access_token = get_valid_spotify_token(current_user)
-        if not access_token:
-            yield {"type": "failed", "message": "No valid Spotify token"}
-            return None  # User not logged in or no valid token
-        sp = spotipy.Spotify(auth=access_token)
-
-        song_uris = []
-        index = 1
-        # Search for each track on Spotify and collect URIs
-        for track_key, value in tracks_dict.items():
-            title = value[0]
-            artist = value[1]
-            try:
-                query = f"track:{title} artist:{artist}"
-                query2 = f"{title} {artist}"
-
-                result = sp.search(q=query, type="track", limit=3)
-                result2 = sp.search(q=query2, type="track", limit=3)
-
-                if result["tracks"]["items"]:
-                    uri = result["tracks"]["items"][0]["uri"]
-                    song_uris.append(uri)
-                    print(f"🎵 Found and added: {title} by {artist}")
-                    log = f"{title} by {artist}"
-                    new_log = SentSpotifySongs(
-                        track=log,
-                        spotify_playlist_id=playlist_id,
-                        spotify_user_id=current_user.spotify_user_id
-                    )
-                    db.session.add(new_log)
-                    yield {"type": "sent", "message": f"🎵 Sent: {title} by {artist}"}
-
-                elif result2["tracks"]["items"]:
-                    uri = result2["tracks"]["items"][0]["uri"]
-                    song_uris.append(uri)
-                    print(f"🎵 Found and added: {title} by {artist}")
-                    successful_comment = f"🎵 Found and added: {title} by {artist}"
-                    log = f"{title} by {artist}"
-                    new_log = SentSpotifySongs(
-                        track=log,
-                        spotify_playlist_id=playlist_id,
-                        spotify_user_id=current_user.spotify_user_id
-                    )
-                    db.session.add(new_log)
-
-                else:
-                    print(f"❌ No track found for: {title} by {artist}")
-                    unsuccessful_comment = f"❌ No track found for: {title} by {artist}"
-                    log = f"{title} by {artist}"
-                    new_log = UnsentSpotifySongs(
-                        track=log,
-                        spotify_playlist_id=playlist_id,
-                        spotify_user_id=current_user.spotify_user_id
-                    )
-                    db.session.add(new_log)
-                    yield {"type": "failed", "message": f"❌ Not found: {title} by {artist}"}
-                db.session.commit()
-            except Exception as e:
-                print(f"🚨 Error processing '{title}' by '{artist}': {e}")
-                time.sleep(5)  # Give Spotify some breathing room before continuing
-            time.sleep(0.3)  # Respect rate limits
-
-            if len(song_uris) % 100 == 0:
-                print(f"{len(song_uris)} song search complete. Wait briefly...")
-                time.sleep(2)
-
-        for i in range(0, len(song_uris), 50):
-            batch = song_uris[i:i + 50]
-            try:
-                sp.playlist_add_items(playlist_id=playlist_id, items=batch)
-                print(f"✅ Added batch {i // 50 + 1} of {len(batch)} songs to playlist.")
-                yield {"type": "sent", "message": f"✅ Added {len(song_uris[i:i + 50])} songs to Spotify"}
-            except Exception as e:
-                print(f"🚨 Failed to upload batch {i // 50 + 1}: {e}")
-                yield {"type": "failed", "message": f"🚨 Failed batch upload: {e}"}
-                time.sleep(10)  # Wait before retrying or proceeding
+        upload_gen = upload_tracks_to_playlist(sp, playlist_id, song_uris)
+        for message in upload_gen:
+            yield message
 
     def sse_wrapper(generator):
         for event in generator:
@@ -3287,11 +3334,11 @@ def song_processing_stream(playlist_id):
         yield "event: done\ndata: {\"message\": \"🎉 All processing complete\"}\n\n"
 
 
-        if os.path.exists(UPLOAD_FOLDER):
-            shutil.rmtree(UPLOAD_FOLDER)
-            print("Folder deleted successfully!")
-        else:
-            print("Folder does not exist.")
+        # if os.path.exists(UPLOAD_FOLDER):
+        #     shutil.rmtree(UPLOAD_FOLDER)
+        #     print("Folder deleted successfully!")
+        # else:
+        #     print("Folder does not exist.")
 
         return redirect(url_for('show_song_processing', playlist_id=playlist_id))
         # stop execution here without freezing the rest of the program

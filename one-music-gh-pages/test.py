@@ -111,3 +111,124 @@ def billboard_scraper(endpoint, selected_date):
     return results
 
 billboard_scraper("billboard-argentina-hot-100", "2025-01-12")
+
+
+def generate():
+    loop = asyncio.new_event_loop()
+
+    async def run_and_collect():
+        async for event in batch_recognize(UPLOAD_FOLDER):
+            yield event
+
+    async_gen = run_and_collect()
+
+    try:
+        while True:
+            try:
+                # Ask async generator for next item and wait for it
+                event = loop.run_until_complete(async_gen.__anext__())
+
+                # Send to client immediately
+                yield f"data: {event}\n\n"
+
+            except StopAsyncIteration:
+                # Async generator finished
+                break
+
+    except GeneratorExit:
+        # Client disconnected
+        pass
+
+    finally:
+        loop.close()
+
+    tracks_dict = {}
+
+    stmt = db.select(RecognisedSongs.track).where(
+        RecognisedSongs.spotify_playlist_id == playlist_id
+    )
+    result = db.session.execute(stmt).scalars().all()
+
+    for i, line in enumerate(result, 1):
+        parts = line.strip().split("::")
+        needed_tracks = [parts[1], parts[2]]  # get second and third items
+        tracks_dict[f"Track {i}"] = needed_tracks
+
+    # NOW LET US ADD TRACKS TO SPOTIFY
+
+    access_token = get_valid_spotify_token(current_user)
+    if not access_token:
+        yield {"type": "failed", "message": "No valid Spotify token"}
+        return None  # User not logged in or no valid token
+    sp = spotipy.Spotify(auth=access_token)
+
+    song_uris = []
+    index = 1
+    # Search for each track on Spotify and collect URIs
+    for track_key, value in tracks_dict.items():
+        title = value[0]
+        artist = value[1]
+        try:
+            query = f"track:{title} artist:{artist}"
+            query2 = f"{title} {artist}"
+
+            result = sp.search(q=query, type="track", limit=3)
+            result2 = sp.search(q=query2, type="track", limit=3)
+
+            if result["tracks"]["items"]:
+                uri = result["tracks"]["items"][0]["uri"]
+                song_uris.append(uri)
+                print(f"🎵 Found and added: {title} by {artist}")
+                log = f"{title} by {artist}"
+                new_log = SentSpotifySongs(
+                    track=log,
+                    spotify_playlist_id=playlist_id,
+                    spotify_user_id=current_user.spotify_user_id
+                )
+                db.session.add(new_log)
+                yield {"type": "sent", "message": f"🎵 Sent: {title} by {artist}"}
+
+            elif result2["tracks"]["items"]:
+                uri = result2["tracks"]["items"][0]["uri"]
+                song_uris.append(uri)
+                print(f"🎵 Found and added: {title} by {artist}")
+                successful_comment = f"🎵 Found and added: {title} by {artist}"
+                log = f"{title} by {artist}"
+                new_log = SentSpotifySongs(
+                    track=log,
+                    spotify_playlist_id=playlist_id,
+                    spotify_user_id=current_user.spotify_user_id
+                )
+                db.session.add(new_log)
+
+            else:
+                print(f"❌ No track found for: {title} by {artist}")
+                unsuccessful_comment = f"❌ No track found for: {title} by {artist}"
+                log = f"{title} by {artist}"
+                new_log = UnsentSpotifySongs(
+                    track=log,
+                    spotify_playlist_id=playlist_id,
+                    spotify_user_id=current_user.spotify_user_id
+                )
+                db.session.add(new_log)
+                yield {"type": "failed", "message": f"❌ Not found: {title} by {artist}"}
+            db.session.commit()
+        except Exception as e:
+            print(f"🚨 Error processing '{title}' by '{artist}': {e}")
+            time.sleep(5)  # Give Spotify some breathing room before continuing
+        time.sleep(0.3)  # Respect rate limits
+
+        if len(song_uris) % 100 == 0:
+            print(f"{len(song_uris)} song search complete. Wait briefly...")
+            time.sleep(2)
+
+    for i in range(0, len(song_uris), 50):
+        batch = song_uris[i:i + 50]
+        try:
+            sp.playlist_add_items(playlist_id=playlist_id, items=batch)
+            print(f"✅ Added batch {i // 50 + 1} of {len(batch)} songs to playlist.")
+            yield {"type": "sent", "message": f"✅ Added {len(song_uris[i:i + 50])} songs to Spotify"}
+        except Exception as e:
+            print(f"🚨 Failed to upload batch {i // 50 + 1}: {e}")
+            yield {"type": "failed", "message": f"🚨 Failed batch upload: {e}"}
+            time.sleep(10)  # Wait before retrying or proceeding

@@ -10,38 +10,65 @@
             <i class="icon-cloud-computing"></i>
         </div>
         <!--dropzone form-->
-        <form action="{{ url_for('file_upload') }}"
-              class="dropzone dropzone-style"
-              id="my-awesome-dropzone">
-        </form>
-         {% with messages = get_flashed_messages(with_categories=true) %}
-              {% if messages %}
-                <div id="flash-messages">
-                  {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} flash-message">
-                      {{ message }}
-                    </div>
-                  {% endfor %}
-                </div>
-              {% endif %}
-         {% endwith %}
+<!--        <form action="{{ url_for('file_upload') }}"-->
+<!--              class="dropzone dropzone-style"-->
+<!--              id="my-awesome-dropzone">-->
+<!--        </form>-->
+<!--         {% with messages = get_flashed_messages(with_categories=true) %}-->
+<!--              {% if messages %}-->
+<!--                <div id="flash-messages">-->
+<!--                  {% for category, message in messages[-1] %}-->
+<!--                    <div class="alert alert-{{ category }} flash-message">-->
+<!--                      {{ message }}-->
+<!--                    </div>-->
+<!--                  {% endfor %}-->
+<!--                </div>-->
+<!--              {% endif %}-->
+<!--         {% endwith %}-->
 
-        <h2 style="color:rgb(239, 245, 251)">Upload Local Song</h2>
+<!--        <h2 style="color:rgb(239, 245, 251)">Upload Local Song</h2>-->
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-              {% if messages %}
-                    <button class="btn-create" onclick="location.href='{{ url_for('create_playlist') }}'">+ Create Playlist</button>
+<!--        {% with messages = get_flashed_messages(with_categories=true) %}-->
+<!--              {% if messages %}-->
+<!--                    <button class="btn-create" onclick="location.href='{{ url_for('create_playlist') }}'">+ Create Playlist</button>-->
 
-                    <!-- Or you use ##<a class="btn-create" href="create-playlist.html">+ Create Playlist</a>
-                 -->
-                    <div class="select-container">
-                        <label for="playlist">Or select existing playlist</label>
+<!--                    &lt;!&ndash; Or you use ##<a class="btn-create" href="create-playlist.html">+ Create Playlist</a>-->
+<!--                 &ndash;&gt;-->
+<!--                    <div class="select-container">-->
+<!--                        <label for="playlist">Or select existing playlist</label>-->
 
-                        <button class="btn-create" id="playlist" onclick="openModal()" style="background-color: seagreen;">Select Playlist</button>
+<!--                        <button class="btn-create" id="playlist" onclick="openModal()" style="background-color: seagreen;">Select Playlist</button>-->
 
-                    </div>
-              {% endif %}
-        {% endwith %}
+<!--                    </div>-->
+<!--              {% endif %}-->
+<!--        {% endwith %}-->
+            <form action="{{ url_for('file_upload') }}"
+                  class="dropzone dropzone-style"
+                  id="my-awesome-dropzone">
+            </form>
+
+            <div id="upload-message" style="padding-top: 30px;"></div>
+
+            <h2 style="color:rgb(239, 245, 251)">Upload Local Song</h2>
+
+            <!-- Buttons hidden by default -->
+            <button class="btn-create"
+                    id="create-playlist-btn"
+                    style="display: none;"
+                    onclick="location.href='{{ url_for('create_playlist') }}'">
+              + Create Playlist
+            </button>
+
+            <div class="select-container" id="select-playlist-container" style="display: none;">
+              <label for="playlist-btn">Or select existing playlist</label>
+
+              <button class="btn-create"
+                      id="playlist-btn"
+                      onclick="openModal()"
+                      style="background-color: seagreen;">
+                Select Playlist
+              </button>
+            </div>
 
     </div>
 
@@ -175,15 +202,46 @@
           });
         });
     </script>
+<!--    <script>-->
+<!--        Dropzone.options.myAwesomeDropzone = {-->
+<!--            init: function () {-->
+<!--                this.on("queuecomplete", function () {-->
+<!--                    window.location.href = "/loader-page";-->
+<!--                });-->
+<!--            }-->
+<!--        };-->
+<!--    </script>-->
     <script>
         Dropzone.options.myAwesomeDropzone = {
-            init: function () {
-                this.on("queuecomplete", function () {
-                    window.location.href = "/loader-page";
-                });
-            }
+
+          init: function () {
+            const dz = this;
+            const msgBox = document.getElementById("upload-message");
+            const createBtn = document.getElementById("create-playlist-btn");
+            const playlistContainer = document.getElementById("select-playlist-container");
+
+            dz.on("queuecomplete", function () {
+              // Show success message
+              msgBox.innerHTML =
+                `<div class="alert alert-success">
+                   All files uploaded successfully!
+                 </div>`;
+
+              // Show the buttons
+              createBtn.style.display = "inline-block";
+              playlistContainer.style.display = "block";
+            });
+
+            dz.on("error", function (file, response) {
+              const message = response?.message || "Upload failed";
+              msgBox.innerHTML =
+                `<div class="alert alert-danger">${message}</div>`;
+            });
+          }
         };
     </script>
+
+
 
 <script>
     // animate the dots in "Calibrating ..."
