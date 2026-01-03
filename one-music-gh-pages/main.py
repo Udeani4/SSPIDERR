@@ -373,7 +373,8 @@ def get_billboard_top_artists(limit=100):
     """
 
     url = "https://www.billboard.com/charts/artist-100/"
-    response = requests.get(url, timeout=10)
+    # response = requests.get(url, timeout=10)
+    response = requests.get(url)
     response.raise_for_status()
 
     soup = BeautifulSoup(response.text, "html.parser")
@@ -956,7 +957,12 @@ def home():
     if should_run_24h_task() or (not home_data_exist and current_user_id is None):
         print("enter-1st if")
         # Fetch Top Album
-        album_result = requests.get(i_tunes_top_albums_url)
+        try:
+            album_result = requests.get(i_tunes_top_albums_url)
+            album_result.raise_for_status()
+        except requests.exceptions.RequestException:
+            album_result = None
+
         if album_result:
             album_json = album_result.json()
             print(album_json)
