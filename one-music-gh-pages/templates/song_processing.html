@@ -48,6 +48,9 @@
       cursor: pointer;
       position: relative;
       overflow: hidden;
+
+      margin: 10px;
+      color: white;
     }
 
     .status-circle h6 {
@@ -59,6 +62,25 @@
       50% { opacity: 1; transform: scale(1.05); }
       100% { opacity: 0; transform: scale(0.9); }
     }
+
+    /* New Included styling */
+
+    .active {
+      background: green;
+      animation: pulse 1s infinite;
+    }
+
+    .error {
+      background: red;
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.4; }
+      100% { opacity: 1; }
+    }
+
 
     /* Modal styling */
     .modal {
@@ -212,24 +234,31 @@
     </header>
     <!-- ##### Header Area End ##### -->
     <div class="status-container">
-      <div class="status-circle" onclick="openModal('recognised')">
+      <div class="status-circle" id="recognized" onclick="openModal('recognised')">
 <!--        <span>Recognised</span>-->
         <h6 id="recognised-text"></h6>
       </div>
-      <div class="status-circle" onclick="openModal('not-recognised')">
+      <div class="status-circle" id="not-recognized" onclick="openModal('not-recognised')">
 <!--        <span>Not Recognised</span>-->
         <h6 id="not-recognised-text"></h6>
       </div>
-      <div class="status-circle" onclick="openModal('sent')">
+      <div class="status-circle" id="sent" onclick="openModal('sent')">
 <!--        <span>Sent ✅</span>-->
         <h6 id="sent-text"></h6>
       </div>
-      <div class="status-circle" onclick="openModal('failed')">
+      <div class="status-circle" id="not-sent" onclick="openModal('failed')">
 <!--        <span>Failed ❌</span>-->
         <h6 id="failed-text"></h6>
       </div>
     </div>
 
+<!--    <div class="status-container">-->
+<!--      <div id="recognized" class="circle">Recognized</div>-->
+<!--      <div id="not-recognized" class="circle">Not Recognized</div>-->
+<!--      <div id="sent" class="circle">Sent to Spotify</div>-->
+<!--      <div id="not-sent" class="circle">Not Sent</div>-->
+<!--    </div>-->
+<!--     -->
       <!-- Modal -->
       <div id="statusModal" class="modal">
         <div class="modal-content">
@@ -345,6 +374,34 @@
         }, 500);
     });
 </script>
+
+<script>
+    let busy = false;
+
+    async function fetchStatus() {
+      if (busy) return;
+      busy = true;
+
+      const res = await fetch("/status");
+      const data = await res.json();
+
+      setState("recognized", data.recognized, "active");
+      setState("not-recognized", data.not_recognized, "error");
+      setState("sent", data.sent_to_spotify, "active");
+      setState("not-sent", data.not_sent_to_spotify, "error");
+
+      busy = false;
+    }
+
+    function setState(id, condition, className) {
+      const el = document.getElementById(id);
+      el.classList.remove("active", "error");
+      if (condition) el.classList.add(className);
+    }
+
+    setInterval(fetchStatus, 1000); // poll every second
+</script>
+
 
 </body>
 </html>
