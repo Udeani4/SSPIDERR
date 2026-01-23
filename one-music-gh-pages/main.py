@@ -854,7 +854,7 @@ def get_live_global_top_tracks(limit=50):
                 "itunes_url": track_itunes_url
             }
         tracks.append(track_info)
-
+        print(f"spotify song id: {spotify_id}")
     return tracks
 
 
@@ -1792,7 +1792,6 @@ def register_page():
 def song_page(song_id):
     sp, source = get_spotify_client_for_request(current_user)
     print(f"get_live_chart:: spotify app: {sp},\nsource: {source}")
-
     try:
         # 1. Get from iTunes (track lookup)
         itunes_url = f"https://itunes.apple.com/lookup?id={song_id}&entity=song"
@@ -3071,6 +3070,7 @@ STATUS = {
     "not_recognized": False,
     "sent_to_spotify": False,
     "not_sent_to_spotify": False,
+    "completed": False,
     "message": "Idle"
 }
 
@@ -3287,16 +3287,19 @@ def song_processing_stream(playlist_id):
             print(f"🚨 Failed to upload batch {i // 50 + 1}: {e}")
             # yield {"type": "failed", "message": f"🚨 Failed batch upload: {e}"}
             time.sleep(10)  # Wait before retrying or proceeding
-    STATUS["message"] = "Completed"
 
-    # if os.path.exists(UPLOAD_FOLDER):
-        #     shutil.rmtree(UPLOAD_FOLDER)
-        #     print("Folder deleted successfully!")
-        # else:
-        #     print("Folder does not exist.")
+    STATUS.update({
+        "completed": True,
+        "message": "All processing completed"
+    })
+
+    if os.path.exists(UPLOAD_FOLDER):
+        shutil.rmtree(UPLOAD_FOLDER)
+        print("Folder deleted successfully!")
+    else:
+        print("Folder does not exist.")
 
     return redirect(url_for('show_song_processing', playlist_id=playlist_id))
-
 
 
 if __name__ == '__main__':

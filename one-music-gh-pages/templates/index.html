@@ -332,15 +332,23 @@
                                             <img src="{{ track['image'] }}" alt="Album Art">
                                         </div>
                                         <div class="content-" style="margin-left: 10px; overflow: hidden; padding-left: 20px">
-                                            <a href="{{ url_for('song_page', song_id=track['spotify_song_id']) }}">
+                                            {% if track['spotify_song_id'] %}
+                                                <a href="{{ url_for('song_page', song_id=track['spotify_song_id']) }}">
+                                                    <h6 style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;">
+                                                        {{ track['name'] | upper }}
+                                                    </h6>
+                                                    <p style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;">
+                                                        {{ track['artist'] }}
+                                                    </p>
+                                                </a>
+                                            {% else %}
                                                 <h6 style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;">
-                                                    {{ track['name'] | upper }}
+                                                        {{ track['name'] | upper }}
                                                 </h6>
                                                 <p style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;">
                                                     {{ track['artist'] }}
                                                 </p>
-                                            </a>
-
+                                            {% endif %}
                                         </div>
                                     </div>
 

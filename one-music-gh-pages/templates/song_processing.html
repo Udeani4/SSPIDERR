@@ -317,6 +317,7 @@
   </script>
 
   <script>
+
       // Reusable function
       function updateCircle(type, message) {
         const el = document.getElementById(`${type}-text`);
@@ -354,9 +355,11 @@
         const data = JSON.parse(event.data);
         updateCircle("failed", data.message);
       });
+
   </script>
 
 <script>
+
     // animate the dots in "Calibrating ..."
     let count = 1;
     setInterval(() => {
@@ -373,6 +376,7 @@
             overlay.style.display = "none";
         }, 500);
     });
+
 </script>
 
 <script>
@@ -399,7 +403,11 @@
       if (condition) el.classList.add(className);
     }
 
-    setInterval(fetchStatus, 1000); // poll every second
+    const interval = setInterval(fetchStatus, 1000)
+    if (data.completed) {
+        clearInterval(interval);
+        console.log("Processing finished. Polling stopped.");
+      }
 </script>
 
 
