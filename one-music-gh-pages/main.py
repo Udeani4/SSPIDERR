@@ -2991,6 +2991,18 @@ def loader_page():
 
     return render_template('loader-page.html', playlist_list=playlist_list)  # Loads templates/index.html
 
+# If upload folder exist initially delete
+EXISTING_UPLOAD_FOLDER = "./static/uploads"
+
+if os.path.exists(EXISTING_UPLOAD_FOLDER):
+    try:
+        shutil.rmtree(EXISTING_UPLOAD_FOLDER)
+        print("Folder deleted successfully!")
+    except Exception as e:
+        print(f"Failed to delete folder: {e}")
+else:
+    print("Folder does not exist.")
+
 
 # Create a folder for uploaded songs
 UPLOAD_FOLDER = os.path.join("static", "uploads")
@@ -3066,12 +3078,12 @@ def show_song_processing(playlist_id):
 
 # These functions are newly introduced to reduce the weight on the generate() function (INITIAL)
 STATUS = {
-    "recognized": False,
-    "not_recognized": False,
-    "sent_to_spotify": False,
-    "not_sent_to_spotify": False,
+    "recognized": None,
+    "not_recognized": None,
+    "sent_to_spotify": None,
+    "not_sent_to_spotify": None,
     "completed": False,
-    "message": "Idle"
+    "message": None
 }
 
 @app.route("/status")
@@ -3105,6 +3117,14 @@ def song_processing_stream(playlist_id):
         shazam = Shazam()
         files = [f for f in os.listdir(folder_path) if f.endswith(AUDIO_EXTS)]
 
+        STATUS.update({
+            "recognized": None,
+            "not_recognized": None,
+            "sent_to_spotify": None,
+            "not_sent_to_spotify": None,
+            "completed": False,
+            "message": "Recognizing..."
+        })
         # print(f"🎧 Found {len(files)} audio files.")
         recognized = []
         failed = []
@@ -3115,10 +3135,14 @@ def song_processing_stream(playlist_id):
         for i, file in enumerate(files, 1):
             full_path = os.path.join(folder_path, file)
             print(f"\n🔍 [{i}/{song_fraction}] Recognizing: {file}")
+
             STATUS.update({
-                "recognized": False,
-                "not_recognized": False,
-                "message": f"Recognizing {file}"
+                "recognized": None,
+                "not_recognized": None,
+                "sent_to_spotify": None,
+                "not_sent_to_spotify": None,
+                "completed": False,
+                "message": f"\n [{i}/{song_fraction}] Recognizing: {file}"
             })
 
             title, artist, good_comment, bad_comment = await recognize_song(full_path, shazam)
@@ -3126,18 +3150,39 @@ def song_processing_stream(playlist_id):
                 result_line = f"{file}::{title}::{artist}"
                 print(f"✅ {result_line}")
                 recognized.append(result_line)
-                STATUS["recognized"] = True
-                STATUS["message"] = f"{good_comment}"
+
+                STATUS.update({
+                    "recognized": f"{good_comment}",
+                    "not_recognized": None,
+                    "sent_to_spotify": None,
+                    "not_sent_to_spotify": None,
+                    "completed": False,
+                    "message": f"Recognition successful"
+                })
             elif bad_comment:  # be careful here you might just need else block
                 print(f"❌ Could not recognize: {file}")
                 failed.append(file)
-                STATUS["not_recognized"] = True
-                STATUS["message"] = f"Failed to recognize {file}"
+                STATUS.update({
+                    "recognized": None,
+                    "not_recognized": f"{bad_comment}",
+                    "sent_to_spotify": None,
+                    "not_sent_to_spotify": None,
+                    "completed": False,
+                    "message": f"Recognition failed"
+                })
 
             await asyncio.sleep(3)  # Delay to prevent rate-limiting
 
             if i % batch_fraction == 0:
                 print(f"⏸️ Batch {i // batch_fraction} complete. Pausing briefly...\n")
+                STATUS.update({
+                    "recognized": None,
+                    "not_recognized": None,
+                    "sent_to_spotify": None,
+                    "not_sent_to_spotify": None,
+                    "completed": False,
+                    "message": f"Batch {i // batch_fraction} complete. Pausing briefly..."
+                })
                 await asyncio.sleep(5)
 
         # Remove previous logs
@@ -3185,6 +3230,15 @@ def song_processing_stream(playlist_id):
         print(f"✅ Recognized: {len(recognized)}")
         print(f"❌ Failed: {len(failed)}")
 
+        STATUS.update({
+            "recognized": None,
+            "not_recognized": None,
+            "sent_to_spotify": None,
+            "not_sent_to_spotify": None,
+            "completed": False,
+            "message": f"Finished batch processing.\nRecognized: {len(recognized)} \nFailed: {len(failed)}"
+        })
+
     asyncio.run(batch_recognize(UPLOAD_FOLDER))
 
     tracks_dict = {}
@@ -3204,9 +3258,12 @@ def song_processing_stream(playlist_id):
     access_token = get_valid_spotify_token(current_user)
     if not access_token:
         STATUS.update({
-            "sent_to_spotify": False,
-            "not_sent_to_spotify": False,
-            "message": f"Spotify access failed"
+            "recognized": None,
+            "not_recognized": None,
+            "sent_to_spotify": None,
+            "not_sent_to_spotify": None,
+            "completed": False,
+            "message": "Spotify access failed"
         })
         # yield {"type": "failed", "message": "No valid Spotify token"}
         return None  # User not logged in or no valid token
@@ -3236,15 +3293,24 @@ def song_processing_stream(playlist_id):
                     spotify_user_id=current_user.spotify_user_id
                 )
                 db.session.add(new_log)
-                STATUS["sent_to_spotify"] = True
-                STATUS["message"] = f"🎵 Sent: {title} by {artist}"
+                # STATUS["sent_to_spotify"] = True
+                # STATUS["message"] = f"🎵 Sent: {title} by {artist}"
+
+                STATUS.update({
+                    "recognized": None,
+                    "not_recognized": None,
+                    "sent_to_spotify": f"Sent: {title}",
+                    "not_sent_to_spotify": None,
+                    "completed": False,
+                    "message": f"{title} by {artist} sent successfully"
+                })
                 # yield {"type": "sent", "message": f"🎵 Sent: {title} by {artist}"}
 
             elif result2["tracks"]["items"]:
                 uri = result2["tracks"]["items"][0]["uri"]
                 song_uris.append(uri)
                 print(f"🎵 Found and added: {title} by {artist}")
-                successful_comment = f"🎵 Found and added: {title} by {artist}"
+                successful_comment = f"Found and added: {title} by {artist}"
                 log = f"{title} by {artist}"
                 new_log = SentSpotifySongs(
                     track=log,
@@ -3252,11 +3318,17 @@ def song_processing_stream(playlist_id):
                     spotify_user_id=current_user.spotify_user_id
                 )
                 db.session.add(new_log)
-                STATUS["sent_to_spotify"] = True
-                STATUS["message"] = f"🎵 Sent: {title} by {artist}"
+                STATUS.update({
+                    "recognized": None,
+                    "not_recognized": None,
+                    "sent_to_spotify": successful_comment,
+                    "not_sent_to_spotify": None,
+                    "completed": False,
+                    "message": f"{title} by {artist} sent successfully"
+                })
             else:
                 print(f"❌ No track found for: {title} by {artist}")
-                unsuccessful_comment = f"❌ No track found for: {title} by {artist}"
+                # unsuccessful_comment = f"No track found for: {title} by {artist}"
                 log = f"{title} by {artist}"
                 new_log = UnsentSpotifySongs(
                     track=log,
@@ -3264,12 +3336,28 @@ def song_processing_stream(playlist_id):
                     spotify_user_id=current_user.spotify_user_id
                 )
                 db.session.add(new_log)
-                STATUS["not_sent_to_spotify"] = True
-                STATUS["message"] = f"❌ Not found: {title} by {artist}"
+                # STATUS["not_sent_to_spotify"] = True
+                # STATUS["message"] = f"❌ Not found: {title} by {artist}"
+                STATUS.update({
+                    "recognized": None,
+                    "not_recognized": None,
+                    "sent_to_spotify": None,
+                    "not_sent_to_spotify": f"Not found: {title} by {artist}",
+                    "completed": False,
+                    "message": f"{title} by {artist} not found, sending to playlist failed "
+                })
                 # yield {"type": "failed", "message": f"❌ Not found: {title} by {artist}"}
             db.session.commit()
         except Exception as e:
             print(f"🚨 Error processing '{title}' by '{artist}': {e}")
+            STATUS.update({
+                "recognized": None,
+                "not_recognized": None,
+                "sent_to_spotify": None,
+                "not_sent_to_spotify": f"Error: {title} by {artist}",
+                "completed": False,
+                "message": f"Error processing '{title}' by '{artist}': {e}"
+            })
             time.sleep(5)  # Give Spotify some breathing room before continuing
         time.sleep(0.3)  # Respect rate limits
 
@@ -3282,15 +3370,35 @@ def song_processing_stream(playlist_id):
         try:
             sp.playlist_add_items(playlist_id=playlist_id, items=batch)
             print(f"✅ Added batch {i // 50 + 1} of {len(batch)} songs to playlist.")
+            STATUS.update({
+                "recognized": None,
+                "not_recognized": None,
+                "sent_to_spotify": None,
+                "not_sent_to_spotify": None,
+                "completed": False,
+                "message": f"Added batch {i // 50 + 1} of {len(batch)} songs to playlist."
+            })
             # yield {"type": "sent", "message": f"✅ Added {len(song_uris[i:i + 50])} songs to Spotify"}
         except Exception as e:
             print(f"🚨 Failed to upload batch {i // 50 + 1}: {e}")
+            STATUS.update({
+                "recognized": None,
+                "not_recognized": None,
+                "sent_to_spotify": None,
+                "not_sent_to_spotify": None,
+                "completed": False,
+                "message": f"Failed to upload batch {i // 50 + 1}: {e}"
+            })
             # yield {"type": "failed", "message": f"🚨 Failed batch upload: {e}"}
             time.sleep(10)  # Wait before retrying or proceeding
 
     STATUS.update({
+        "recognized": None,
+        "not_recognized": None,
+        "sent_to_spotify": None,
+        "not_sent_to_spotify": None,
         "completed": True,
-        "message": "All processing completed"
+        "message": "Song processing complete! Click circle objects to view status"
     })
 
     if os.path.exists(UPLOAD_FOLDER):

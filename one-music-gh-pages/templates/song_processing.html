@@ -22,65 +22,166 @@
     <link rel="stylesheet" href="https://unpkg.com/dropzone@5/dist/min/dropzone.min.css" type="text/css" />
 <!--    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">-->
     <style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', Tahoma, sans-serif;
+      }
 
-    .status-container {
-      position: relative;
-      z-index: 1;
-    }
+      body {
+        height: 100vh;
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: #fff;
+      }
 
-    .status-container {
-      display: grid;
-      grid-template-columns: repeat(2, 200px);
-      gap: 2rem;
-    }
+      h1 {
+      margin-top: 40px;
+      margin-bottom: 60px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
 
-    .status-circle {
-      width: 200px;
-      height: 200px;
-      border-radius: 50%;
-      background: white;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      /* force normal text behavior */
+      font-size: 14px;
+      line-height: 1.6;
       text-align: center;
-      font-weight: bold;
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
 
-      margin: 10px;
-      color: white;
+      /* ensure wrapping */
+      white-space: normal;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
     }
 
-    .status-circle h6 {
-      animation: flashText 2s infinite;
-    }
 
-    @keyframes flashText {
-      0% { opacity: 0; transform: scale(0.9); }
-      50% { opacity: 1; transform: scale(1.05); }
-      100% { opacity: 0; transform: scale(0.9); }
-    }
+      .circle-container {
+        display: grid;
+        grid-template-columns: repeat(2, 200px);
+        gap: 30px;
+        justify-content: center;
+        align-items: center;
+      }
 
-    /* New Included styling */
+      .circle {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 20px;
+        font-weight: 600;
+        line-height: 1.4;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        transition:
+          transform 0.3s ease,
+          box-shadow 0.3s ease;
+      }
 
-    .active {
-      background: green;
-      animation: pulse 1s infinite;
-    }
+      .circle:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 18px 35px rgba(0, 0, 0, 0.45);
+      }
 
-    .error {
-      background: red;
-      animation: pulse 1s infinite;
-    }
+      .recognised {
+        background: linear-gradient(135deg, #4caf50, #2e7d32);
+      }
+      .recognised-active {
+        background: linear-gradient(135deg, #6fdc74, #43a047);
+      }
 
-    @keyframes pulse {
-      0% { opacity: 1; }
-      50% { opacity: 0.4; }
-      100% { opacity: 1; }
-    }
+      .unrecognised {
+        background: linear-gradient(135deg, #ff9800, #ef6c00);
+      }
+      .unrecognised-active {
+        background: linear-gradient(135deg, #ffb74d, #ff8f00);
+      }
 
+      .sent {
+        background: linear-gradient(135deg, #2196f3, #1565c0);
+      }
+      .sent-active {
+        background: linear-gradient(135deg, #64b5f6, #1e88e5);
+      }
+
+      .unsent {
+        background: linear-gradient(135deg, #f44336, #b71c1c);
+      }
+      .unsent-active {
+        background: linear-gradient(135deg, #ef5350, #d32f2f);
+      }
+
+      .recognised-active,
+      .unrecognised-active,
+      .sent-active,
+      .unsent-active {
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.25);
+        transform: scale(1.03);
+      }
+
+      @keyframes textFlash {
+        0% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+
+      .text-flashing {
+        animation: textFlash 1s infinite;
+      }
+
+      @media (max-width: 480px) {
+        .circle-container {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .bg-logo {
+        position: fixed;
+        inset: 0;
+
+        background-image: url('/static/img/bg-img/sspidderr_icon_for_processing.png');
+        background-repeat: no-repeat;
+        background-position: center;
+
+        /* Responsive sizing */
+        background-size: min(180vw, 180vh);
+
+        opacity: 0.2;
+        pointer-events: none;
+        z-index: 0;
+
+        /* subtle animation */
+        animation: logoFloat 10s ease-in-out infinite;
+      }
+
+      body > *:not(.bg-logo) {
+        position: relative;
+        z-index: 1;
+      }
+
+      @keyframes logoFloat {
+        0% {
+          transform: scale(1) translateY(0);
+          opacity: 0.06;
+        }
+        50% {
+          transform: scale(1.05) translateY(-10px);
+          opacity: 0.3;
+        }
+        100% {
+          transform: scale(1) translateY(0);
+          opacity: 0.06;
+        }
+      }
 
     /* Modal styling */
     .modal {
@@ -233,22 +334,52 @@
         </div>
     </header>
     <!-- ##### Header Area End ##### -->
-    <div class="status-container">
-      <div class="status-circle" id="recognized" onclick="openModal('recognised')">
-<!--        <span>Recognised</span>-->
-        <h6 id="recognised-text"></h6>
+<!--    <div class="status-container">-->
+<!--      <div class="status-circle" id="recognized" onclick="openModal('recognised')">-->
+<!--&lt;!&ndash;        <span>Recognised</span>&ndash;&gt;-->
+<!--        <h6 id="recognised-text"></h6>-->
+<!--      </div>-->
+<!--      <div class="status-circle" id="not-recognized" onclick="openModal('not-recognised')">-->
+<!--&lt;!&ndash;        <span>Not Recognised</span>&ndash;&gt;-->
+<!--        <h6 id="not-recognised-text"></h6>-->
+<!--      </div>-->
+<!--      <div class="status-circle" id="sent" onclick="openModal('sent')">-->
+<!--&lt;!&ndash;        <span>Sent ✅</span>&ndash;&gt;-->
+<!--        <h6 id="sent-text"></h6>-->
+<!--      </div>-->
+<!--      <div class="status-circle" id="not-sent" onclick="openModal('failed')">-->
+<!--&lt;!&ndash;        <span>Failed ❌</span>&ndash;&gt;-->
+<!--        <h6 id="failed-text"></h6>-->
+<!--      </div>-->
+<!--    </div>-->
+
+     <div class="bg-logo"></div>
+    <h1 class="updates-tag">Processing update...</h1>
+
+    <div class="circle-container" id="all-circles">
+      <div class="circle-object">
+        <div class="circle recognised" id="recognised-songs-object" onclick="openModal('recognised')">
+          <span class="recognised-circle-text circle-text"
+            >Recognised Songs</span
+          >
+        </div>
       </div>
-      <div class="status-circle" id="not-recognized" onclick="openModal('not-recognised')">
-<!--        <span>Not Recognised</span>-->
-        <h6 id="not-recognised-text"></h6>
+      <div class="circle-object">
+        <div class="circle unrecognised" id="unrecognised-songs-object" onclick="openModal('not-recognised')">
+          <span class="unrecognised-circle-text circle-text"
+            >Unrecognised Songs</span
+          >
+        </div>
       </div>
-      <div class="status-circle" id="sent" onclick="openModal('sent')">
-<!--        <span>Sent ✅</span>-->
-        <h6 id="sent-text"></h6>
+      <div class="circle-object">
+        <div class="circle sent" id="sent-songs-object" onclick="openModal('sent')">
+          <span class="sent-circle-text circle-text">Sent Songs</span>
+        </div>
       </div>
-      <div class="status-circle" id="not-sent" onclick="openModal('failed')">
-<!--        <span>Failed ❌</span>-->
-        <h6 id="failed-text"></h6>
+      <div class="circle-object">
+        <div class="circle unsent" id="unsent-songs-object" onclick="openModal('failed')">
+          <span class="unsent-circle-text circle-text">Unsent Songs</span>
+        </div>
       </div>
     </div>
 
@@ -381,33 +512,105 @@
 
 <script>
     let busy = false;
+    let intervalId = null;
+
+    const updatesTag = document.querySelector('.updates-tag');
+
+    const allCircles = document.querySelectorAll('.circle');
+    const allCirclesText = document.querySelectorAll('.circle-text');
+    const recognisedCircleObj = document.querySelector('.recognised');
+    const unrecognisedCircleObj = document.querySelector('.unrecognised');
+    const sentCircleObj = document.querySelector('.sent');
+    const unsentCircleObj = document.querySelector('.unsent');
+
+    const recognisedCircleText = document.querySelector('.recognised-circle-text');
+    const unrecognisedCircleText = document.querySelector(
+      '.unrecognised-circle-text',
+    );
+    const sentCircleText = document.querySelector('.sent-circle-text');
+    const unsentCircleText = document.querySelector('.unsent-circle-text');
+
+    const STATUS_CLASSES = ['recognised', 'unrecognised', 'sent', 'unsent'];
+
+    // Find which one the element has
+    function getStatusClass(element) {
+      return STATUS_CLASSES.find(cls => element.classList.contains(cls));
+    }
+
+    // Build and toggle the -active class
+    function activateCircle(element) {
+      const status = getStatusClass(element);
+      if (!status) return;
+
+      element.classList.add(`${status}-active`);
+    }
+
+    function deactivateCircle(element) {
+      const status = getStatusClass(element);
+      if (!status) return;
+
+      element.classList.remove(`${status}-active`);
+    }
 
     async function fetchStatus() {
       if (busy) return;
       busy = true;
 
-      const res = await fetch("/status");
-      const data = await res.json();
+      try {
+        const res = await fetch('/status', { cache: 'no-store' });
+        const data = await res.json();
 
-      setState("recognized", data.recognized, "active");
-      setState("not-recognized", data.not_recognized, "error");
-      setState("sent", data.sent_to_spotify, "active");
-      setState("not-sent", data.not_sent_to_spotify, "error");
+        if (data.message) {
+          updatesTag.textContent = data.message;
+        }
 
-      busy = false;
-    }
+        if (data.message !== null) {
+          updatesTag.textContent = data.message;
+        }
+        if (data.recognized !== null) {
+          allCircles.forEach(circle => deactivateCircle(circle));
+          recognisedCircleObj.classList.add('recognised-active');
+          recognisedCircleText.textContent = data.recognized;
+          recognisedCircleText.classList.add('text-flashing');
+        }
+        if (data.not_recognized !== null) {
+          allCircles.forEach(circle => deactivateCircle(circle));
+          unrecognisedCircleObj.classList.add('unrecognised-active');
+          unrecognisedCircleText.textContent = data.not_recognized;
+          unrecognisedCircleText.classList.add('text-flashing');
+        }
+        if (data.sent_to_spotify !== null) {
+          allCircles.forEach(circle => deactivateCircle(circle));
+          sentCircleObj.classList.add('sent-active');
+          sentCircleText.textContent = data.sent_to_spotify;
+          sentCircleText.classList.add('text-flashing');
+        }
+        if (data.not_sent_to_spotify !== null) {
+          allCircles.forEach(circle => deactivateCircle(circle));
+          unsentCircleObj.classList.add('unsent-active');
+          unsentCircleText.textContent = data.not_sent_to_spotify;
+          unsentCircleText.classList.add('text-flashing');
+        }
 
-    function setState(id, condition, className) {
-      const el = document.getElementById(id);
-      el.classList.remove("active", "error");
-      if (condition) el.classList.add(className);
-    }
+        if (data.completed === true) {
+          allCircles.forEach(circle => {
+            deactivateCircle(circle);
+          });
+          allCirclesText.forEach(circle => {
+            circle.classList.remove('text-flashing');
+          });
 
-    const interval = setInterval(fetchStatus, 1000)
-    if (data.completed) {
-        clearInterval(interval);
-        console.log("Processing finished. Polling stopped.");
+          clearInterval(intervalId);
+          console.log('Processing finished. Polling stopped.');
+        }
+      } catch (err) {
+        console.error('Fetch failed:', err);
+      } finally {
+        busy = false;
       }
+    }
+
+    intervalId = setInterval(fetchStatus, 1000);
 </script>
 
 
