@@ -2398,6 +2398,45 @@ img {
     letter-spacing: 1px;
 }
 
+
+/* BOOT SCREEN WRAPPER */
+#boot-screen {
+  position: fixed;
+  inset: 0;
+  background-color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+/* LOGO */
+.boot-logo {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+
+  /* Subtle professional animation */
+  animation: logoPulse 1.6s ease-in-out infinite;
+}
+
+/* Animation */
+@keyframes logoPulse {
+  0% {
+    opacity: 0.55;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0.55;
+    transform: scale(0.96);
+  }
+}
+
+
 /* ====== The End ====== */
 
 /*# sourceMappingURL=style.css.map */
