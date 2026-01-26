@@ -22,7 +22,7 @@
     <link rel="stylesheet" href="https://unpkg.com/dropzone@5/dist/min/dropzone.min.css" type="text/css" />
 <!--    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">-->
     <style>
-    * {
+      .all-elements{
         box-sizing: border-box;
         margin: 0;
         padding: 0;
@@ -39,21 +39,21 @@
       }
 
       h1 {
-      margin-top: 40px;
-      margin-bottom: 60px;
-      font-weight: 500;
-      letter-spacing: 0.5px;
+          margin-top: 40px;
+          margin-bottom: 60px;
+          font-weight: 500;
+          letter-spacing: 0.5px;
 
-      /* force normal text behavior */
-      font-size: 14px;
-      line-height: 1.6;
-      text-align: center;
+          /* force normal text behavior */
+          font-size: 14px;
+          line-height: 1.6;
+          text-align: center;
 
-      /* ensure wrapping */
-      white-space: normal;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-    }
+          /* ensure wrapping */
+          white-space: normal;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+      }
 
 
       .circle-container {
@@ -163,10 +163,11 @@
         animation: logoFloat 10s ease-in-out infinite;
       }
 
-      body > *:not(.bg-logo) {
+      .all-elements > *:not(.bg-logo) {
         position: relative;
         z-index: 1;
       }
+
 
       @keyframes logoFloat {
         0% {
@@ -213,8 +214,6 @@
       font-size: 20px;
       color: red;
     }
-
-    
   </style>
 </head>
 
@@ -334,25 +333,8 @@
         </div>
     </header>
     <!-- ##### Header Area End ##### -->
-<!--    <div class="status-container">-->
-<!--      <div class="status-circle" id="recognized" onclick="openModal('recognised')">-->
-<!--&lt;!&ndash;        <span>Recognised</span>&ndash;&gt;-->
-<!--        <h6 id="recognised-text"></h6>-->
-<!--      </div>-->
-<!--      <div class="status-circle" id="not-recognized" onclick="openModal('not-recognised')">-->
-<!--&lt;!&ndash;        <span>Not Recognised</span>&ndash;&gt;-->
-<!--        <h6 id="not-recognised-text"></h6>-->
-<!--      </div>-->
-<!--      <div class="status-circle" id="sent" onclick="openModal('sent')">-->
-<!--&lt;!&ndash;        <span>Sent ✅</span>&ndash;&gt;-->
-<!--        <h6 id="sent-text"></h6>-->
-<!--      </div>-->
-<!--      <div class="status-circle" id="not-sent" onclick="openModal('failed')">-->
-<!--&lt;!&ndash;        <span>Failed ❌</span>&ndash;&gt;-->
-<!--        <h6 id="failed-text"></h6>-->
-<!--      </div>-->
-<!--    </div>-->
 
+  <div class="all-elements">
      <div class="bg-logo"></div>
     <h1 class="updates-tag">Processing update...</h1>
 
@@ -382,14 +364,8 @@
         </div>
       </div>
     </div>
+  </div>
 
-<!--    <div class="status-container">-->
-<!--      <div id="recognized" class="circle">Recognized</div>-->
-<!--      <div id="not-recognized" class="circle">Not Recognized</div>-->
-<!--      <div id="sent" class="circle">Sent to Spotify</div>-->
-<!--      <div id="not-sent" class="circle">Not Sent</div>-->
-<!--    </div>-->
-<!--     -->
       <!-- Modal -->
       <div id="statusModal" class="modal">
         <div class="modal-content">
@@ -399,9 +375,36 @@
         </div>
       </div>
 
+<!-- ##### Footer Area Start ##### -->
+    <footer class="footer-area">
+        <div class="container">
+            <div class="row d-flex flex-wrap align-items-center">
+                <div class="col-12 col-md-6">
+                    <a href="{{ url_for('home') }}"><img src="static/img/core-img/sspiderr_icon_new.png" style="width: 250px;" alt=""></a>
+                    <p class="copywrite-text"><a href="#"><!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
+                            Copyright &copy;<script>document.write(new Date().getFullYear());</script> All rights reserved | This template is made with <i class="fa fa-heart-o" aria-hidden="true"></i> by <a href="https://colorlib.com" target="_blank">Colorlib</a>
+                            <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
+                    </p>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <div class="footer-nav">
+                        <ul>
+                            <li><a href="{{ url_for('home') }}">Home</a></li>
+                            {% if current_user.is_authenticated: %}
+                                <li><a href="{{ url_for('playlist') }}">Playlists</a></li>
+                            {% endif %}
+                            <li><a href="{{ url_for('about_us') }}">About</a></li>
+                            <li><a href="{{ url_for('news_blog') }}">News</a></li>
+                            <li><a href="{{ url_for('contact') }}">Contact</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
 
 
-  {% include "footer.html" %}
 
     <!-- ##### All Javascript Script ##### -->
     <!-- jQuery-2.2.4 js -->
@@ -609,10 +612,8 @@
         busy = false;
       }
     }
-
     intervalId = setInterval(fetchStatus, 1000);
 </script>
-
 
 </body>
 </html>

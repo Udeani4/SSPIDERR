@@ -176,6 +176,24 @@
 
 
     <!-- Modal Script -->
+<script>
+    window.addEventListener("load", () => {
+      const boot = document.getElementById("boot-screen");
+      const app = document.getElementById("app");
+
+      // Small delay for smoothness (optional)
+      setTimeout(() => {
+        boot.style.opacity = "0";
+        boot.style.transition = "opacity 0.4s ease";
+
+        setTimeout(() => {
+          boot.remove();
+          app.hidden = false;
+        }, 400);
+      }, 300);
+    });
+</script>
+
     <script>
         let selectedTrackId = null;
 
