@@ -59,6 +59,29 @@
         transform: scale(0.96);
       }
     }
+
+
+    /* Loading text container */
+    .boot-loading {
+      margin-top: 32px; /* distance from animated image */
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 1rem;
+      letter-spacing: 0.5px;
+    }
+
+    /* Optional subtle dot animation */
+    .dots {
+      animation: dots 1.5s infinite;
+    }
+
+    @keyframes dots {
+      0%   { content: ""; }
+      33%  { content: "."; }
+      66%  { content: ".."; }
+      100% { content: "..."; }
+    }
     </style>
 </head>
 <!-- Loading Overlay -->
@@ -73,7 +96,11 @@
         src="/static/img/bg-img/sspidderr_icon_for_processing.png"
         alt="App logo"
         class="boot-logo"
-      /></div>
+      />
+        <div class="boot-loading">
+            <p class="loading-class">Loading</p><span class="dots">...</span>
+        </div>
+    </div>
 
     <div id="app" hidden>
     <!-- Preloader -->

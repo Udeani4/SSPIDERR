@@ -376,33 +376,7 @@
       </div>
 
 <!-- ##### Footer Area Start ##### -->
-    <footer class="footer-area">
-        <div class="container">
-            <div class="row d-flex flex-wrap align-items-center">
-                <div class="col-12 col-md-6">
-                    <a href="{{ url_for('home') }}"><img src="static/img/core-img/sspiderr_icon_new.png" style="width: 250px;" alt=""></a>
-                    <p class="copywrite-text"><a href="#"><!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-                            Copyright &copy;<script>document.write(new Date().getFullYear());</script> All rights reserved | This template is made with <i class="fa fa-heart-o" aria-hidden="true"></i> by <a href="https://colorlib.com" target="_blank">Colorlib</a>
-                            <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-                    </p>
-                </div>
 
-                <div class="col-12 col-md-6">
-                    <div class="footer-nav">
-                        <ul>
-                            <li><a href="{{ url_for('home') }}">Home</a></li>
-                            {% if current_user.is_authenticated: %}
-                                <li><a href="{{ url_for('playlist') }}">Playlists</a></li>
-                            {% endif %}
-                            <li><a href="{{ url_for('about_us') }}">About</a></li>
-                            <li><a href="{{ url_for('news_blog') }}">News</a></li>
-                            <li><a href="{{ url_for('contact') }}">Contact</a></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </footer>
 
 
 
@@ -447,11 +421,9 @@
     }
 
      document.addEventListener("DOMContentLoaded" , () => closeModal() )
-
   </script>
 
   <script>
-
       // Reusable function
       function updateCircle(type, message) {
         const el = document.getElementById(`${type}-text`);
@@ -492,128 +464,127 @@
 
   </script>
 
-<script>
+    <script>
 
-    // animate the dots in "Calibrating ..."
-    let count = 1;
-    setInterval(() => {
-        document.getElementById("dots").textContent = ".".repeat(count);
-        count = count === 3 ? 1 : count + 1;
-    }, 500);
-
-    // hide overlay when page finishes loading
-    window.addEventListener("load", function () {
-        const overlay = document.getElementById("loading-overlay");
-        overlay.style.opacity = 0;
-
-        setTimeout(() => {
-            overlay.style.display = "none";
+        // animate the dots in "Calibrating ..."
+        let count = 1;
+        setInterval(() => {
+            document.getElementById("dots").textContent = ".".repeat(count);
+            count = count === 3 ? 1 : count + 1;
         }, 500);
-    });
 
-</script>
+        // hide overlay when page finishes loading
+        window.addEventListener("load", function () {
+            const overlay = document.getElementById("loading-overlay");
+            overlay.style.opacity = 0;
 
-<script>
-    let busy = false;
-    let intervalId = null;
+            setTimeout(() => {
+                overlay.style.display = "none";
+            }, 500);
+        });
 
-    const updatesTag = document.querySelector('.updates-tag');
+    </script>
 
-    const allCircles = document.querySelectorAll('.circle');
-    const allCirclesText = document.querySelectorAll('.circle-text');
-    const recognisedCircleObj = document.querySelector('.recognised');
-    const unrecognisedCircleObj = document.querySelector('.unrecognised');
-    const sentCircleObj = document.querySelector('.sent');
-    const unsentCircleObj = document.querySelector('.unsent');
+    <script>
+        let busy = false;
+        let intervalId = null;
 
-    const recognisedCircleText = document.querySelector('.recognised-circle-text');
-    const unrecognisedCircleText = document.querySelector(
-      '.unrecognised-circle-text',
-    );
-    const sentCircleText = document.querySelector('.sent-circle-text');
-    const unsentCircleText = document.querySelector('.unsent-circle-text');
+        const updatesTag = document.querySelector('.updates-tag');
 
-    const STATUS_CLASSES = ['recognised', 'unrecognised', 'sent', 'unsent'];
+        const allCircles = document.querySelectorAll('.circle');
+        const allCirclesText = document.querySelectorAll('.circle-text');
+        const recognisedCircleObj = document.querySelector('.recognised');
+        const unrecognisedCircleObj = document.querySelector('.unrecognised');
+        const sentCircleObj = document.querySelector('.sent');
+        const unsentCircleObj = document.querySelector('.unsent');
 
-    // Find which one the element has
-    function getStatusClass(element) {
-      return STATUS_CLASSES.find(cls => element.classList.contains(cls));
-    }
+        const recognisedCircleText = document.querySelector('.recognised-circle-text');
+        const unrecognisedCircleText = document.querySelector(
+          '.unrecognised-circle-text',
+        );
+        const sentCircleText = document.querySelector('.sent-circle-text');
+        const unsentCircleText = document.querySelector('.unsent-circle-text');
 
-    // Build and toggle the -active class
-    function activateCircle(element) {
-      const status = getStatusClass(element);
-      if (!status) return;
+        const STATUS_CLASSES = ['recognised', 'unrecognised', 'sent', 'unsent'];
 
-      element.classList.add(`${status}-active`);
-    }
-
-    function deactivateCircle(element) {
-      const status = getStatusClass(element);
-      if (!status) return;
-
-      element.classList.remove(`${status}-active`);
-    }
-
-    async function fetchStatus() {
-      if (busy) return;
-      busy = true;
-
-      try {
-        const res = await fetch('/status', { cache: 'no-store' });
-        const data = await res.json();
-
-        if (data.message) {
-          updatesTag.textContent = data.message;
+        // Find which one the element has
+        function getStatusClass(element) {
+          return STATUS_CLASSES.find(cls => element.classList.contains(cls));
         }
 
-        if (data.message !== null) {
-          updatesTag.textContent = data.message;
-        }
-        if (data.recognized !== null) {
-          allCircles.forEach(circle => deactivateCircle(circle));
-          recognisedCircleObj.classList.add('recognised-active');
-          recognisedCircleText.textContent = data.recognized;
-          recognisedCircleText.classList.add('text-flashing');
-        }
-        if (data.not_recognized !== null) {
-          allCircles.forEach(circle => deactivateCircle(circle));
-          unrecognisedCircleObj.classList.add('unrecognised-active');
-          unrecognisedCircleText.textContent = data.not_recognized;
-          unrecognisedCircleText.classList.add('text-flashing');
-        }
-        if (data.sent_to_spotify !== null) {
-          allCircles.forEach(circle => deactivateCircle(circle));
-          sentCircleObj.classList.add('sent-active');
-          sentCircleText.textContent = data.sent_to_spotify;
-          sentCircleText.classList.add('text-flashing');
-        }
-        if (data.not_sent_to_spotify !== null) {
-          allCircles.forEach(circle => deactivateCircle(circle));
-          unsentCircleObj.classList.add('unsent-active');
-          unsentCircleText.textContent = data.not_sent_to_spotify;
-          unsentCircleText.classList.add('text-flashing');
+        // Build and toggle the -active class
+        function activateCircle(element) {
+          const status = getStatusClass(element);
+          if (!status) return;
+
+          element.classList.add(`${status}-active`);
         }
 
-        if (data.completed === true) {
-          allCircles.forEach(circle => {
-            deactivateCircle(circle);
-          });
-          allCirclesText.forEach(circle => {
-            circle.classList.remove('text-flashing');
-          });
+        function deactivateCircle(element) {
+          const status = getStatusClass(element);
+          if (!status) return;
 
-          clearInterval(intervalId);
-          console.log('Processing finished. Polling stopped.');
+          element.classList.remove(`${status}-active`);
         }
-      } catch (err) {
-        console.error('Fetch failed:', err);
-      } finally {
-        busy = false;
-      }
-    }
-    intervalId = setInterval(fetchStatus, 1000);
-</script>
 
+        async function fetchStatus() {
+          if (busy) return;
+          busy = true;
+
+          try {
+            const res = await fetch('/status', { cache: 'no-store' });
+            const data = await res.json();
+
+            if (data.message) {
+              updatesTag.textContent = data.message;
+            }
+
+            if (data.message !== null) {
+              updatesTag.textContent = data.message;
+            }
+            if (data.recognized !== null) {
+              allCircles.forEach(circle => deactivateCircle(circle));
+              recognisedCircleObj.classList.add('recognised-active');
+              recognisedCircleText.textContent = data.recognized;
+              recognisedCircleText.classList.add('text-flashing');
+            }
+            if (data.not_recognized !== null) {
+              allCircles.forEach(circle => deactivateCircle(circle));
+              unrecognisedCircleObj.classList.add('unrecognised-active');
+              unrecognisedCircleText.textContent = data.not_recognized;
+              unrecognisedCircleText.classList.add('text-flashing');
+            }
+            if (data.sent_to_spotify !== null) {
+              allCircles.forEach(circle => deactivateCircle(circle));
+              sentCircleObj.classList.add('sent-active');
+              sentCircleText.textContent = data.sent_to_spotify;
+              sentCircleText.classList.add('text-flashing');
+            }
+            if (data.not_sent_to_spotify !== null) {
+              allCircles.forEach(circle => deactivateCircle(circle));
+              unsentCircleObj.classList.add('unsent-active');
+              unsentCircleText.textContent = data.not_sent_to_spotify;
+              unsentCircleText.classList.add('text-flashing');
+            }
+
+            if (data.completed === true) {
+              allCircles.forEach(circle => {
+                deactivateCircle(circle);
+              });
+              allCirclesText.forEach(circle => {
+                circle.classList.remove('text-flashing');
+              });
+
+              clearInterval(intervalId);
+              console.log('Processing finished. Polling stopped.');
+            }
+          } catch (err) {
+            console.error('Fetch failed:', err);
+          } finally {
+            busy = false;
+          }
+        }
+        intervalId = setInterval(fetchStatus, 1000);
+    </script>
 </body>
 </html>

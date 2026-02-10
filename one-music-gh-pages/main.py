@@ -946,14 +946,33 @@ def latest_albums(sp):
 # get time tag for Home Data
 new_time_tag = datetime.now(timezone.utc)
 
+# SORTING OUT THE LOADING ISSUE
+
+loading_message = {
+    "is_loading": False,
+    "message": "idle"
+}
+
+@app.route('/app-status', methods=['GET','POST'])
+def get_app_status():
+    return jsonify(loading_message)
+
+
 @app.route('/', methods=['GET','POST'])
 def home():
+    loading_message.update({
+        "is_loading": True,
+        "message": "Authenticating..."
+    })
     print(f"Is current user authenticated: {current_user.is_authenticated}, Current User Id: {current_user.id if current_user.is_authenticated else None}")
     current_user_id = current_user.id if current_user.is_authenticated else None
     # Get the latest saved home data
     home_data_exist = HomeData.query.filter_by(user_id=current_user_id).order_by(HomeData.id.desc()).first()
     # home_data_exist = HomeData.query.first()
-
+    loading_message.update({
+        "is_loading": True,
+        "message": "Loading data..."
+    })
     if should_run_24h_task() or (not home_data_exist and current_user_id is None):
         print("enter-1st if")
         # Fetch Top Album
@@ -962,7 +981,10 @@ def home():
             album_result.raise_for_status()
         except requests.exceptions.RequestException:
             album_result = None
-
+        loading_message.update({
+            "is_loading": True,
+            "message": "Please hold on. This might take a few minutes..."
+        })
         if album_result:
             album_json = album_result.json()
             print(album_json)
@@ -1000,6 +1022,10 @@ def home():
                 song_id = songs[0]["song_id"]
                 print(song_name, song_id)
 
+        loading_message.update({
+            "is_loading": True,
+            "message": "Loading APIs..."
+        })
         # Fetch Top Artist
         top_artist_name = get_billboard_top_artists(limit=1)  # Top artist this week
         top_artist_name=top_artist_name[0]
@@ -1027,6 +1053,10 @@ def home():
         else:
             this_weeks_10_hits = []  # or some default/fallback
 
+        loading_message.update({
+            "is_loading": True,
+            "message": "Initializing..."
+        })
         # FETCH TOP ARTISTS SECTION
         artist_section_dict = {}
         top_artists_list = get_billboard_top_artists(limit=10)
@@ -1055,6 +1085,10 @@ def home():
         )
         db.session.add(new_home_data)
         db.session.commit()
+        loading_message.update({
+            "is_loading": False,
+            "message": "Loading Template..."
+        })
         return render_template('index.html',
                                album_art=album_art,
                                album_name=album_name,
@@ -1070,6 +1104,10 @@ def home():
                                album_id=top_album_id
                                )
     else:
+        loading_message.update({
+            "is_loading": True,
+            "message": "Authenticating..."
+        })
         print("enter-1st else")
         # latest_data = HomeData.query.filter_by(user_id=current_user_id).order_by(HomeData.id.desc()).first()
         latest_data = HomeData.query.filter_by(new_time_tag=new_time_tag).order_by(HomeData.id.desc()).first()
@@ -1086,6 +1124,10 @@ def home():
 
         # Convert JSON fields back to Python lists/dicts
         import json
+        loading_message.update({
+            "is_loading": True,
+            "message": "Loading data..."
+        })
         top_albums = data.top_albums
         best_ten_hits_2025 = data.best_2025_hits
         this_weeks_10_hits = data.this_weeks_hits
@@ -1104,6 +1146,10 @@ def home():
         # LOGGED IN SECTION
         if current_user.is_authenticated:
             print("enter-1st else 1st if")
+            loading_message.update({
+                "is_loading": True,
+                "message": "Initializing..."
+            })
             # data = HomeData.query.order_by(HomeData.id.desc()).first()
             if not data.feature_artists_info:
                 print("enter-1st else 1st if 1st if")
@@ -1153,6 +1199,11 @@ def home():
                     return None  # User not logged in or no valid token
                 sp = spotipy.Spotify(auth=access_token)
 
+                loading_message.update({
+                    "is_loading": True,
+                    "message": "Loading APIs..."
+                })
+
                 import json
                 # 5️⃣ Convert JSON fields back to Python objects (we will do it directly because our JSON data is not text. It is already stored as a list
                 feature_artists_info = data.feature_artists_info
@@ -1162,6 +1213,10 @@ def home():
                 playlist_list = get_user_playlists(current_user, sp, 1, "playlist", "small")
                 # 6️⃣ Reconstruct variables exactly as your template expects
 
+            loading_message.update({
+                "is_loading": False,
+                "message": "Loading templates..."
+            })
             return render_template('index.html', playlist_list=playlist_list,
                                        album_art=album_art,
                                        album_name=album_name,
@@ -1179,7 +1234,10 @@ def home():
                                        artist_section_dict=artist_section_dict,
                                        album_id=top_album_id
                                        )
-
+        loading_message.update({
+            "is_loading": False,
+            "message": "Loading Templates..."
+        })
         return render_template('index.html',
                                album_art=album_art,
                                album_name=album_name,
@@ -1194,7 +1252,6 @@ def home():
                                artist_section_dict=artist_section_dict,
                                album_id=top_album_id
         )
-
 
 @app.route('/add_to_playlist', methods=['POST'])
 def add_to_playlist():

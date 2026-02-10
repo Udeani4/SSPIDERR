@@ -1,5 +1,5 @@
 {% include "header.html" %}
-<div id="loading-state">{{ loading_state }}</div>
+
     <!-- ##### Hero Area Start ##### -->
     <section class="hero-area">
         <div class="hero-slides owl-carousel">
@@ -559,22 +559,34 @@
 
     <!-- Modal Script -->
     <script>
-        window.addEventListener("load", () => {
-          const boot = document.getElementById("boot-screen");
-          const app = document.getElementById("app");
+      (async function initApp() {
+        const boot = document.getElementById("boot-screen");
+        const app = document.getElementById("app");
 
-          // Small delay for smoothness (optional)
-          setTimeout(() => {
-            boot.style.opacity = "0";
-            boot.style.transition = "opacity 0.4s ease";
+        if (!boot || !app) return;
 
-            setTimeout(() => {
-              boot.remove();
-              app.hidden = false;
-            }, 400);
-          }, 300);
-        });
+        try {
+          // Run critical API calls in parallel
+          await Promise.all([
+            fetch("/api/status")
+          ]);
+        } catch (err) {
+          console.error("App init failed:", err);
+          // Optional: show error state instead of removing loader
+          return;
+        }
+
+        // Fade out boot screen
+        boot.style.transition = "opacity 0.4s ease";
+        boot.style.opacity = "0";
+
+        setTimeout(() => {
+          boot.remove();
+          app.hidden = false;
+        }, 400);
+      })();
     </script>
+
 
     <script>
         let selectedTrackId = null;
