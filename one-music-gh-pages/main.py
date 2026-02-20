@@ -732,7 +732,7 @@ def get_user_spotify(access_token):
     if not access_token:
         return None
     # Spotipy accepts token string in 'auth' param for simple use
-    return spotipy.Spotify(auth=access_token)
+    return spotipy.Spotify(auth=access_token, requests_timeout=30)
 
 def get_spotify_client_for_request(current_user):
     """
@@ -969,7 +969,6 @@ def get_app_status():
 @app.route('/', methods=['GET','POST'])
 def home():
     # dom_initial_loader()
-
     loading_message.update({
         "is_loading": True,
         "message": "Authenticating..."
@@ -1032,10 +1031,6 @@ def home():
                 song_id = songs[0]["song_id"]
                 print(song_name, song_id)
 
-        loading_message.update({
-            "is_loading": True,
-            "message": "Loading APIs..."
-        })
         # Fetch Top Artist
         top_artist_name = get_billboard_top_artists(limit=1)  # Top artist this week
         top_artist_name=top_artist_name[0]
@@ -1095,10 +1090,6 @@ def home():
         )
         db.session.add(new_home_data)
         db.session.commit()
-        loading_message.update({
-            "is_loading": False,
-            "message": "Loading Template..."
-        })
         return render_template('index.html',
                                album_art=album_art,
                                album_name=album_name,
@@ -1114,10 +1105,6 @@ def home():
                                album_id=top_album_id
                                )
     else:
-        loading_message.update({
-            "is_loading": True,
-            "message": "Authenticating..."
-        })
         print("enter-1st else")
         # latest_data = HomeData.query.filter_by(user_id=current_user_id).order_by(HomeData.id.desc()).first()
         latest_data = HomeData.query.filter_by(new_time_tag=new_time_tag).order_by(HomeData.id.desc()).first()
@@ -1134,10 +1121,7 @@ def home():
 
         # Convert JSON fields back to Python lists/dicts
         import json
-        loading_message.update({
-            "is_loading": True,
-            "message": "Loading data..."
-        })
+
         top_albums = data.top_albums
         best_ten_hits_2025 = data.best_2025_hits
         this_weeks_10_hits = data.this_weeks_hits
@@ -1156,10 +1140,7 @@ def home():
         # LOGGED IN SECTION
         if current_user.is_authenticated:
             print("enter-1st else 1st if")
-            loading_message.update({
-                "is_loading": True,
-                "message": "Initializing..."
-            })
+
             # data = HomeData.query.order_by(HomeData.id.desc()).first()
             if not data.feature_artists_info:
                 print("enter-1st else 1st if 1st if")
@@ -1209,11 +1190,6 @@ def home():
                     return None  # User not logged in or no valid token
                 sp = spotipy.Spotify(auth=access_token)
 
-                loading_message.update({
-                    "is_loading": True,
-                    "message": "Loading APIs..."
-                })
-
                 import json
                 # 5️⃣ Convert JSON fields back to Python objects (we will do it directly because our JSON data is not text. It is already stored as a list
                 feature_artists_info = data.feature_artists_info
@@ -1223,10 +1199,6 @@ def home():
                 playlist_list = get_user_playlists(current_user, sp, 1, "playlist", "small")
                 # 6️⃣ Reconstruct variables exactly as your template expects
 
-            loading_message.update({
-                "is_loading": False,
-                "message": "Loading templates..."
-            })
             return render_template('index.html', playlist_list=playlist_list,
                                        album_art=album_art,
                                        album_name=album_name,
@@ -1244,10 +1216,7 @@ def home():
                                        artist_section_dict=artist_section_dict,
                                        album_id=top_album_id
                                        )
-        loading_message.update({
-            "is_loading": False,
-            "message": "Loading Templates..."
-        })
+
         return render_template('index.html',
                                album_art=album_art,
                                album_name=album_name,
@@ -1852,7 +1821,7 @@ def register_page():
         db.session.commit()
 
         login_user(new_user)
-        return redirect(url_for("home"))  # Don't include `.html` here
+        return redirect(url_for("spotify_login"))  # Don't include `.html` here
     return render_template('register.html', current_user=current_user)
 
 @app.route('/song-page/<song_id>', methods=['GET', 'POST'])
@@ -2479,6 +2448,8 @@ def get_valid_spotify_token(user):
     refresh_token = user.spotify_ref_tok
 
     # If no token at all → go to login
+
+
     if not access_token:
         return None
 
@@ -2509,7 +2480,7 @@ def get_user_playlists(user, sp, image_size, ph_query, ph_size):  # ph_query, ph
         access_token = get_valid_spotify_token(user)
         if not access_token:
             return None  # User not logged in or no valid token
-        sp = spotipy.Spotify(auth=access_token)
+        sp = spotipy.Spotify(auth=access_token, requests_timeout=30)
 
     playlists = []
 
