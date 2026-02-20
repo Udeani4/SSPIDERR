@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Initial Loader</title>
+    <style>
+
+    /* BOOT SCREEN WRAPPER */
+    #boot-screen-new {
+      position: fixed;
+      inset: 0;
+      background-color: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    }
+
+    /* LOGO */
+    .boot-logo {
+      width: 500px;
+      height: 500px;
+      object-fit: contain;
+
+      /* Subtle professional animation */
+      animation: logoPulse 1.6s ease-in-out infinite;
+    }
+
+    /* Animation */
+    @keyframes logoPulse {
+      0% {
+        opacity: 0.55;
+        transform: scale(0.96);
+      }
+      50% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      100% {
+        opacity: 0.55;
+        transform: scale(0.96);
+      }
+    }
+
+
+    /* Loading text container */
+    .boot-loading {
+      margin-top: 32px; /* distance from animated image */
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 1rem;
+      letter-spacing: 0.5px;
+    }
+
+    /* Optional subtle dot animation */
+    .dots {
+      animation: dots 1.5s infinite;
+    }
+
+    @keyframes dots {
+      0%   { content: ""; }
+      33%  { content: "."; }
+      66%  { content: ".."; }
+      100% { content: "..."; }
+    }
+    </style>
+</head>
+<body>
+    <!-- BOOT SCREEN -->
+    <div id="boot-screen-new">
+      <img
+        src="/static/img/bg-img/sspidderr_icon_for_processing.png"
+        alt="App logo"
+        class="boot-logo"
+      />
+        <div class="boot-loading">
+            <p class="loading-class">Loading</p><span class="dots">...</span>
+        </div>
+    </div>
+    <script>
+      const windowLoader = document.getElementById('boot-screen-new');
+
+      window.addEventListener('load', function () {
+        windowLoader.style.display = 'none';
+      });
+    </script>
+
+</body>
+</html>

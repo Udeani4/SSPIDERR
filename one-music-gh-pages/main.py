@@ -316,6 +316,12 @@ def logout():
     return redirect(url_for('home'))
 
 
+def create_upload_folder():
+    # Create a folder for uploaded songs
+    UPLOAD_FOLDER = os.path.join("static", "uploads")
+    app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
 
 def should_run_24h_task():
     status = SchedulerStatus.query.first()
@@ -957,9 +963,13 @@ loading_message = {
 def get_app_status():
     return jsonify(loading_message)
 
+# def dom_initial_loader():
+#     return render_template('initial_loader.html')
 
 @app.route('/', methods=['GET','POST'])
 def home():
+    # dom_initial_loader()
+
     loading_message.update({
         "is_loading": True,
         "message": "Authenticating..."
@@ -3061,6 +3071,7 @@ else:
     print("Folder does not exist.")
 
 
+
 # Create a folder for uploaded songs
 UPLOAD_FOLDER = os.path.join("static", "uploads")
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
@@ -3171,8 +3182,26 @@ def song_processing_stream(playlist_id):
             return None, None, None, f"⚠️ Failed to recognize {os.path.basename(file_path)}: {e}"
 
     async def batch_recognize(folder_path):
+        # Check if folder exists
+        if not os.path.isdir(folder_path):
+            print("Folder does not exist")
+            return None  # or return [], or raise an error
+
         shazam = Shazam()
         files = [f for f in os.listdir(folder_path) if f.endswith(AUDIO_EXTS)]
+
+        if not files:
+            STATUS.update({
+                "recognized": None,
+                "not_recognized": None,
+                "sent_to_spotify": None,
+                "not_sent_to_spotify": None,
+                "completed": False,
+                "message": "No audio files found"
+            })
+
+            print('No Audio files found')
+            return []
 
         STATUS.update({
             "recognized": None,
@@ -3209,7 +3238,7 @@ def song_processing_stream(playlist_id):
                 recognized.append(result_line)
 
                 STATUS.update({
-                    "recognized": f"{good_comment}",
+                    "recognized": f"{good_comment}"[:35],
                     "not_recognized": None,
                     "sent_to_spotify": None,
                     "not_sent_to_spotify": None,
@@ -3221,7 +3250,7 @@ def song_processing_stream(playlist_id):
                 failed.append(file)
                 STATUS.update({
                     "recognized": None,
-                    "not_recognized": f"{bad_comment}",
+                    "not_recognized": f"{bad_comment}"[:35],
                     "sent_to_spotify": None,
                     "not_sent_to_spotify": None,
                     "completed": False,
@@ -3356,7 +3385,7 @@ def song_processing_stream(playlist_id):
                 STATUS.update({
                     "recognized": None,
                     "not_recognized": None,
-                    "sent_to_spotify": f"Sent: {title}",
+                    "sent_to_spotify": f"Sent: {title}"[:35],
                     "not_sent_to_spotify": None,
                     "completed": False,
                     "message": f"{title} by {artist} sent successfully"
@@ -3378,7 +3407,7 @@ def song_processing_stream(playlist_id):
                 STATUS.update({
                     "recognized": None,
                     "not_recognized": None,
-                    "sent_to_spotify": successful_comment,
+                    "sent_to_spotify": successful_comment[:35],
                     "not_sent_to_spotify": None,
                     "completed": False,
                     "message": f"{title} by {artist} sent successfully"
@@ -3399,7 +3428,7 @@ def song_processing_stream(playlist_id):
                     "recognized": None,
                     "not_recognized": None,
                     "sent_to_spotify": None,
-                    "not_sent_to_spotify": f"Not found: {title} by {artist}",
+                    "not_sent_to_spotify": f"Not found: {title} by {artist}"[:35],
                     "completed": False,
                     "message": f"{title} by {artist} not found, sending to playlist failed "
                 })
@@ -3411,7 +3440,7 @@ def song_processing_stream(playlist_id):
                 "recognized": None,
                 "not_recognized": None,
                 "sent_to_spotify": None,
-                "not_sent_to_spotify": f"Error: {title} by {artist}",
+                "not_sent_to_spotify": f"Error: {title} by {artist}"[:35],
                 "completed": False,
                 "message": f"Error processing '{title}' by '{artist}': {e}"
             })
@@ -3464,6 +3493,7 @@ def song_processing_stream(playlist_id):
     else:
         print("Folder does not exist.")
 
+    create_upload_folder() #creates a new upload folder
     return redirect(url_for('show_song_processing', playlist_id=playlist_id))
 
 
