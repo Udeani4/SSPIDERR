@@ -3090,6 +3090,7 @@ def file_upload():
             "message": str(e)
         }, 500
 
+    # return redirect(url_for('display_uploads'))
 
 
 
@@ -3466,6 +3467,21 @@ def song_processing_stream(playlist_id):
 
     create_upload_folder() #creates a new upload folder
     return redirect(url_for('show_song_processing', playlist_id=playlist_id))
+
+
+@app.route("/display-uploads")
+def display_uploads():
+    files = [f for f in os.listdir(UPLOAD_FOLDER) if f.endswith(AUDIO_EXTS)]
+
+    # For modal playlist
+    access_token = get_valid_spotify_token(current_user)
+    if not access_token:
+        return None  # User not logged in or no valid token
+    sp = spotipy.Spotify(auth=access_token)
+
+    playlist_list = get_user_playlists(current_user, sp, 1, "playlist", "small")
+    return render_template("display_uploads.html", playlist_list=playlist_list, files=files)
+
 
 
 if __name__ == '__main__':

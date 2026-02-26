@@ -231,23 +231,21 @@
 <!--    </script>-->
     <script>
         Dropzone.options.myAwesomeDropzone = {
-
           init: function () {
             const dz = this;
             const msgBox = document.getElementById("upload-message");
-            const createBtn = document.getElementById("create-playlist-btn");
-            const playlistContainer = document.getElementById("select-playlist-container");
 
             dz.on("queuecomplete", function () {
-              // Show success message
+
               msgBox.innerHTML =
                 `<div class="alert alert-success">
-                   All files uploaded successfully!
+                   All files uploaded successfully! Redirecting...
                  </div>`;
 
-              // Show the buttons
-              createBtn.style.display = "inline-block";
-              playlistContainer.style.display = "block";
+              // small delay so user sees success message
+              setTimeout(() => {
+                window.location.href = "/display-uploads";
+              }, 2000);
             });
 
             dz.on("error", function (file, response) {

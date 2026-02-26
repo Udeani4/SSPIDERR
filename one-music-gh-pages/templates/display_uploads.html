@@ -1,0 +1,99 @@
+{% include "header.html" %}
+
+<!-- ***** List of songs ***** -->
+      <div class="col-12 col-lg-6">
+          <div class="popular-artists-area mb-100">
+              <div class="section-heading text-left mb-50 wow fadeInUp" data-wow-delay="50ms">
+                  <p>Songs Ready for Upload</p>
+                  <h2>Songs List</h2>
+              </div>
+
+              {% for file in files %}
+                  <!-- Single Artist -->
+                  <div class="single-artists d-flex align-items-center wow fadeInUp" data-wow-delay="100ms">
+                      <div class="thumbnail">
+                          <img src="{{ url_for('static', filename=img/core-img/music_icon.png) }}" alt="y" class="artist-img">
+                      </div>
+                      <div class="content-">
+                        <p>{{ file }}</p>
+                      </div>
+                  </div>
+              {% endfor %}
+          </div>
+          <!-- Buttons hidden by default -->
+            <button class="btn-create"
+                    id="create-playlist-btn"
+                    onclick="location.href='{{ url_for('create_playlist') }}'">
+              + Create Playlist
+            </button>
+
+            <div class="select-container" id="select-playlist-container">
+              <label for="playlist-btn">Or select existing playlist</label>
+
+              <button class="btn-create"
+                      id="playlist-btn"
+                      onclick="openModal()"
+                      style="background-color: seagreen;">
+                Select Playlist
+              </button>
+            </div>
+      </div>
+
+<!-- Modal 1-->
+    <div class="modal" id="playlistModal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h3>Choose a Playlist</h3>
+
+            <!-- Playlist Items -->
+            {% for playlist in playlist_list: %}
+                <div class="playlist" onclick="window.location='{{ url_for('show_song_processing', playlist_id=playlist['id']) }}'">
+                    <img src="{{ playlist['image'] }}" alt="Chill Vibes">
+                    <span class="playlist-name">{{ playlist['name'] }}</span>
+                </div>
+            {% endfor %}
+
+            <!-- Add more as needed -->
+            <div class="create-btn-wrapper-popup">
+                <button class="open-btn-popup" onclick="location.href='{{ url_for('create_playlist') }}'">Create Playlist</button>
+            </div>
+        </div>
+    </div>
+
+{% include "footer.html" %}
+ <!-- ##### All Javascript Script ##### -->
+    <!-- jQuery-2.2.4 js -->
+    <script src="static/js/jquery/jquery-2.2.4.min.js"></script>
+    <!-- Popper js -->
+    <script src="static/js/bootstrap/popper.min.js"></script>
+    <!-- Bootstrap js -->
+    <script src="static/js/bootstrap/bootstrap.min.js"></script>
+    <!-- All Plugins js -->
+    <script src="static/js/plugins/plugins.js"></script>
+    <!-- Active js -->
+    <script src="static/js/active.js"></script>
+
+<script>
+        function openModal() {
+          document.getElementById("playlistModal").style.display = "flex";
+        }
+
+        function closeModal() {
+          document.getElementById("playlistModal").style.display = "none";
+        }
+
+        // Close if clicking outside either modal
+        window.onclick = function(event) {
+          const modal1 = document.getElementById("playlistModal");
+
+          if (event.target === modal1) {
+            modal1.style.display = "none";
+          }
+        };
+
+        window.addEventListener("keydown", function(event) {
+          if (event.key === "Escape") {
+            modal1.style.display = "none";
+          }
+        });
+</script>
