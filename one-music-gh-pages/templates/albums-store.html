@@ -1,4 +1,5 @@
 {% include "header.html" %}
+
     <!-- ##### Breadcumb Area Start ##### -->
     <section class="breadcumb-area bg-img bg-overlay" style="background-image: url(static/img/bg-img/breadcumb3.jpg);">
         <div class="bradcumbContent">
@@ -8,74 +9,39 @@
     </section>
     <!-- ##### Breadcumb Area End ##### -->
 
-    <!-- ##### Album Catagory Area Start ##### -->
-    <section class="album-catagory section-padding-100-0">
-        <div class="container">
-            <div class="row">
-                <div class="col-12">
-                    <div class="browse-by-catagories catagory-menu d-flex flex-wrap align-items-center mb-70">
-                        <a href="#" data-filter="*">Browse All</a>
-                        <a href="#" data-filter=".a" class="active">A</a>
-                        <a href="#" data-filter=".b">B</a>
-                        <a href="#" data-filter=".c">C</a>
-                        <a href="#" data-filter=".d">D</a>
-                        <a href="#" data-filter=".e">E</a>
-                        <a href="#" data-filter=".f">F</a>
-                        <a href="#" data-filter=".g">G</a>
-                        <a href="#" data-filter=".h">H</a>
-                        <a href="#" data-filter=".i">I</a>
-                        <a href="#" data-filter=".j">J</a>
-                        <a href="#" data-filter=".k">K</a>
-                        <a href="#" data-filter=".l">L</a>
-                        <a href="#" data-filter=".m">M</a>
-                        <a href="#" data-filter=".n">N</a>
-                        <a href="#" data-filter=".o">O</a>
-                        <a href="#" data-filter=".p">P</a>
-                        <a href="#" data-filter=".q">Q</a>
-                        <a href="#" data-filter=".r">R</a>
-                        <a href="#" data-filter=".s">S</a>
-                        <a href="#" data-filter=".t">T</a>
-                        <a href="#" data-filter=".u">U</a>
-                        <a href="#" data-filter=".v">V</a>
-                        <a href="#" data-filter=".w">W</a>
-                        <a href="#" data-filter=".x">X</a>
-                        <a href="#" data-filter=".y">Y</a>
-                        <a href="#" data-filter=".z">Z</a>
-                        <a href="#" data-filter=".number">0-9</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row oneMusic-albums">
-
-                <!-- Single Album -->
-                {% for playlist in playlist_list: %}
-                    <div class="col-12 col-sm-4 col-md-3 col-lg-2 single-album-item t c p">
+    <!-- ##### Album Category Area Start ##### -->
+    <section class="album-catagory section-padding-100">
+            <div class="container">
+                <div class="row oneMusic-albums" style="display: flex !important; flex-wrap: wrap !important; margin-bottom:80px;">
+                    {% for playlist in playlist_list %}
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-2 single-album-item">
                         <div class="single-album">
-                            <img src="{{ playlist['image'] }}" alt="">
-                            <div class="album-info">
-                                <a href="{{ url_for('playlist_page', playlist_id = playlist['id']) }}">
-                                    <h5>{{ playlist['name'] }}</h5>
+                            <img src="{{ playlist['image'] }}" class="img-fluid" alt="" style="width: 100%; height: 200px; object-fit: cover;">
+
+                            <div class="album-info text-center mt-3">
+                                <a href="{{ url_for('playlist_page', playlist_id=playlist['id']) }}">
+                                    <h5>{{ playlist['name'][:15] }}</h5>
                                 </a>
-                                {% if playlist['num_tracks'] > 1 %}
-                                    <p>{{ playlist['num_tracks'] }} songs</p>
-                                {% else %}
-                                    <p>{{ playlist['num_tracks'] }} song</p>
-                                {% endif %}
+
+                                <p>
+                                    {{ playlist['num_tracks'] }}
+                                    {% if playlist['num_tracks'] == 1 %}
+                                        song
+                                    {% else %}
+                                        songs
+                                    {% endif %}
+                                </p>
                             </div>
                         </div>
                     </div>
-                {% endfor %}
-
+                    {% endfor %}
+                </div>
             </div>
-        </div>
     </section>
     <!-- ##### Album Catagory Area End ##### -->
 
-    
-    <!-- ##### Buy Now Area Start ##### -->
-    <div class="oneMusic-buy-now-area mb-100">
-
+<!-- ##### Buy Now Area Start ##### -->
+    <div class="oneMusic-buy-now-area mb-100" style="margin-top:100px">
         <div class="bradcumbContentAlbums">
             <p>Suggestions</p>
             <h2>Latest Albums</h2>
@@ -83,30 +49,6 @@
 
         <div class="container">
             <div class="row">
-
-<!--                &lt;!&ndash; Single Album Area &ndash;&gt;-->
-<!--                <div class="col-12 col-sm-6 col-md-3">-->
-<!--                    <div class="single-album-area">-->
-<!--                        <div class="album-thumb">-->
-<!--                            <img src="static/img/bg-img/b1.jpg" alt="">-->
-<!--                            &lt;!&ndash; Album Price &ndash;&gt;-->
-<!--                            <div class="album-price">-->
-<!--                                <p>$0.90</p>-->
-<!--                            </div>-->
-<!--                            &lt;!&ndash; Play Icon &ndash;&gt;-->
-<!--                            <div class="play-icon">-->
-<!--                                <a href="#" class="video&#45;&#45;play&#45;&#45;btn"><span class="icon-play-button"></span></a>-->
-<!--                            </div>-->
-<!--                        </div>-->
-<!--                        <div class="album-info">-->
-<!--                            <a href="#">-->
-<!--                                <h5>Garage Band</h5>-->
-<!--                            </a>-->
-<!--                            <p>Radio Station</p>-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                </div>-->
-<!--                -->
                 {% for album in latest_albums %}
                     <!-- Single Album Area -->
                     <div class="col-12 col-sm-6 col-md-3">
@@ -126,7 +68,6 @@
                         </div>
                     </div>
                 {% endfor %}
-
             </div>
 
             <div class="row">
@@ -139,6 +80,8 @@
         </div>
     </div>
     <!-- ##### Buy Now Area End ##### -->
+
+    
 
 
 <!-- DO NOT DELETE THIS SONG AREA. YOU WILL NEED IT LATER, WHEN YOU FIGURE OUT HOW TO GET PREVIEW SONGS-->

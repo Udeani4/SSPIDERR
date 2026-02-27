@@ -841,7 +841,7 @@ http://www.tooplate.com/view/2101-insertion
         <!-- Create Playlist Button -->
         <div class="create-btn-wrapper-popup">
           <button class="open-btn-popup"
-                  onclick="location.href='{{ url_for('create_playlist') }}'">
+                  onclick="location.href='{{ url_for('create_playlist', next=request.path) }}'">
             Create Playlist
           </button>
         </div>

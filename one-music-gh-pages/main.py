@@ -1771,6 +1771,8 @@ def delete_comment(comment_id):
 
 @app.route('/login-page', methods=["GET","POST"])
 def login_page():
+    next_page = request.args.get('next')
+
     if request.method == "POST":
         email = request.form.get("email")
         password = request.form.get("password")
@@ -1787,7 +1789,10 @@ def login_page():
             return redirect(url_for('login_page'))
         else:
             login_user(user)
-            return redirect(url_for('home'))
+            if next_page:
+                return redirect(next_page)
+            else:
+                return redirect(url_for('home'))
     return render_template('login.html', current_user=current_user)
 
 @app.route('/register-page', methods=["GET","POST"])
@@ -2639,6 +2644,9 @@ def refresh_user_library(user, sp, playlists):
 @app.route('/create-playlist', methods=['GET', 'POST'])
 @login_required
 def create_playlist():
+    # store the page you came from by getting it from the url
+    next_page = request.args.get('next')
+    print(next_page)
     # Get a valid token or redirect if none
     access_token = get_valid_spotify_token(current_user)
     if not access_token:
@@ -2686,7 +2694,10 @@ def create_playlist():
         db.session.add(new_playlist_data)
         db.session.commit()
 
-        return redirect(url_for('playlist'))
+        if next_page:
+            return redirect(next_page)
+        else:
+            return redirect(url_for('playlist'))
     return render_template('create-playlist.html')
 
 

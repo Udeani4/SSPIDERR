@@ -156,7 +156,7 @@
                                             <li><a href="{{ url_for('contact') }}">Contact</a></li>
                                             <li><a href="{{ url_for('elements') }}">Elements</a></li>
                                             {% if not current_user.is_authenticated: %}
-                                                <li><a href="{{ url_for('login_page') }}">Login</a></li>
+                                                <li><a href="{{ url_for('login_page', next=request.path) }}">Login</a></li>
                                             {% else: %}
                                                 <li><a href="{{ url_for('logout') }}">Logout</a></li>
                                             {% endif %}
@@ -190,7 +190,7 @@
                                     {% if not current_user.is_authenticated: %}
                                         <!-- Login/Register -->
                                         <div class="login-register-btn mr-50">
-                                            <a href="{{ url_for('login_page') }}" id="loginBtn">Login / Register</a>
+                                            <a href="{{ url_for('login_page', next=request.path) }}" id="loginBtn">Login / Register</a>
                                         </div>
                                     {% else: %}
                                         <!--Logout-->
