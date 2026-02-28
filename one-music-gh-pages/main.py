@@ -295,10 +295,11 @@ class HomeData(db.Model):
 class SchedulerStatus(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     last_run = db.Column(db.DateTime(timezone=True), nullable=False)
+    user_id = db.Column(db.String(50), nullable=False)
 
 
 with app.app_context():
-    Songs.__table__.drop(db.engine)
+    # Songs.__table__.drop(db.engine)
     # HomeData.__table__.drop(db.engine)
     # SchedulerStatus.__table__.drop(db.engine)
     # BlogPost.__table__.drop(db.engine)
@@ -315,6 +316,8 @@ def logout():
     logout_user()
     return redirect(url_for('home'))
 
+# If upload folder exist initially delete
+EXISTING_UPLOAD_FOLDER = "./static/uploads"
 
 def create_upload_folder():
     # Create a folder for uploaded songs
@@ -322,17 +325,46 @@ def create_upload_folder():
     app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+def delete_upload_folder():
+    if os.path.exists(EXISTING_UPLOAD_FOLDER):
+        try:
+            shutil.rmtree(EXISTING_UPLOAD_FOLDER)
+            print("Folder deleted successfully!")
+        except Exception as e:
+            print(f"Failed to delete folder: {e}")
+    else:
+        print("Folder does not exist.")
 
-def should_run_24h_task():
-    status = SchedulerStatus.query.first()
+def should_run_24h_task(current_user_id):
     now = datetime.now(timezone.utc)  # aware
 
-    # First run
-    if not status:
-        status = SchedulerStatus(last_run=now)
-        db.session.add(status)
-        db.session.commit()
-        return True
+    if current_user_id:
+        status = (
+            SchedulerStatus.query
+            .filter_by(user_id=current_user_id)
+            .order_by(SchedulerStatus.last_run.desc())
+            .first()
+        )
+        # First run
+        if not status:
+            status = SchedulerStatus(last_run=now, user_id=current_user_id)
+            db.session.add(status)
+            db.session.commit()
+
+    else:
+        status = (
+            SchedulerStatus.query
+            .filter_by(user_id="NULL_USER")
+            .order_by(SchedulerStatus.last_run.desc())
+            .first()
+        )
+
+        # First run
+        if not status:
+            status = SchedulerStatus(last_run=now, user_id="NULL_USER")
+            db.session.add(status)
+            db.session.commit()
+            return True
 
     # Get last_run safely
     last_run = status.last_run
@@ -347,7 +379,6 @@ def should_run_24h_task():
         db.session.commit()
         return True
     return False
-
 
 def get_artwork_url(original_url: str, size: int = 500) -> str:
     """
@@ -973,6 +1004,10 @@ def home():
         "is_loading": True,
         "message": "Authenticating..."
     })
+
+    delete_upload_folder() #delete upload_folder once user gets to home page
+    create_upload_folder() #create a new empty folder for future use
+
     print(f"Is current user authenticated: {current_user.is_authenticated}, Current User Id: {current_user.id if current_user.is_authenticated else None}")
     current_user_id = current_user.id if current_user.is_authenticated else None
     # Get the latest saved home data
@@ -982,7 +1017,7 @@ def home():
         "is_loading": True,
         "message": "Loading data..."
     })
-    if should_run_24h_task() or (not home_data_exist and current_user_id is None):
+    if should_run_24h_task(current_user_id) or (not home_data_exist and current_user_id is None):
         print("enter-1st if")
         # Fetch Top Album
         try:
@@ -1789,6 +1824,19 @@ def login_page():
             return redirect(url_for('login_page'))
         else:
             login_user(user)
+
+            # Add update the login time to the scheduler to avoid  repeat long load because of Using
+            now = datetime.now(timezone.utc)
+            status = (
+                SchedulerStatus.query
+                .filter_by(user_id=current_user.id)
+                .order_by(SchedulerStatus.last_run.desc())
+                .first()
+            )
+            if status:
+                status.last_run = now  #update before leaving page
+
+
             if next_page:
                 return redirect(next_page)
             else:
@@ -2646,7 +2694,7 @@ def refresh_user_library(user, sp, playlists):
 def create_playlist():
     # store the page you came from by getting it from the url
     next_page = request.args.get('next')
-    print(next_page)
+    print('callback_url: ', next_page)
     # Get a valid token or redirect if none
     access_token = get_valid_spotify_token(current_user)
     if not access_token:
@@ -3025,12 +3073,6 @@ def elements():
 
 @app.route('/loader-page')
 def loader_page():
-    # Refresh removes any upload folder
-    # if os.path.exists(UPLOAD_FOLDER):
-    #     shutil.rmtree(UPLOAD_FOLDER)
-    #     print("Folder deleted successfully!")
-
-    # For modal playlist
     access_token = get_valid_spotify_token(current_user)
     if not access_token:
         return None  # User not logged in or no valid token
@@ -3040,24 +3082,12 @@ def loader_page():
 
     return render_template('loader-page.html', playlist_list=playlist_list)  # Loads templates/index.html
 
-# If upload folder exist initially delete
-EXISTING_UPLOAD_FOLDER = "./static/uploads"
-
-if os.path.exists(EXISTING_UPLOAD_FOLDER):
-    try:
-        shutil.rmtree(EXISTING_UPLOAD_FOLDER)
-        print("Folder deleted successfully!")
-    except Exception as e:
-        print(f"Failed to delete folder: {e}")
-else:
-    print("Folder does not exist.")
-
-
 
 # Create a folder for uploaded songs
 UPLOAD_FOLDER = os.path.join("static", "uploads")
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
 
 # Allowed music formats
 ALLOWED_EXTENSIONS = {".mp3", ".wav", ".flac", ".aac", ".ogg", ".m4a"}
@@ -3470,11 +3500,7 @@ def song_processing_stream(playlist_id):
         "message": "Song processing complete! Click circle objects to view status"
     })
 
-    if os.path.exists(UPLOAD_FOLDER):
-        shutil.rmtree(UPLOAD_FOLDER)
-        print("Folder deleted successfully!")
-    else:
-        print("Folder does not exist.")
+    delete_upload_folder()
 
     create_upload_folder() #creates a new upload folder
     return redirect(url_for('show_song_processing', playlist_id=playlist_id))
