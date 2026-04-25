@@ -378,8 +378,12 @@ def should_run_24h_task(current_user_id):
     if now - last_run >= timedelta(hours=24):
         status.last_run = now
         db.session.commit()
+        print(f'Time - schedule ----True')
         return True
+    print(f'Time - schedule ----False')
     return False
+
+
 
 def get_artwork_url(original_url: str, size: int = 500) -> str:
     """
@@ -1860,6 +1864,7 @@ def login_page():
             return redirect(url_for('login_page'))
         else:
             login_user(user)
+            print(f'is current_user authenticated: {current_user.is_authenticated}')
 
             # Add update the login time to the scheduler to avoid  repeat long load because of Using
             now = datetime.now(timezone.utc)
