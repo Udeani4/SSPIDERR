@@ -17,7 +17,7 @@
                         <h3>Create Playlist</h3>
                         <!-- Login Form -->
                         <div class="create-playlist-form">
-                            <form action="#" method="post">
+                            <form action="{{ url_for('create_playlist') }}" method="post">
                                 <div class="form-group">
                                     <label for="playlist-create-name">Name</label>
                                     <input class="form-control" id="playlist-create-name" name="name" placeholder="Enter playlist name">

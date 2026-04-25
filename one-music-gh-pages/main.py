@@ -793,7 +793,7 @@ def get_spotify_playlist_tracks(playlist_id):
 
     try:
         # Use playlist_items (handles pagination) — set limit as you want
-        results = sp.playlist_items(playlist_id, limit=100, market="US")
+        results = sp.playlist_items(playlist_id, limit=15, market="US")
 
     except spotipy.exceptions.SpotifyException as e:
         # If user token fails and we used user client, try server fallback
@@ -805,7 +805,7 @@ def get_spotify_playlist_tracks(playlist_id):
                     client_id=spotify_client_id,
                     client_secret=spotify_client_secret
                 ))
-                results = sp.playlist_items(playlist_id, limit=100, market="US")
+                results = sp.playlist_items(playlist_id, limit=15, market="US")
             except Exception as e2:
                 # return None or raise depending on your app design
                 return None
@@ -998,6 +998,8 @@ def get_app_status():
 # def dom_initial_loader():
 #     return render_template('initial_loader.html')
 
+import inspect ## for getting some info like current line
+
 @app.route('/', methods=['GET','POST'])
 def home():
     # dom_initial_loader()
@@ -1021,6 +1023,8 @@ def home():
     if should_run_24h_task(current_user_id) or (not home_data_exist and current_user_id is None):
         print("enter-1st if")
         # Fetch Top Album
+
+        print('i-tunes album request', f' -- current line: {inspect.currentframe().f_lineno}')
         try:
             album_result = requests.get(i_tunes_top_albums_url)
             album_result.raise_for_status()
@@ -1030,6 +1034,7 @@ def home():
             "is_loading": True,
             "message": "Please hold on. This might take a few minutes..."
         })
+        print('i-tunes album request completed', f' -- current line: {inspect.currentframe().f_lineno}')
         if album_result:
             album_json = album_result.json()
             print(album_json)
@@ -1048,6 +1053,7 @@ def home():
                 print(album_art)
 
         # Fetch Top Song
+        print('i tunes songs request', f' -- current line: {inspect.currentframe().f_lineno}')
         song_result = requests.get(i_tunes_top_songs_url)
         if song_result:
             song_json = song_result.json()
@@ -1066,28 +1072,39 @@ def home():
                 song_art = songs[0]["artwork_url_original"]
                 song_id = songs[0]["song_id"]
                 print(song_name, song_id)
+        print('i tunes song request completed', f' -- current line: {inspect.currentframe().f_lineno}')
 
         # Fetch Top Artist
+        print('retrieve get_billboard_top_artists', f' -- current line: {inspect.currentframe().f_lineno}')
         top_artist_name = get_billboard_top_artists(limit=1)  # Top artist this week
         top_artist_name=top_artist_name[0]
         print(top_artist_name)
+        print('retrieve get_billboard_top_artists completed', f' -- current line: {inspect.currentframe().f_lineno}')
 
         sp, source = get_spotify_client_for_request(current_user)
         print(f"Home:: spotify app: {sp},\n source: {source}")
 
+        print('retrieve get_artist_image', f' -- current line: {inspect.currentframe().f_lineno}')
         artist_art = get_artist_image(top_artist_name, 0, sp=sp)
         print(artist_art)
+        print('retrieve get_artist_image completed', f' -- current line: {inspect.currentframe().f_lineno}')
 
+        print('retrieve top_albums_info', f' -- current line: {inspect.currentframe().f_lineno}')
         top_albums = top_albums_info()
+        print('retrieve top_albums_info completed', f' -- current line: {inspect.currentframe().f_lineno}')
 
-        best_ten_hits = get_spotify_playlist_tracks(best_hits_2025_id)
+        print("retrieve get_spotify_playlist_tracks", f' -- current line: {inspect.currentframe().f_lineno}')
+        best_ten_hits = get_spotify_playlist_tracks(best_hits_2025_id) ## This is where the issue is. Then implement threading for simultaneous function call
+        print("retrieve get_spotify_playlist_tracks completed", f' -- current line: {inspect.currentframe().f_lineno}')
 
         if best_ten_hits:  # only slice if not None
             best_ten_hits_2025 = best_ten_hits[:10]
         else:
             best_ten_hits_2025 = []  # or some default/fallback
 
+        print('retrieve get_live_global_top_tracks', f' -- current line: {inspect.currentframe().f_lineno}')
         this_weeks_10 = get_live_global_top_tracks(limit=10)
+        print('retrieve get_live_global_top_tracks completed', f' -- current line: {inspect.currentframe().f_lineno}')
 
         if this_weeks_10:  # only slice if not None
             this_weeks_10_hits = this_weeks_10[:10]
@@ -1100,12 +1117,16 @@ def home():
         })
         # FETCH TOP ARTISTS SECTION
         artist_section_dict = {}
+        print('retrieve get_billboard_top_artists', f' -- current line: {inspect.currentframe().f_lineno}')
         top_artists_list = get_billboard_top_artists(limit=10)
+        print('retrieve get_billboard_top_artists completed', f' -- current line: {inspect.currentframe().f_lineno}')
 
+        print('compile top_artist_list', f' -- current line: {inspect.currentframe().f_lineno}')
         for artist in top_artists_list:
             img_url = get_artist_image(artist, 5, sp=sp)
             artist_section_dict[artist] = img_url  # assign key-value pair
         print(artist_section_dict)
+        print('compile top_artist_list completed', f' -- current line: {inspect.currentframe().f_lineno}')
 
         # load to database
         new_home_data = HomeData(
@@ -1157,7 +1178,7 @@ def home():
 
         # Convert JSON fields back to Python lists/dicts
         import json
-
+        ## its already stored as Json in the Database
         top_albums = data.top_albums
         best_ten_hits_2025 = data.best_2025_hits
         this_weeks_10_hits = data.this_weeks_hits
@@ -1179,6 +1200,7 @@ def home():
 
             # data = HomeData.query.order_by(HomeData.id.desc()).first()
             if not data.feature_artists_info:
+                print('generating feature_artists_info', f' -- current line: {inspect.currentframe().f_lineno}')
                 print("enter-1st else 1st if 1st if")
                 print(f"You have reached if current_user.is_authenticated. Artist name {top_artist_name}")
                 # For modal playlist
@@ -1187,11 +1209,21 @@ def home():
                     return None  # User not logged in or no valid token
                 sp = spotipy.Spotify(auth=access_token)
 
+                print('retrieve get_user_playlists', f' -- current line: {inspect.currentframe().f_lineno}')
                 playlist_list = get_user_playlists(current_user, sp, 1, "playlist", "small")
+                print('retrieve get_user_playlists completed', f' -- current line: {inspect.currentframe().f_lineno}')
+
+                print('retrieve top_artist_info', f' -- current line: {inspect.currentframe().f_lineno}')
                 feature_artists_info = top_artist_info(top_artist_name)
+                print('retrieve top_artist_info completed', f' -- current line: {inspect.currentframe().f_lineno}')
+
+                print('retrieve get_artist_description', f' -- current line: {inspect.currentframe().f_lineno}')
                 artist_description = get_artist_description(top_artist_name, last_fm_api_key)
+                print('retrieve get_artist_description completed', f' -- current line: {inspect.currentframe().f_lineno}')
                 print(artist_description)
+                print('retrieve get_album_tracks_sorted', f' -- current line: {inspect.currentframe().f_lineno}')
                 top_artist_album_track = get_album_tracks_sorted(feature_artists_info['album_name'])
+                print('retrieve get_album_tracks_sorted completed', f' -- current line: {inspect.currentframe().f_lineno}')
 
                 print(f"Playlist List: {playlist_list}")
                 print(f"artist description: {artist_description}")
@@ -1220,6 +1252,7 @@ def home():
                 db.session.commit()
 
             else:
+                print('feature_artists_info exists in data', f' -- current line: {inspect.currentframe().f_lineno}')
                 print("enter-1st else 1st if 1st else")
                 access_token = get_valid_spotify_token(current_user)
                 if not access_token:
@@ -1232,8 +1265,10 @@ def home():
                 artist_description = data.artist_description  # string, no conversion needed
                 top_artist_album_track = data.top_artist_album_track
                 # The spotify playlist data has to be gotten live, not from the database
+                print('retrieve get_user_playlists', f' -- current line: {inspect.currentframe().f_lineno}')
                 playlist_list = get_user_playlists(current_user, sp, 1, "playlist", "small")
                 # 6️⃣ Reconstruct variables exactly as your template expects
+                print('retrieve get_user_playlists complete', f' -- current line: {inspect.currentframe().f_lineno}')
 
             return render_template('index.html', playlist_list=playlist_list,
                                        album_art=album_art,
