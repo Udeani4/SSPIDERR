@@ -301,7 +301,7 @@ class SchedulerStatus(db.Model):
 with app.app_context():
     # Songs.__table__.drop(db.engine)
     # HomeData.__table__.drop(db.engine)
-    # SchedulerStatus.__table__.drop(db.engine)
+    SchedulerStatus.__table__.drop(db.engine) ## run this again after 24 hrs
     # BlogPost.__table__.drop(db.engine)
     # Comment.__table__.drop(db.engine)
     db.create_all() #This is where the table is created
@@ -337,20 +337,40 @@ def delete_upload_folder():
         print("Folder does not exist.")
 
 def should_run_24h_task(current_user_id):
-    now = datetime.now(timezone.utc)  # aware
+    now = datetime.now(timezone.utc)
 
     if current_user_id:
+        # Try to get logged-in user status
         status = (
             SchedulerStatus.query
             .filter_by(user_id=current_user_id)
             .order_by(SchedulerStatus.last_run.desc())
             .first()
         )
-        # First run
+
+        # 🔥 NEW: fallback to NULL_USER if no user record
         if not status:
-            status = SchedulerStatus(last_run=now, user_id=current_user_id)
-            db.session.add(status)
-            db.session.commit()
+            null_status = (
+                SchedulerStatus.query
+                .filter_by(user_id="NULL_USER")
+                .order_by(SchedulerStatus.last_run.desc())
+                .first()
+            )
+
+            if null_status:
+                # Inherit last_run from anonymous usage
+                status = SchedulerStatus(
+                    user_id=current_user_id,
+                    last_run=null_status.last_run
+                )
+                db.session.add(status)
+                db.session.commit()
+            else:
+                # Truly first-time user
+                status = SchedulerStatus(last_run=now, user_id=current_user_id)
+                db.session.add(status)
+                db.session.commit()
+                return True  # ✅ consistent with NULL_USER branch
 
     else:
         status = (
@@ -360,29 +380,27 @@ def should_run_24h_task(current_user_id):
             .first()
         )
 
-        # First run
         if not status:
             status = SchedulerStatus(last_run=now, user_id="NULL_USER")
             db.session.add(status)
             db.session.commit()
             return True
 
-    # Get last_run safely
+    # --- Shared logic continues ---
+
     last_run = status.last_run
 
-    # Convert naive → aware but DO NOT save back to DB
     if last_run.tzinfo is None:
         last_run = last_run.replace(tzinfo=timezone.utc)
 
-    # Compare
     if now - last_run >= timedelta(hours=24):
         status.last_run = now
         db.session.commit()
-        print(f'Time - schedule ----True')
+        print('Time - schedule ----True')
         return True
-    print(f'Time - schedule ----False')
-    return False
 
+    print('Time - schedule ----False')
+    return False
 
 
 def get_artwork_url(original_url: str, size: int = 500) -> str:
@@ -823,7 +841,8 @@ def get_spotify_playlist_tracks(playlist_id):
             continue
         track_name = track.get('track')
         artist_name = ", ".join([a['name'] for a in track.get('artists', [])])
-        alt_track = url_for('static', filename='audio/dummy-audio.mp3')
+        # alt_track = url_for('static', filename='audio/dummy-audio.mp3') ## url_for() wont work in the threading executor
+        alt_track = '/static/audio/dummy-audio.mp3'
 
         # Safely call your iTunes helper
         track_url = get_itunes_preview(track_name, artist_name, limit=1, country="US")
@@ -877,7 +896,8 @@ def get_live_global_top_tracks(limit=50):
             print(f"Error searching Spotify for {track_name}: {e}")
 
         img_url = get_artist_image(artist_name, 5, sp=sp)
-        alt_track = url_for('static', filename='audio/dummy-audio.mp3')
+        # alt_track = url_for('static', filename='audio/dummy-audio.mp3') ## url_for() wont work because its inside a threading executor
+        alt_track = '/static/audio/dummy-audio.mp3'
 
         # Safely call your iTunes helper
         track_url = get_itunes_preview(track_name, artist_name, limit=1, country="US")
@@ -1003,6 +1023,14 @@ def get_app_status():
 #     return render_template('initial_loader.html')
 
 import inspect ## for getting some info like current line
+from concurrent.futures import ThreadPoolExecutor
+
+
+def fetch_json(url):
+    """ Fetch function for quick requests. Returns a response (not yet converted to json object)"""
+    response = requests.get(url)
+    response.raise_for_status()  # catches HTTP errors
+    return response
 
 @app.route('/', methods=['GET','POST'])
 def home():
@@ -1027,11 +1055,24 @@ def home():
     if should_run_24h_task(current_user_id) or (not home_data_exist and current_user_id is None):
         print("enter-1st if")
         # Fetch Top Album
+        # print('Starting threading...')
+        with ThreadPoolExecutor(max_workers=7) as executor:
+            futures = {
+                "i_tunes_top_albums": executor.submit(fetch_json, i_tunes_top_albums_url),
+                "i_tunes_top_songs": executor.submit(fetch_json, i_tunes_top_songs_url),
+                "get_billboard_top_artists": executor.submit(get_billboard_top_artists, 10),
+                "get_spotify_client_for_request": executor.submit(get_spotify_client_for_request, current_user),
+                "top_albums_info": executor.submit(top_albums_info),
+                "best_hits_2025_id": executor.submit(get_spotify_playlist_tracks, best_hits_2025_id),
+                "get_live_global_top_tracks": executor.submit(get_live_global_top_tracks,10)
+            }
+
+            # Collect results
+            results = {key: future.result() for key, future in futures.items()}
 
         print('i-tunes album request', f' -- current line: {inspect.currentframe().f_lineno}')
         try:
-            album_result = requests.get(i_tunes_top_albums_url)
-            album_result.raise_for_status()
+            album_result = results['i_tunes_top_albums']
         except requests.exceptions.RequestException:
             album_result = None
         loading_message.update({
@@ -1058,7 +1099,7 @@ def home():
 
         # Fetch Top Song
         print('i tunes songs request', f' -- current line: {inspect.currentframe().f_lineno}')
-        song_result = requests.get(i_tunes_top_songs_url)
+        song_result = results['i_tunes_top_songs']
         if song_result:
             song_json = song_result.json()
             print(song_json)
@@ -1080,12 +1121,13 @@ def home():
 
         # Fetch Top Artist
         print('retrieve get_billboard_top_artists', f' -- current line: {inspect.currentframe().f_lineno}')
-        top_artist_name = get_billboard_top_artists(limit=1)  # Top artist this week
+        top_artist_name = results['get_billboard_top_artists']  # Top artist this week
+
         top_artist_name=top_artist_name[0]
         print(top_artist_name)
         print('retrieve get_billboard_top_artists completed', f' -- current line: {inspect.currentframe().f_lineno}')
 
-        sp, source = get_spotify_client_for_request(current_user)
+        sp, source = results['get_spotify_client_for_request']
         print(f"Home:: spotify app: {sp},\n source: {source}")
 
         print('retrieve get_artist_image', f' -- current line: {inspect.currentframe().f_lineno}')
@@ -1094,11 +1136,11 @@ def home():
         print('retrieve get_artist_image completed', f' -- current line: {inspect.currentframe().f_lineno}')
 
         print('retrieve top_albums_info', f' -- current line: {inspect.currentframe().f_lineno}')
-        top_albums = top_albums_info()
+        top_albums = results['top_albums_info']
         print('retrieve top_albums_info completed', f' -- current line: {inspect.currentframe().f_lineno}')
 
         print("retrieve get_spotify_playlist_tracks", f' -- current line: {inspect.currentframe().f_lineno}')
-        best_ten_hits = get_spotify_playlist_tracks(best_hits_2025_id) ## This is where the issue is. Then implement threading for simultaneous function call
+        best_ten_hits = results['best_hits_2025_id'] ## This is where the issue is. Then implement threading for simultaneous function call
         print("retrieve get_spotify_playlist_tracks completed", f' -- current line: {inspect.currentframe().f_lineno}')
 
         if best_ten_hits:  # only slice if not None
@@ -1107,7 +1149,7 @@ def home():
             best_ten_hits_2025 = []  # or some default/fallback
 
         print('retrieve get_live_global_top_tracks', f' -- current line: {inspect.currentframe().f_lineno}')
-        this_weeks_10 = get_live_global_top_tracks(limit=10)
+        this_weeks_10 = results['get_live_global_top_tracks']
         print('retrieve get_live_global_top_tracks completed', f' -- current line: {inspect.currentframe().f_lineno}')
 
         if this_weeks_10:  # only slice if not None
@@ -1122,7 +1164,7 @@ def home():
         # FETCH TOP ARTISTS SECTION
         artist_section_dict = {}
         print('retrieve get_billboard_top_artists', f' -- current line: {inspect.currentframe().f_lineno}')
-        top_artists_list = get_billboard_top_artists(limit=10)
+        top_artists_list = results['get_billboard_top_artists']
         print('retrieve get_billboard_top_artists completed', f' -- current line: {inspect.currentframe().f_lineno}')
 
         print('compile top_artist_list', f' -- current line: {inspect.currentframe().f_lineno}')
@@ -1213,16 +1255,27 @@ def home():
                     return None  # User not logged in or no valid token
                 sp = spotipy.Spotify(auth=access_token)
 
+                ## Start important threads
+                with ThreadPoolExecutor(max_workers=3) as executor:
+                    futures = {
+                        "get_user_playlists": executor.submit(get_user_playlists,current_user, sp, 1, "playlist", "small"),
+                        "top_artist_info": executor.submit(top_artist_info,top_artist_name),
+                        "get_artist_description": executor.submit(get_artist_description,top_artist_name, last_fm_api_key),
+                    }
+
+                    # Collect results
+                    results = {key: future.result() for key, future in futures.items()}
+
                 print('retrieve get_user_playlists', f' -- current line: {inspect.currentframe().f_lineno}')
-                playlist_list = get_user_playlists(current_user, sp, 1, "playlist", "small")
+                playlist_list = results['get_user_playlists']
                 print('retrieve get_user_playlists completed', f' -- current line: {inspect.currentframe().f_lineno}')
 
                 print('retrieve top_artist_info', f' -- current line: {inspect.currentframe().f_lineno}')
-                feature_artists_info = top_artist_info(top_artist_name)
+                feature_artists_info = results['top_artist_info']
                 print('retrieve top_artist_info completed', f' -- current line: {inspect.currentframe().f_lineno}')
 
                 print('retrieve get_artist_description', f' -- current line: {inspect.currentframe().f_lineno}')
-                artist_description = get_artist_description(top_artist_name, last_fm_api_key)
+                artist_description = results['get_artist_description']
                 print('retrieve get_artist_description completed', f' -- current line: {inspect.currentframe().f_lineno}')
                 print(artist_description)
                 print('retrieve get_album_tracks_sorted', f' -- current line: {inspect.currentframe().f_lineno}')
