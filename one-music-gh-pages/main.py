@@ -295,13 +295,14 @@ class HomeData(db.Model):
 class SchedulerStatus(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     last_run = db.Column(db.DateTime(timezone=True), nullable=False)
-    user_id = db.Column(db.String(50), nullable=False)
+    session_id = db.Column(db.String, nullable=True)
+    user_id = db.Column(db.String(50), nullable=True)
 
 
 with app.app_context():
     # Songs.__table__.drop(db.engine)
     # HomeData.__table__.drop(db.engine)
-    SchedulerStatus.__table__.drop(db.engine) ## run this again after 24 hrs
+    # SchedulerStatus.__table__.drop(db.engine) ## run this again after 24 hrs
     # BlogPost.__table__.drop(db.engine)
     # Comment.__table__.drop(db.engine)
     db.create_all() #This is where the table is created
@@ -336,11 +337,24 @@ def delete_upload_folder():
     else:
         print("Folder does not exist.")
 
+
+
+import uuid
+
+def get_session_id():
+    '''This function is useful to keep track of the sessions before carrying out the scheduler. This helps in cases of multiple users'''
+    if 'session_id' not in session:
+        session['session_id'] = str(uuid.uuid4())
+    return session['session_id']
+
+
 def should_run_24h_task(current_user_id):
     now = datetime.now(timezone.utc)
 
+    session_id = get_session_id()
+
     if current_user_id:
-        # Try to get logged-in user status
+        # 🔹 Logged-in flow
         status = (
             SchedulerStatus.query
             .filter_by(user_id=current_user_id)
@@ -348,46 +362,50 @@ def should_run_24h_task(current_user_id):
             .first()
         )
 
-        # 🔥 NEW: fallback to NULL_USER if no user record
+        # 🔥 NEW: migrate session → user
         if not status:
-            null_status = (
+            session_status = (
                 SchedulerStatus.query
-                .filter_by(user_id="NULL_USER")
+                .filter_by(session_id=session_id)
                 .order_by(SchedulerStatus.last_run.desc())
                 .first()
             )
 
-            if null_status:
-                # Inherit last_run from anonymous usage
+            if session_status:
                 status = SchedulerStatus(
                     user_id=current_user_id,
-                    last_run=null_status.last_run
+                    last_run=session_status.last_run
                 )
                 db.session.add(status)
                 db.session.commit()
             else:
-                # Truly first-time user
-                status = SchedulerStatus(last_run=now, user_id=current_user_id)
+                status = SchedulerStatus(
+                    user_id=current_user_id,
+                    last_run=now
+                )
                 db.session.add(status)
                 db.session.commit()
-                return True  # ✅ consistent with NULL_USER branch
+                return True
 
     else:
+        # 🔹 Anonymous flow (session-based now)
         status = (
             SchedulerStatus.query
-            .filter_by(user_id="NULL_USER")
+            .filter_by(session_id=session_id)
             .order_by(SchedulerStatus.last_run.desc())
             .first()
         )
 
         if not status:
-            status = SchedulerStatus(last_run=now, user_id="NULL_USER")
+            status = SchedulerStatus(
+                session_id=session_id,
+                last_run=now
+            )
             db.session.add(status)
             db.session.commit()
             return True
 
-    # --- Shared logic continues ---
-
+    # --- shared logic ---
     last_run = status.last_run
 
     if last_run.tzinfo is None:
@@ -895,7 +913,7 @@ def get_live_global_top_tracks(limit=50):
         except Exception as e:
             print(f"Error searching Spotify for {track_name}: {e}")
 
-        img_url = get_artist_image(artist_name, 5, sp=sp)
+        img_url = get_artist_image(artist_name, 5, sp=sp) ## This needs to be quicker. Figure it ourt
         # alt_track = url_for('static', filename='audio/dummy-audio.mp3') ## url_for() wont work because its inside a threading executor
         alt_track = '/static/audio/dummy-audio.mp3'
 
@@ -1023,7 +1041,7 @@ def get_app_status():
 #     return render_template('initial_loader.html')
 
 import inspect ## for getting some info like current line
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
 def fetch_json(url):
@@ -1031,6 +1049,10 @@ def fetch_json(url):
     response = requests.get(url)
     response.raise_for_status()  # catches HTTP errors
     return response
+
+def fetch_artist(artist,sp):
+    img_url = get_artist_image(artist, 5, sp=sp)
+    return artist, img_url
 
 @app.route('/', methods=['GET','POST'])
 def home():
@@ -1168,9 +1190,16 @@ def home():
         print('retrieve get_billboard_top_artists completed', f' -- current line: {inspect.currentframe().f_lineno}')
 
         print('compile top_artist_list', f' -- current line: {inspect.currentframe().f_lineno}')
-        for artist in top_artists_list:
-            img_url = get_artist_image(artist, 5, sp=sp)
-            artist_section_dict[artist] = img_url  # assign key-value pair
+        # for artist in top_artists_list:
+        #     img_url = get_artist_image(artist, 5, sp=sp)
+        #     artist_section_dict[artist] = img_url  # assign key-value pair
+
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            futures = [executor.submit(fetch_artist, artist, sp) for artist in top_artists_list]
+            for future in as_completed(futures):
+                artist, img_url = future.result()
+                artist_section_dict[artist] = img_url
+
         print(artist_section_dict)
         print('compile top_artist_list completed', f' -- current line: {inspect.currentframe().f_lineno}')
 
