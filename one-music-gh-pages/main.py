@@ -900,7 +900,8 @@ def get_live_global_top_tracks(limit=50):
     sp, source = get_spotify_client_for_request(current_user)
     print(f"get_live_chart:: spotify app: {sp},\n source: {source}")
 
-    tracks = []
+    tracks = [None] * len(data["tracks"]["track"])
+
     def data_extraction(item,sp):
         track_name = item["name"]
         artist_name = item["artist"]["name"]
@@ -938,10 +939,14 @@ def get_live_global_top_tracks(limit=50):
         return track_info, spotify_id
 
     with ThreadPoolExecutor(max_workers=10) as executor:
-        futures = [executor.submit(data_extraction, item, sp) for item in data["tracks"]["track"]]
+        futures = {
+            executor.submit(data_extraction, item, sp): idx
+            for idx, item in enumerate(data["tracks"]["track"])
+        }
         for future in as_completed(futures):
+            idx = futures[future]
             track_information, spotify_id = future.result()
-            tracks.append(track_information)
+            tracks[idx] = track_information ## Return to this
             print(f"spotify song id: {spotify_id}")
     return tracks
 
