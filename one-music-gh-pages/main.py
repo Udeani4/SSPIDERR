@@ -41,6 +41,8 @@ import spotipy
 from spotipy import Spotify
 from spotipy.oauth2 import SpotifyOAuth, SpotifyClientCredentials
 import webbrowser
+import inspect ## for getting some info like current line
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from wtforms.validators import DataRequired
 
@@ -899,7 +901,7 @@ def get_live_global_top_tracks(limit=50):
     print(f"get_live_chart:: spotify app: {sp},\n source: {source}")
 
     tracks = []
-    for item in data["tracks"]["track"]:
+    def data_extraction(item,sp):
         track_name = item["name"]
         artist_name = item["artist"]["name"]
 
@@ -913,7 +915,7 @@ def get_live_global_top_tracks(limit=50):
         except Exception as e:
             print(f"Error searching Spotify for {track_name}: {e}")
 
-        img_url = get_artist_image(artist_name, 5, sp=sp) ## This needs to be quicker. Figure it ourt
+        img_url = get_artist_image(artist_name, 5, sp=sp) ## This needs to be quicker. Figure it out
         # alt_track = url_for('static', filename='audio/dummy-audio.mp3') ## url_for() wont work because its inside a threading executor
         alt_track = '/static/audio/dummy-audio.mp3'
 
@@ -933,11 +935,15 @@ def get_live_global_top_tracks(limit=50):
                 "spotify_song_id": spotify_id,  # ✅ now you can use this in JS for add-to-playlist
                 "itunes_url": track_itunes_url
             }
-        tracks.append(track_info)
-        print(f"spotify song id: {spotify_id}")
+        return track_info, spotify_id
+
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        futures = [executor.submit(data_extraction, item, sp) for item in data["tracks"]["track"]]
+        for future in as_completed(futures):
+            track_information, spotify_id = future.result()
+            tracks.append(track_information)
+            print(f"spotify song id: {spotify_id}")
     return tracks
-
-
 
 def get_itunes_preview(song_name, artist_name=None, limit=1, country="US"):
     base_url = "https://itunes.apple.com/search"
@@ -1040,8 +1046,8 @@ def get_app_status():
 # def dom_initial_loader():
 #     return render_template('initial_loader.html')
 
-import inspect ## for getting some info like current line
-from concurrent.futures import ThreadPoolExecutor, as_completed
+# import inspect ## for getting some info like current line
+# from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
 def fetch_json(url):
