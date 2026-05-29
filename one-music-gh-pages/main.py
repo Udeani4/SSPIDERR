@@ -416,7 +416,7 @@ def should_run_24h_task(current_user_id):
     if now - last_run >= timedelta(hours=24):
         status.last_run = now
         db.session.commit()
-        print('Time - schedule ----True')
+        print('Time - schedule ----True') ## The scheduler is still wrong. When we log in we still rerun the api request. It does not go to picking data from the database
         return True
 
     print('Time - schedule ----False')
