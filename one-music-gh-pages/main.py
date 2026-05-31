@@ -349,11 +349,14 @@ def get_session_id():
         session['session_id'] = str(uuid.uuid4())
     return session['session_id']
 
+'50c15f32-0af5-4bd0-9d69-33f9a2cb10c3'
+'50c15f32-0af5-4bd0-9d69-33f9a2cb10c3'
 
 def should_run_24h_task(current_user_id):
     now = datetime.now(timezone.utc)
 
     session_id = get_session_id()
+    print("Current Session ID: ", session_id)
 
     if current_user_id:
         # 🔹 Logged-in flow
@@ -362,7 +365,7 @@ def should_run_24h_task(current_user_id):
             .filter_by(user_id=current_user_id)
             .order_by(SchedulerStatus.last_run.desc())
             .first()
-        )
+        ) ## Lets reset the table. Clear the table nd create again
 
         # 🔥 NEW: migrate session → user
         if not status:
@@ -374,12 +377,11 @@ def should_run_24h_task(current_user_id):
             )
 
             if session_status:
-                status = SchedulerStatus(
-                    user_id=current_user_id,
-                    last_run=session_status.last_run
-                )
-                db.session.add(status)
+                session_status.user_id = current_user_id
+                session_status.session_id = None
+
                 db.session.commit()
+                status = session_status
             else:
                 status = SchedulerStatus(
                     user_id=current_user_id,
@@ -388,7 +390,6 @@ def should_run_24h_task(current_user_id):
                 db.session.add(status)
                 db.session.commit()
                 return True
-
     else:
         # 🔹 Anonymous flow (session-based now)
         status = (
