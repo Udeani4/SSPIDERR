@@ -349,14 +349,16 @@ def get_session_id():
         session['session_id'] = str(uuid.uuid4())
     return session['session_id']
 
-'50c15f32-0af5-4bd0-9d69-33f9a2cb10c3'
-'50c15f32-0af5-4bd0-9d69-33f9a2cb10c3'
+# '50c15f32-0af5-4bd0-9d69-33f9a2cb10c3'
+# '50c15f32-0af5-4bd0-9d69-33f9a2cb10c3'
 
 def should_run_24h_task(current_user_id):
     now = datetime.now(timezone.utc)
+    # current_user_id = None ## remove this after test
 
     session_id = get_session_id()
     print("Current Session ID: ", session_id)
+    print('Current_user_id: ', current_user_id)
 
     if current_user_id:
         # 🔹 Logged-in flow
@@ -378,7 +380,7 @@ def should_run_24h_task(current_user_id):
 
             if session_status:
                 session_status.user_id = current_user_id
-                session_status.session_id = None
+                session_status.session_id = None ## We weill visit here again if it fails
 
                 db.session.commit()
                 status = session_status
@@ -416,6 +418,8 @@ def should_run_24h_task(current_user_id):
 
     if now - last_run >= timedelta(hours=24):
         status.last_run = now
+        status.session_id=session_id ## i just added this
+        status.user_id=current_user_id if current_user_id else None ## I just added this check if it works
         db.session.commit()
         print('Time - schedule ----True') ## The scheduler is still wrong. When we log in we still rerun the api request. It does not go to picking data from the database
         return True
@@ -735,12 +739,13 @@ def get_artist_description(artist_name, last_fm_api_key=None):
     return {"source": None, "description": "No description available."}
 
 def get_album_tracks_sorted(album_name):
-
+    print('get_album_tracks_sorted activated')
     sp, source = get_spotify_client_for_request(current_user)
     print(f"get_live_chart:: spotify app: {sp},\nsource: {source}")
 
     # Step 1: Search for album
     results = sp.search(q=f"album:{album_name}", type="album", limit=1)
+    print('is_track_data_results: ', results)
     if not results["albums"]["items"]:
         return []
 
@@ -760,9 +765,11 @@ def get_album_tracks_sorted(album_name):
             "track_number": track_info["track_number"],
             "album_name": album_name
         })
+    print('track_data_check: ', track_data)
 
     # Step 3: Sort tracks by popularity (descending)
     sorted_tracks = sorted(track_data, key=lambda x: x["popularity"], reverse=True)
+    print('sorted_track_check: ', sorted_tracks)
     return sorted_tracks
 
 # THE FOLLOWING FUNCTION ARE STEPS TO USE SPOTIFY SERVER ACCESS
@@ -1322,6 +1329,7 @@ def home():
                 print('retrieve get_album_tracks_sorted', f' -- current line: {inspect.currentframe().f_lineno}')
                 top_artist_album_track = get_album_tracks_sorted(feature_artists_info['album_name'])
                 print('retrieve get_album_tracks_sorted completed', f' -- current line: {inspect.currentframe().f_lineno}')
+                print(top_artist_album_track)
 
                 print(f"Playlist List: {playlist_list}")
                 print(f"artist description: {artist_description}")
@@ -1356,12 +1364,15 @@ def home():
                 if not access_token:
                     return None  # User not logged in or no valid token
                 sp = spotipy.Spotify(auth=access_token)
+                print('current user: ', current_user)
+                print('spotify token:', sp)
 
                 import json
                 # 5️⃣ Convert JSON fields back to Python objects (we will do it directly because our JSON data is not text. It is already stored as a list
                 feature_artists_info = data.feature_artists_info
                 artist_description = data.artist_description  # string, no conversion needed
                 top_artist_album_track = data.top_artist_album_track
+                print(f'top_artist_album_track: {top_artist_album_track if top_artist_album_track else None}')
                 # The spotify playlist data has to be gotten live, not from the database
                 print('retrieve get_user_playlists', f' -- current line: {inspect.currentframe().f_lineno}')
                 playlist_list = get_user_playlists(current_user, sp, 1, "playlist", "small")
@@ -1583,20 +1594,39 @@ def afro_beats():
     sp, source = get_spotify_client_for_request(current_user)
     print(f"get_live_chart:: spotify app: {sp},\nsource: {source}")
 
-    top_tracks = audio_mack_scrape(AFRO_TOP_TRACKS, sp,10)
-    trending_tracks = audio_mack_scrape(AFRO_TRENDING_TRACKS, sp,10)
-    recent_tracks = audio_mack_scrape(AFRO_RECENT_TRACKS, sp,10)
-    top_albums = audio_mack_scrape(AFRO_TOP_ALBUMS, sp,10)
-    trending_albums = audio_mack_scrape(AFRO_TRENDING_ALBUMS, sp,10)
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        futures = {
+            "top_tracks": executor.submit(audio_mack_scrape, AFRO_TOP_TRACKS,sp,10),
+            "trending_tracks": executor.submit(audio_mack_scrape, AFRO_TRENDING_TRACKS,sp,10),
+            "recent_tracks": executor.submit(audio_mack_scrape,AFRO_RECENT_TRACKS,sp, 10),
+            "top_albums": executor.submit(audio_mack_scrape,AFRO_TOP_ALBUMS,sp,10),
+            "trending_albums": executor.submit(audio_mack_scrape,AFRO_TRENDING_ALBUMS,sp,10),
+        }
+
+        # Collect results
+        results = {key: future.result() for key, future in futures.items()}
+
+    top_tracks = results['top_tracks']
+    trending_tracks = results['trending_tracks']
+    recent_tracks = results['recent_tracks']
+    top_albums = results['top_albums']
+    trending_albums = results['trending_albums']
 
     top_afro_artist = top_albums[0]['main_artist']
-    top_afro_artist_img = get_artist_image(top_afro_artist,0,sp)
-
     top_afro_artist_album = top_albums[0]['title']
-    top_afro_album_song = get_album_tracks_sorted(top_afro_artist_album)
 
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        futures={
+            'top_afro_album_song':executor.submit(get_album_tracks_sorted,top_afro_artist_album),
+            'top_afro_artist_img':executor.submit(get_artist_image,top_afro_artist,0,sp),
+            'top_afro_artist_info':executor.submit(top_artist_info,top_afro_artist)
+        }
 
-    top_afro_artist_info = top_artist_info(top_afro_artist)
+        results={key:future.result() for key,future in futures.items()}
+
+    top_afro_album_song = results['top_afro_album_song']
+    top_afro_artist_img = results['top_afro_artist_img']
+    top_afro_artist_info = results['top_afro_artist_info']
 
     if current_user.is_authenticated:
         # For modal playlist
