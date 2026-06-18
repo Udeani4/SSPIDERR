@@ -1446,9 +1446,18 @@ def playlist():
     sp = spotipy.Spotify(auth=access_token)
 
     playlist_list = get_user_playlists(current_user, sp, 1,"playlist", "small")
-    refresh_user_library(current_user, sp, playlist_list)
 
-    new_album = latest_albums(sp)
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        futures={
+            'refresh_user_library':executor.submit(refresh_user_library,current_user,sp,playlist_list),
+            'new_album':executor.submit(latest_albums,sp)
+        } ## We had an error here please return back
+
+        results={key:future.result() for key,future in futures.items()}
+
+
+    is_refresh_user_library=results['refresh_user_library'] ## we dont need this for now
+    new_album = results['new_album']
 
 
     return render_template('albums-store.html',
