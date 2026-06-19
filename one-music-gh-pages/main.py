@@ -353,6 +353,14 @@ def get_session_id():
 # '50c15f32-0af5-4bd0-9d69-33f9a2cb10c3'
 
 def should_run_24h_task(current_user_id):
+    ## The current problem. When you run the first time there are no issues. The session_id is stored in the current data session with no current_user_id.
+    ## when you come the second time. When you have logged in the scheduler will filter the data based on the current_user_id but remember the
+    ## current datapoint is with no current_user_id. Therefore it will use the prevous data point under that id of which might be older than 24hr
+    ## which will trigger the task to run as true
+    ## LETS TRY THIS: We will use a function or object to store the number of times we have run the task. If it is greater that one it will use the
+    ## session_id to get the most recent one and then we can insert the current_user_id when task is done
+
+
     now = datetime.now(timezone.utc)
     # current_user_id = None ## remove this after test
 
@@ -380,7 +388,7 @@ def should_run_24h_task(current_user_id):
 
             if session_status:
                 session_status.user_id = current_user_id
-                session_status.session_id = None ## We weill visit here again if it fails
+                session_status.session_id = session_id ## None ## We weill visit here again if it fails. This might br redundant
 
                 db.session.commit()
                 status = session_status
@@ -2824,41 +2832,41 @@ def format_artists(track):
 
 
 def refresh_user_library(user, sp, playlists):
+    with app.app_context():
+        # Step 2.1: Clear the user playlist record (so db stays in sync)
+        db.session.query(Playlist).filter_by(spotify_user_id=user.spotify_user_id).delete()
 
-    # Step 2.1: Clear the user playlist record (so db stays in sync)
-    db.session.query(Playlist).filter_by(spotify_user_id=user.spotify_user_id).delete()
+        # Step 2.2: Clear this user’s old songs (so DB stays in sync)
+        db.session.query(Songs).filter_by(spotify_user_id=user.spotify_user_id).delete()
 
-    # Step 2.2: Clear this user’s old songs (so DB stays in sync)
-    db.session.query(Songs).filter_by(spotify_user_id=user.spotify_user_id).delete()
+        # Step 3: Insert fresh songs
+        for playlist in playlists:
 
-    # Step 3: Insert fresh songs
-    for playlist in playlists:
+            playlist_update = Playlist(
+                name = playlist["name"],
+                description = playlist["description"],
+                spotify_playlist_id = playlist['id'],
+                spotify_user_id = user.spotify_user_id
 
-        playlist_update = Playlist(
-            name = playlist["name"],
-            description = playlist["description"],
-            spotify_playlist_id = playlist['id'],
-            spotify_user_id = user.spotify_user_id
-
-        )
-        db.session.add(playlist_update)
-
-        tracks = get_playlist_tracks(user, sp, playlist['id'])
-        for track in tracks:
-            song = Songs(
-                track_id=track['id'],
-                name=track['name'],
-                album=track['album'],
-                artist=track['artist'],
-                duration_ms=track['duration_ms'],
-                popularity=track['popularity'],
-                preview_url=track['preview_url'],
-                external_url=track['external_url'],
-                spotify_playlist_id=playlist['id'],
-                spotify_user_id=user.spotify_user_id
             )
-            db.session.add(song)
-    db.session.commit()
+            db.session.add(playlist_update)
+
+            tracks = get_playlist_tracks(user, sp, playlist['id'])
+            for track in tracks:
+                song = Songs(
+                    track_id=track['id'],
+                    name=track['name'],
+                    album=track['album'],
+                    artist=track['artist'],
+                    duration_ms=track['duration_ms'],
+                    popularity=track['popularity'],
+                    preview_url=track['preview_url'],
+                    external_url=track['external_url'],
+                    spotify_playlist_id=playlist['id'],
+                    spotify_user_id=user.spotify_user_id
+                )
+                db.session.add(song)
+        db.session.commit()
     return True
 
 
