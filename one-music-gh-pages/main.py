@@ -351,15 +351,15 @@ def get_session_id():
 
 # '50c15f32-0af5-4bd0-9d69-33f9a2cb10c3'
 # '50c15f32-0af5-4bd0-9d69-33f9a2cb10c3'
-
+number_of_run=1
 def should_run_24h_task(current_user_id):
     ## The current problem. When you run the first time there are no issues. The session_id is stored in the current data session with no current_user_id.
-    ## when you come the second time. When you have logged in the scheduler will filter the data based on the current_user_id but remember the
-    ## current datapoint is with no current_user_id. Therefore it will use the prevous data point under that id of which might be older than 24hr
+    ## when you come the second time, When you have logged in the scheduler will filter the data based on the current_user_id but remember the
+    ## current datapoint is with no current_user_id. Therefore it will use the previous data point under that id of which might be older than 24hr
     ## which will trigger the task to run as true
-    ## LETS TRY THIS: We will use a function or object to store the number of times we have run the task. If it is greater that one it will use the
+    ## LETS TRY THIS: We will use a function or object to store the number of times we have run the task. If it is greater than one it will use the
     ## session_id to get the most recent one and then we can insert the current_user_id when task is done
-
+    global number_of_run
 
     now = datetime.now(timezone.utc)
     # current_user_id = None ## remove this after test
@@ -369,16 +369,40 @@ def should_run_24h_task(current_user_id):
     print('Current_user_id: ', current_user_id)
 
     if current_user_id:
-        # 🔹 Logged-in flow
-        status = (
-            SchedulerStatus.query
-            .filter_by(user_id=current_user_id)
-            .order_by(SchedulerStatus.last_run.desc())
-            .first()
-        ) ## Lets reset the table. Clear the table nd create again
+        if number_of_run==1:
+            # 🔹 Logged-in flow
+            status = (
+                SchedulerStatus.query
+                .filter_by(user_id=current_user_id)
+                .order_by(SchedulerStatus.last_run.desc())
+                .first()
+            ) ## Lets reset the table. Clear the table nd create again
 
-        # 🔥 NEW: migrate session → user
-        if not status:
+            # 🔥 NEW: migrate session → user
+            if not status:
+                session_status = (
+                    SchedulerStatus.query
+                    .filter_by(session_id=session_id)
+                    .order_by(SchedulerStatus.last_run.desc())
+                    .first()
+                )
+
+                if session_status:
+                    session_status.user_id = current_user_id
+                    session_status.session_id = session_id ## None ## We weill visit here again if it fails. This might br redundant
+
+                    db.session.commit()
+                    status = session_status
+                else:
+                    status = SchedulerStatus(
+                        user_id=current_user_id,
+                        last_run=now
+                    )
+                    db.session.add(status)
+                    db.session.commit()
+                    number_of_run += 1
+                    return True
+        elif number_of_run>1:
             session_status = (
                 SchedulerStatus.query
                 .filter_by(session_id=session_id)
@@ -388,18 +412,10 @@ def should_run_24h_task(current_user_id):
 
             if session_status:
                 session_status.user_id = current_user_id
-                session_status.session_id = session_id ## None ## We weill visit here again if it fails. This might br redundant
 
                 db.session.commit()
                 status = session_status
-            else:
-                status = SchedulerStatus(
-                    user_id=current_user_id,
-                    last_run=now
-                )
-                db.session.add(status)
-                db.session.commit()
-                return True
+
     else:
         # 🔹 Anonymous flow (session-based now)
         status = (
@@ -416,6 +432,7 @@ def should_run_24h_task(current_user_id):
             )
             db.session.add(status)
             db.session.commit()
+            number_of_run += 1
             return True
 
     # --- shared logic ---
@@ -429,9 +446,10 @@ def should_run_24h_task(current_user_id):
         status.session_id=session_id ## i just added this
         status.user_id=current_user_id if current_user_id else None ## I just added this check if it works
         db.session.commit()
+        number_of_run+=1
         print('Time - schedule ----True') ## The scheduler is still wrong. When we log in we still rerun the api request. It does not go to picking data from the database
         return True
-
+    number_of_run += 1
     print('Time - schedule ----False')
     return False
 
