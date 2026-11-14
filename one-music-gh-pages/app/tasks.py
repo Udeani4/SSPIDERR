@@ -229,6 +229,7 @@ def start_scheduler(app):
         def cleanup():
             with app.app_context():
                 uploads.cleanup_old_files()
+                uploads.purge_old_results()
 
         soon = datetime.now(tz) + timedelta(seconds=15)
         scheduler.add_job(job, CronTrigger(hour=0, minute=0, timezone=tz), args=[HOME_JOB],

@@ -14,7 +14,8 @@
                          data-job="{{ job.public_id if job else '' }}"
                          data-playlist-id="{{ playlist_id }}"
                          data-playlist-name="{{ playlist.get('name') or '' }}"
-                         data-pending="{{ pending }}">
+                         data-pending="{{ pending }}"
+                         data-job-missing="{{ '1' if job_missing else '0' }}">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <strong id="job-state">Getting ready...</strong>
                             <span class="ss-meta" id="job-progress-text"></span>
@@ -25,7 +26,8 @@
                         <div class="ss-counts">
                             <div class="ss-count recognised" id="count-recognized"><strong>0</strong><span>Recognised</span></div>
                             <div class="ss-count unrecognised" id="count-not_recognized"><strong>0</strong><span>Not recognised</span></div>
-                            <div class="ss-count sent" id="count-sent"><strong>0</strong><span>Added / found</span></div>
+                            <div class="ss-count sent" id="count-sent"><strong>0</strong><span>Added</span></div>
+                            <div class="ss-count already" id="count-already"><strong>0</strong><span>Already in playlist</span></div>
                             <div class="ss-count unsent" id="count-not_sent"><strong>0</strong><span>Not on Spotify</span></div>
                         </div>
 
@@ -39,6 +41,7 @@
                             </div>
                         </div>
 
+                        <p class="ss-meta mt-3 mb-0" id="job-retention" hidden>These results are kept for {{ retention_days }} days. Your uploaded files have already been deleted from our server.</p>
                         <div class="d-flex flex-wrap justify-content-center mt-4" style="gap:10px" id="job-actions" hidden>
                             <a href="{{ url_for('library.playlist_page', playlist_id=playlist_id) }}" class="ss-btn spotify"><i class="fa fa-list"></i> Open the playlist</a>
                             <a href="{{ url_for('uploads.loader_page') }}" class="ss-btn ghost"><i class="fa fa-upload"></i> Upload more songs</a>
@@ -60,6 +63,7 @@
 
     function badge(item) {
         if (item.added) return '<span class="ss-badge ok">Added</span>';
+        if (item.already_in_playlist) return '<span class="ss-badge info" title="This song was already in the playlist, so it was not added again">Already in playlist</span>';
         if (item.recognized === false) return '<span class="ss-badge warn">Not recognised</span>';
         if (item.recognized && item.added === false) return `<span class="ss-badge bad" title="${(item.error || "").replace(/"/g, "&quot;")}">Not added</span>`;
         return '<span class="ss-badge wait">Waiting</span>';
@@ -94,13 +98,20 @@
                 return tr;
             });
             el("job-items").replaceChildren(...rows);
-            SSPIDERR.toast(data.failed ? data.message : "Your playlist has been updated!", data.failed ? "error" : "success", 8000);
+            el("job-retention").hidden = {{ 'false' if retention_days else 'true' }};
+            const c = data.counts || {};
+            const note = data.failed ? data.message
+                : c.sent ? "Your playlist has been updated!"
+                : c.already ? "Nothing new to add. Those songs were already in your playlist."
+                : "Done. No songs could be added this time.";
+            SSPIDERR.toast(note, data.failed ? "error" : c.sent ? "success" : "info", 8000);
         }
     }
 
     async function poll() {
         try {
             const res = await fetch(`/jobs/${jobId}/status`, { headers: { Accept: "application/json" }, cache: "no-store" });
+            if (res.status === 404) { showExpired(); return; }
             if (!res.ok) throw new Error();
             const data = await res.json();
             render(data);
@@ -111,7 +122,14 @@
         timer = setTimeout(poll, 1500);
     }
 
+    function showExpired() {
+        el("job-state").textContent = "Results no longer available";
+        el("job-message").innerHTML = 'Results are kept for {{ retention_days }} days, and these have been cleared. <a href="{{ url_for('uploads.loader_page') }}">Upload songs</a> to start a new run.';
+        el("job-progress").style.width = "0";
+    }
+
     async function start() {
+        if (card.dataset.jobMissing === "1") { showExpired(); return; }   // old link: never start a new job by accident
         if (!jobId) {
             if (card.dataset.pending === "0") {
                 el("job-state").textContent = "Nothing to process";

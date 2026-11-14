@@ -72,6 +72,8 @@ def show_song_processing(playlist_id):
     except spotipy.SpotifyException:
         abort(404)
     return render_template("song_processing.html", playlist_id=playlist_id, playlist=playlist, job=job,
+                           job_missing=bool(public_id) and job is None,
+                           retention_days=current_app.config.get("UPLOAD_RESULTS_RETENTION_DAYS", 30),
                            pending=len(uploads.list_pending(current_user.id)))
 
 

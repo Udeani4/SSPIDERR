@@ -13,7 +13,7 @@ import shutil
 import threading
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import spotipy
@@ -31,6 +31,7 @@ EVENT_KEYS = {
     "recognized": "recognized",
     "not_recognized": "not_recognized",
     "sent": "sent_to_spotify",
+    "already": "already_in_playlist",
     "not_sent": "not_sent_to_spotify",
 }
 
@@ -110,6 +111,28 @@ def cleanup_old_files(max_age_hours=24):
             shutil.rmtree(path, ignore_errors=True)
             removed += 1
     return removed
+
+
+def purge_old_results(days=None):
+    """Scheduler job: delete finished jobs (and their per-song results) older than `days`.
+
+    Running or queued jobs are never touched. Returns the number of jobs removed.
+    """
+    days = days if days is not None else current_app.config.get("UPLOAD_RESULTS_RETENTION_DAYS", 30)
+    if not days or days <= 0:              # 0 = keep forever
+        return 0
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    old_ids = [job_id for (job_id,) in db.session.query(UploadJob.id).filter(
+        UploadJob.state.in_(("done", "failed")),
+        db.func.coalesce(UploadJob.finished_at, UploadJob.created_at) < cutoff,
+    )]
+    if not old_ids:
+        return 0
+    UploadJobItem.query.filter(UploadJobItem.job_id.in_(old_ids)).delete(synchronize_session=False)
+    UploadJob.query.filter(UploadJob.id.in_(old_ids)).delete(synchronize_session=False)
+    db.session.commit()
+    log.info("Purged %d upload jobs older than %d days", len(old_ids), days)
+    return len(old_ids)
 
 
 # --------------------------------------------------------------------------
@@ -237,8 +260,9 @@ def _send_to_spotify(job, sp):
             continue
         item.spotify_uri = match["uri"]
         if match["uri"] in existing or match["uri"] in uris:
-            item.added = True
-            _update(job, event="sent", event_text=f"Already in playlist: {item.title}",
+            item.added = None
+            item.already_in_playlist = True
+            _update(job, event="already", event_text=f"Already in playlist: {item.title}",
                     message=f"{label} is already in the playlist")
             continue
         uris.append(match["uri"])
@@ -283,9 +307,13 @@ def process_job(app, job_id):
             added = _send_to_spotify(job, sp)
 
             recognised = sum(1 for i in job.items if i.recognized)
-            _update(job, state="done", finished_at=utcnow(),
-                    message=(f"Done! Recognised {recognised} of {job.total_files} songs and "
-                             f"added {added} new song{'s' if added != 1 else ''} to {job.playlist_name or 'your playlist'}."))
+            duplicates = sum(1 for i in job.items if i.already_in_playlist)
+            message = (f"Done! Recognised {recognised} of {job.total_files} songs and "
+                       f"added {added} new song{'s' if added != 1 else ''} to {job.playlist_name or 'your playlist'}.")
+            if duplicates:
+                message += (f" {duplicates} {'was' if duplicates == 1 else 'were'} already in the playlist,"
+                            " so we didn't add them again.")
+            _update(job, state="done", finished_at=utcnow(), message=message)
         except Exception as exc:
             db.session.rollback()
             log.exception("Upload job %s failed", job_id)
@@ -327,11 +355,13 @@ def job_status(job):
             "recognized": sum(1 for i in items if i.recognized),
             "not_recognized": sum(1 for i in items if i.recognized is False),
             "sent": sum(1 for i in items if i.added),
+            "already": sum(1 for i in items if i.already_in_playlist),
             "not_sent": sum(1 for i in items if i.recognized and i.added is False),
         },
         "items": [{
             "filename": i.filename, "title": i.title, "artist": i.artist,
-            "recognized": i.recognized, "added": i.added, "error": i.error,
+            "recognized": i.recognized, "added": i.added, "already_in_playlist": bool(i.already_in_playlist),
+            "error": i.error,
         } for i in items],
     })
     return payload

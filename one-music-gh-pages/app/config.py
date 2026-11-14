@@ -58,6 +58,8 @@ class Config:
     # Uploads live outside static/ so nobody can download other users' files.
     UPLOAD_EXTENSIONS = {".mp3", ".wav", ".flac", ".aac", ".ogg", ".m4a"}
     RECOGNITION_DELAY_SECONDS = 3                   # pause between Shazam calls
+    # Per-song recognition results are kept this many days after a job finishes (0 = forever).
+    UPLOAD_RESULTS_RETENTION_DAYS = int(os.environ.get("UPLOAD_RESULTS_RETENTION_DAYS", "30"))
 
     # --- Third-party APIs -------------------------------------------------
     SPOTIFY_CLIENT_ID = os.environ.get("SSPIDERR_SPOTIFY_CLIENT_ID")

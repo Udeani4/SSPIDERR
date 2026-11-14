@@ -202,7 +202,8 @@ class UploadJobItem(db.Model):
     artist = mapped_column(String(300), nullable=True)
     recognized = mapped_column(db.Boolean, nullable=True)
     spotify_uri = mapped_column(String(100), nullable=True)
-    added = mapped_column(db.Boolean, nullable=True)
+    added = mapped_column(db.Boolean, nullable=True)                 # True = we added it this run
+    already_in_playlist = mapped_column(db.Boolean, nullable=True)   # skipped as a duplicate
     error = mapped_column(Text, nullable=True)
 
     job = relationship("UploadJob", back_populates="items")

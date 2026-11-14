@@ -80,7 +80,7 @@ def test_process_job_end_to_end(app, fake_sp, monkeypatch):
     job = db.session.get(UploadJob, job.id)
     status = uploads.job_status(job)
     assert job.state == "done" and status["completed"] is True
-    assert status["counts"] == {"recognized": 2, "not_recognized": 1, "sent": 1, "not_sent": 1}
+    assert status["counts"] == {"recognized": 2, "not_recognized": 1, "sent": 1, "already": 0, "not_sent": 1}
     assert len(fake_sp.added) == 1 and len(fake_sp.added[0][1]) == 1   # only the song found on Spotify
     assert not uploads.job_dir(user.id, job.public_id).exists()         # cleaned up
     assert "Recognised 2 of 3" in job.message
@@ -96,6 +96,14 @@ def test_process_job_skips_songs_already_in_playlist(app, fake_sp, monkeypatch):
     job, _ = uploads.create_job(user, "p1")
     uploads.process_job(app, job.id)
     assert fake_sp.added == []
+    db.session.expire_all()
+    job = db.session.get(UploadJob, job.id)
+    item = job.items[0]
+    assert item.already_in_playlist is True and not item.added            # labelled, not counted as "added"
+    status = uploads.job_status(job)
+    assert status["counts"]["already"] == 1 and status["counts"]["sent"] == 0
+    assert status["items"][0]["already_in_playlist"] is True
+    assert "already in the playlist" in job.message
 
 
 def test_process_job_fails_cleanly_without_spotify(app, monkeypatch):
@@ -137,3 +145,34 @@ def test_upload_route_saves_file(logged_in, user, app):
     res = logged_in.post("/upload-song", data=data, content_type="multipart/form-data")
     assert res.status_code == 200 and res.get_json() == {"success": True, "filename": "my_song.mp3"}
     assert uploads.list_pending(user.id) == ["my_song.mp3"]
+
+
+def test_purge_old_results(app, db):
+    from datetime import datetime, timedelta, timezone
+
+    from app.models import UploadJobItem
+    user = make_user()
+    now = datetime.now(timezone.utc)
+
+    def job(state, age_days):
+        j = UploadJob(public_id=f"{state}-{age_days}", user_id=user.id, playlist_id="p1", state=state,
+                      created_at=now - timedelta(days=age_days),
+                      finished_at=(now - timedelta(days=age_days)) if state in ("done", "failed") else None)
+        j.items.append(UploadJobItem(filename="a.mp3"))
+        db.session.add(j)
+        return j
+    job("done", 45), job("failed", 31), job("done", 5), job("running", 60)
+    db.session.commit()
+
+    assert uploads.purge_old_results(30) == 2
+    assert sorted(j.public_id for j in UploadJob.query) == ["done-5", "running-60"]   # recent + still running kept
+    assert UploadJobItem.query.count() == 2
+    assert uploads.purge_old_results(0) == 0                                          # 0 = keep forever
+
+
+def test_expired_results_link_never_starts_a_new_job(logged_in, user, fake_sp):
+    uploads.save_upload(user.id, storage("hit-a.mp3"))                   # pending files exist...
+    html = logged_in.get("/song-processing/p1?job=deleted-job-id").get_data(as_text=True)
+    assert 'data-job-missing="1"' in html                                  # ...but the page won't auto-start
+    assert logged_in.get("/jobs/deleted-job-id/status").status_code == 404
+    assert UploadJob.query.count() == 0

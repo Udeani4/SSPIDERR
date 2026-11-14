@@ -205,7 +205,7 @@
 .ss-progress { height: 10px; background: #e5e7eb; border-radius: 999px; overflow: hidden; }
 .ss-progress > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--ss-accent), #ff8a5c);
   transition: width .4s ease; }
-.ss-counts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 22px 0; }
+.ss-counts { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 22px 0; }
 .ss-count { background: var(--ss-soft); border-radius: 12px; padding: 14px 8px; text-align: center; border-top: 4px solid #ccc; }
 .ss-count strong { display: block; font-size: 26px; color: var(--ss-ink); }
 .ss-count span { font-size: 12px; color: var(--ss-muted); text-transform: uppercase; letter-spacing: .5px; }
@@ -213,8 +213,10 @@
 .ss-count.unrecognised { border-top-color: #f59e0b; }
 .ss-count.sent { border-top-color: var(--ss-spotify); }
 .ss-count.unsent { border-top-color: #dc2626; }
+.ss-count.already { border-top-color: #6366f1; }
 .ss-count.pulse { animation: ss-pulse .6s ease; }
 @keyframes ss-pulse { 50% { transform: scale(1.06); } }
+@media (max-width: 991px) { .ss-counts { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 575px) { .ss-counts { grid-template-columns: repeat(2, 1fr); } }
 .ss-result-table { width: 100%; font-size: 14px; }
 .ss-result-table td, .ss-result-table th { padding: 8px 6px; border-bottom: 1px solid #eee; vertical-align: top; }
@@ -223,6 +225,7 @@
 .ss-badge.warn { background: #fef3c7; color: #92400e; }
 .ss-badge.bad { background: #fee2e2; color: #991b1b; }
 .ss-badge.wait { background: #e5e7eb; color: #374151; }
+.ss-badge.info { background: #e0e7ff; color: #3730a3; }
 
 /* ---- Chart result cards (See what's new) ------------------------------------ */
 .ss-chart-row { display: flex; align-items: center; gap: 14px; background: #fff; border-radius: 12px; padding: 10px 14px;
