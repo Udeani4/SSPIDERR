@@ -17,9 +17,7 @@
             <div class="ss-tags">{% for tag in song_data['lastfm']['tags'][:5] %}<span>{{ tag }}</span>{% endfor %}</div>
         {% endif %}
         <div class="ss-hero-actions">
-            {% if song_data['preview_url'] %}
-                <audio controls preload="none" src="{{ song_data['preview_url'] }}" aria-label="30-second preview"></audio>
-            {% endif %}
+            {{ ui.preview(song_data['preview_url'], "Play " ~ song_data['song_name'], True) }}
         </div>
         <div class="ss-hero-actions" style="margin-top:16px">
             {% if song_data['spotify']['id'] %}

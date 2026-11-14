@@ -6,9 +6,14 @@
          {% if placeholder %}data-placeholder="{{ placeholder }}"{% endif %}>
 {%- endmacro %}
 
-{% macro preview(url) -%}
+{#- Play button for a 30-second preview. There is deliberately no <audio> element or audio URL in
+    src/href: nothing is fetched (and download managers see nothing) until the visitor presses play.
+    static/js/app.js creates one shared player on click. -#}
+{% macro preview(url, label="Play preview", big=False) -%}
     {% if url %}
-        <audio class="ss-preview" controls preload="none" src="{{ url }}" aria-label="30-second preview"></audio>
+        <button type="button" class="ss-play{{ ' big' if big }}" data-preview="{{ url }}" aria-label="{{ label }}" aria-pressed="false" title="{{ label }}">
+            <i class="fa fa-play" aria-hidden="true"></i>{% if big %}<span>Play preview</span>{% endif %}
+        </button>
     {% endif %}
 {%- endmacro %}
 

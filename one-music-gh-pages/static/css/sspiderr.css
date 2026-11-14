@@ -71,11 +71,27 @@
 .ss-track a:hover .ss-track__title { color: var(--ss-accent); }
 .ss-track__actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 
-/* Compact audio preview */
-.ss-preview { width: 210px; height: 36px; }
-.ss-no-preview { font-size: 12px; color: #aaa; width: 210px; text-align: center; }
+/* Preview play button (audio is only created when pressed - see app.js) */
+.ss-play {
+  --ss-progress: 0%;
+  position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  width: 38px; height: 38px; border-radius: 50%; border: 0; cursor: pointer; flex-shrink: 0;
+  color: #fff; background: var(--ss-ink); transition: transform .1s ease, background .15s ease;
+}
+.ss-play::after {          /* progress ring */
+  content: ""; position: absolute; inset: -3px; border-radius: 50%; pointer-events: none;
+  background: conic-gradient(var(--ss-accent) var(--ss-progress), transparent 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+          mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+}
+.ss-play:hover { background: var(--ss-accent); transform: scale(1.06); }
+.ss-play.playing { background: var(--ss-accent); }
+.ss-play i { font-size: 14px; margin-left: 2px; }
+.ss-play.playing i, .ss-play.loading i { margin-left: 0; }
+.ss-play.big { width: auto; height: 44px; padding: 0 20px 0 16px; border-radius: 999px; font-weight: 700; }
+.ss-play.big::after { display: none; }
+.ss-play.big span { font-size: 15px; }
 @media (max-width: 575px) {
-  .ss-preview, .ss-no-preview { width: 130px; }
   .ss-track__img { width: 48px; height: 48px; }
 }
 

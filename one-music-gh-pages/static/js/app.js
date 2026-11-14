@@ -163,11 +163,65 @@
     window.location = `${createPlaylistUrl}?next=${encodeURIComponent(location.pathname)}`;
   });
 
-  // ---------------------------------------------------------------- media + images
-  document.addEventListener("play", (event) => {
-    if (event.target.tagName !== "AUDIO") return;
-    document.querySelectorAll("audio").forEach((a) => { if (a !== event.target) a.pause(); });
-  }, true);
+  // ---------------------------------------------------------------- previews
+  // Pages contain only <button data-preview="url">. A single Audio object is created on the
+  // first click, so loading a page never downloads any audio.
+  let player = null;
+  let activeButton = null;
+
+  function setButton(btn, state) {
+    if (!btn) return;
+    btn.classList.toggle("playing", state === "playing");
+    btn.classList.toggle("loading", state === "loading");
+    btn.setAttribute("aria-pressed", state === "playing" ? "true" : "false");
+    const icon = btn.querySelector("i");
+    if (icon) icon.className = state === "playing" ? "fa fa-pause" : state === "loading" ? "fa fa-spinner fa-spin" : "fa fa-play";
+    if (state === "idle") btn.style.removeProperty("--ss-progress");
+  }
+
+  function stopPreview() {
+    if (player) { player.pause(); player.removeAttribute("src"); player.load(); }
+    setButton(activeButton, "idle");
+    activeButton = null;
+  }
+
+  function getPlayer() {
+    if (player) return player;
+    player = new Audio();
+    player.preload = "none";
+    player.addEventListener("playing", () => setButton(activeButton, "playing"));
+    player.addEventListener("waiting", () => setButton(activeButton, "loading"));
+    player.addEventListener("ended", stopPreview);
+    player.addEventListener("error", () => {
+      if (!player.getAttribute("src")) return;          // error from clearing src on stop
+      toast("That preview couldn't be played.", "error");
+      stopPreview();
+    });
+    player.addEventListener("timeupdate", () => {
+      if (activeButton && player.duration) {
+        activeButton.style.setProperty("--ss-progress", `${(player.currentTime / player.duration) * 100}%`);
+      }
+    });
+    return player;
+  }
+
+  document.addEventListener("click", (event) => {
+    const btn = event.target.closest("[data-preview]");
+    if (!btn) return;
+    event.preventDefault();
+    if (btn === activeButton) {                          // same button: toggle pause / resume
+      if (player.paused) { player.play(); } else { player.pause(); setButton(btn, "idle"); }
+      return;
+    }
+    stopPreview();
+    const audio = getPlayer();
+    activeButton = btn;
+    setButton(btn, "loading");
+    audio.src = btn.dataset.preview;
+    audio.play().catch(() => {});
+  });
+
+  // ---------------------------------------------------------------- images
 
   document.addEventListener("error", (event) => {
     const img = event.target;

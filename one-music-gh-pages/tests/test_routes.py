@@ -301,3 +301,21 @@ def test_missing_spotify_id_is_filled_in(client, fake_sp, offline, monkeypatch, 
         sess["_user_id"] = str(user.id)
     assert client.get("/playlist").status_code == 200
     assert user.spotify_user_id == "me"
+
+
+@pytest.mark.parametrize("url", ["/", "/see-whats-new-results?keyword=hot-100", f"/song-page/{SPOTIFY_ID}", "/suggested-songs"])
+def test_pages_never_download_audio_on_load(client, db, offline, catalog_client, url):
+    """Previews are buttons with data-preview; no <audio> or audio src that a browser would fetch."""
+    import re
+    db.session.add(SchedulerStatus(job_name=tasks.HOME_JOB, last_run=datetime.now(timezone.utc)))
+    db.session.add(HomeData(album_name="X", top_albums=[], best_2025_hits=[], artist_section_dict={},
+                            this_weeks_hits=[{"name": "S", "artist": "A", "image": None, "spotify_song_id": "s1",
+                                              "preview_url": "https://audio.example/p.m4a"}],
+                            feature_artists_info={"artist_name": "A"},
+                            top_artist_album_track=[{"id": "t", "name": "T", "preview_url": "https://audio.example/q.m4a"}]))
+    db.session.commit()
+    html = client.get(url).get_data(as_text=True)
+    assert "<audio" not in html
+    assert not re.search(r'(src|href)="[^"]+\.(m4a|mp3|aac)"', html)
+    if url == "/":
+        assert 'data-preview="https://audio.example/p.m4a"' in html
