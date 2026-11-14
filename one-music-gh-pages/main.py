@@ -349,17 +349,15 @@ def get_session_id():
         session['session_id'] = str(uuid.uuid4())
     return session['session_id']
 
-# '50c15f32-0af5-4bd0-9d69-33f9a2cb10c3'
-# '50c15f32-0af5-4bd0-9d69-33f9a2cb10c3'
+
 number_of_run=1
 def should_run_24h_task(current_user_id):
-    ## The current problem. When you run the first time there are no issues. The session_id is stored in the current data session with no current_user_id.
-    ## when you come the second time, When you have logged in the scheduler will filter the data based on the current_user_id but remember the
-    ## current datapoint is with no current_user_id. Therefore it will use the previous data point under that id of which might be older than 24hr
-    ## which will trigger the task to run as true
-    ## LETS TRY THIS: We will use a function or object to store the number of times we have run the task. If it is greater than one it will use the
-    ## session_id to get the most recent one and then we can insert the current_user_id when task is done
-    global number_of_run
+    ## New problem: If a user is constantly on this app does it mean there will be no updates
+    ## because it's still not yet 24hrs since he was left.
+    ## Remember this is to ensure the home page does not always use api request every time it refreshes
+    ## We have to find a way it runs every particular time e.g 00:00 midnight.
+
+    global number_of_run ## keeps track of the number of runs
 
     now = datetime.now(timezone.utc)
     # current_user_id = None ## remove this after test
@@ -1473,9 +1471,11 @@ def playlist():
 
     playlist_list = get_user_playlists(current_user, sp, 1,"playlist", "small")
 
+    user_id = current_user.spotify_user_id ## you cant pass in current_user directly into a ThreadPool
+
     with ThreadPoolExecutor(max_workers=2) as executor:
         futures={
-            'refresh_user_library':executor.submit(refresh_user_library,current_user,sp,playlist_list),
+            'refresh_user_library':executor.submit(refresh_user_library,user_id,sp,playlist_list),
             'new_album':executor.submit(latest_albums,sp)
         } ## We had an error here please return back
 
@@ -2849,13 +2849,13 @@ def format_artists(track):
     return f"{main_artist} ft. {', '.join(featured)}"
 
 
-def refresh_user_library(user, sp, playlists):
+def refresh_user_library(spotify_user_id, sp, playlists):
     with app.app_context():
         # Step 2.1: Clear the user playlist record (so db stays in sync)
-        db.session.query(Playlist).filter_by(spotify_user_id=user.spotify_user_id).delete()
+        db.session.query(Playlist).filter_by(spotify_user_id=spotify_user_id).delete()
 
         # Step 2.2: Clear this user’s old songs (so DB stays in sync)
-        db.session.query(Songs).filter_by(spotify_user_id=user.spotify_user_id).delete()
+        db.session.query(Songs).filter_by(spotify_user_id=spotify_user_id).delete()
 
         # Step 3: Insert fresh songs
         for playlist in playlists:
@@ -2864,12 +2864,12 @@ def refresh_user_library(user, sp, playlists):
                 name = playlist["name"],
                 description = playlist["description"],
                 spotify_playlist_id = playlist['id'],
-                spotify_user_id = user.spotify_user_id
+                spotify_user_id = spotify_user_id
 
             )
             db.session.add(playlist_update)
 
-            tracks = get_playlist_tracks(user, sp, playlist['id'])
+            tracks = get_playlist_tracks(spotify_user_id, sp, playlist['id'])
             for track in tracks:
                 song = Songs(
                     track_id=track['id'],
@@ -2881,7 +2881,7 @@ def refresh_user_library(user, sp, playlists):
                     preview_url=track['preview_url'],
                     external_url=track['external_url'],
                     spotify_playlist_id=playlist['id'],
-                    spotify_user_id=user.spotify_user_id
+                    spotify_user_id=spotify_user_id
                 )
                 db.session.add(song)
         db.session.commit()
