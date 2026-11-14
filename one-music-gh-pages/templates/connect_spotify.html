@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Connect Spotify{% endblock %}
+{% block content %}
+    <section class="breadcumb-area bg-img bg-overlay" style="background-image: url('{{ url_for('static', filename='img/bg-img/create_playlist_img.jpg') }}');">
+        <div class="bradcumbContent">
+            <p>One last step</p>
+            <h2>Connect Spotify</h2>
+        </div>
+    </section>
+
+    <section class="login-area section-padding-100">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12 col-md-9 col-lg-7">
+                    <div class="login-content text-center">
+                        <h3>Link your Spotify account</h3>
+                        <p class="mb-4">SSPIDERR needs permission to <strong>read your playlists</strong> and <strong>add songs to them</strong>.
+                            We never post anything, follow anyone or change your account.</p>
+                        <ul class="text-left mx-auto mb-4" style="max-width: 420px; line-height: 2;">
+                            <li><i class="fa fa-check text-success mr-2"></i>Add any song you find here to a playlist in one click</li>
+                            <li><i class="fa fa-check text-success mr-2"></i>Turn your local music files into a Spotify playlist</li>
+                            <li><i class="fa fa-check text-success mr-2"></i>Get suggestions based on what you already listen to</li>
+                        </ul>
+                        <a href="{{ url_for('auth.spotify_login', next=next) }}" class="ss-btn spotify"><i class="fa fa-spotify"></i> Connect with Spotify</a>
+                        <p class="ss-alt-link"><a href="{{ url_for('main.home') }}">Maybe later</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

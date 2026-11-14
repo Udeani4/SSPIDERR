@@ -1,0 +1,325 @@
+[
+ {
+  "id": "top-charts",
+  "title": "Top chart",
+  "desc": "Select the best from Billboard",
+  "options": [
+   [
+    "hot-100",
+    "Billboard Hot 100"
+   ],
+   [
+    "billboard-200",
+    "Billboard 200"
+   ],
+   [
+    "artist-100",
+    "Billboard 100 Artists"
+   ],
+   [
+    "streaming-songs",
+    "Streaming Songs"
+   ],
+   [
+    "radio-songs",
+    "Radio Songs"
+   ]
+  ]
+ },
+ {
+  "id": "global",
+  "title": "Global",
+  "desc": "Get the world best from Billboard",
+  "options": [
+   [
+    "billboard-global-200",
+    "Billboard Global 200"
+   ]
+  ]
+ },
+ {
+  "id": "hits-of-the-world",
+  "title": "Hits of the world",
+  "desc": "Best Hits everywhere from Billboard",
+  "options": [
+   [
+    "the-arabic-hot-100",
+    "Arabic Hot 100"
+   ],
+   [
+    "top-arabic-artist-100",
+    "Arabic Artist 100"
+   ],
+   [
+    "billboard-argentina-hot-100",
+    "Argentina Hot 100"
+   ],
+   [
+    "billboard-brasil-hot-100",
+    "Brasil Hot 100"
+   ],
+   [
+    "malaysia-songs-hotw",
+    "Malaysia Songs"
+   ],
+   [
+    "luxembourg-songs-hotw",
+    "Luxembourg Songs"
+   ],
+   [
+    "ireland-songs-hotw",
+    "Ireland Songs"
+   ],
+   [
+    "indonesia-songs-hotw",
+    "Indonesia Songs"
+   ],
+   [
+    "india-songs-hotw",
+    "India Songs"
+   ],
+   [
+    "iceland-songs-hotw",
+    "Iceland Songs"
+   ],
+   [
+    "hong-kong-songs-hotw",
+    "Hong Kong Songs"
+   ],
+   [
+    "greece-albums",
+    "Greece Albums"
+   ],
+   [
+    "greece-songs-hotw",
+    "Greece Songs"
+   ],
+   [
+    "germany-songs-hotw",
+    "Germany Songs"
+   ],
+   [
+    "france-songs-hotw",
+    "France Songs"
+   ],
+   [
+    "finland-songs-hotw",
+    "Finland Songs"
+   ],
+   [
+    "ecuador-songs-hotw",
+    "Ecuador Songs"
+   ],
+   [
+    "denmark-songs-hotw",
+    "Denmark Songs"
+   ],
+   [
+    "czech-republic-songs-hotw",
+    "Czech Republic Songs"
+   ],
+   [
+    "croatia-songs-hotw",
+    "Croatia Songs"
+   ],
+   [
+    "china-tme-uni-songs",
+    "China TME UNI Songs"
+   ],
+   [
+    "chile-songs-hotw",
+    "Chile Songs"
+   ],
+   [
+    "bolivia-songs-hotw",
+    "Bolivia Songs"
+   ],
+   [
+    "belgium-songs-hotw",
+    "Belgium Songs"
+   ],
+   [
+    "austria-songs-hotw",
+    "Austria Songs"
+   ],
+   [
+    "australia-songs-hotw",
+    "Australia Songs"
+   ],
+   [
+    "australian-albums",
+    "Australia Albums"
+   ],
+   [
+    "official-uk-albums",
+    "Official UK Albums"
+   ],
+   [
+    "official-uk-songs",
+    "Official UK Singles"
+   ],
+   [
+    "thailand-songs-hotw",
+    "Thailand Songs"
+   ],
+   [
+    "billboard-philippines-hot-100",
+    "Philippines Hot 100"
+   ],
+   [
+    "japan-hot-100",
+    "Japan Hot 100"
+   ],
+   [
+    "billboard-italy-albums-top-100",
+    "Italy Albums"
+   ],
+   [
+    "billboard-italy-hot-100",
+    "Italy Hot 100"
+   ],
+   [
+    "canadian-albums",
+    "Canadian Albums"
+   ],
+   [
+    "canadian-hot-100",
+    "Canadian Hot 100"
+   ],
+   [
+    "u-k-songs-hotw",
+    "UK Songs"
+   ],
+   [
+    "turkey-songs-hotw",
+    "Turkey Songs"
+   ],
+   [
+    "taiwan-songs-hotw",
+    "Taiwan Songs"
+   ],
+   [
+    "switzerland-songs-hotw",
+    "Switzerland Songs"
+   ],
+   [
+    "sweden-songs-hotw",
+    "Sweden Songs"
+   ],
+   [
+    "spain-songs-hotw",
+    "Spain Songs"
+   ],
+   [
+    "south-africa-songs-hotw",
+    "South Africa Songs"
+   ],
+   [
+    "slovakia-songs-hotw",
+    "Slovakia Songs"
+   ],
+   [
+    "singapore-songs-hotw",
+    "Singapore Songs"
+   ],
+   [
+    "romania-songs-hotw",
+    "Romania Songs"
+   ],
+   [
+    "portugal-songs-hotw",
+    "Portugal Songs"
+   ],
+   [
+    "poland-songs-hotw",
+    "Poland Songs"
+   ],
+   [
+    "peru-songs-hotw",
+    "Peru Songs"
+   ],
+   [
+    "norway-songs-hotw",
+    "Norway Songs"
+   ],
+   [
+    "new-zealand-songs-hotw",
+    "New Zealand Songs"
+   ],
+   [
+    "netherlands-songs-hotw",
+    "Netherlands Songs"
+   ]
+  ]
+ },
+ {
+  "id": "greatest-of-all-time",
+  "title": "Greatest of all time",
+  "desc": "Greatest music ever from Billboard",
+  "options": [
+   [
+    "greatest-of-all-time-artists",
+    "G-O-A-T Artists"
+   ],
+   [
+    "greatest-of-all-time-hot-100-no-2-hits",
+    "G-O-A-T NO 2 Tracks"
+   ],
+   [
+    "greatest-of-all-time-songs-of-the-summer",
+    "G-O-A-T Summer Songs"
+   ],
+   [
+    "greatest-of-all-time-holiday-100-songs",
+    "G-O-A-T Holiday Songs"
+   ],
+   [
+    "greatest-of-all-time-top-holiday-albums",
+    "G-O-A-T Holiday Albums"
+   ],
+   [
+    "greatest-of-all-time-pop-songs-artists",
+    "G-O-A-T Pop Artists"
+   ],
+   [
+    "greatest-of-all-time-adult-contemporary-artists",
+    "G-O-A-T Contemporary Artists"
+   ],
+   [
+    "greatest-of-all-time-adult-contemporary-songs",
+    "G-O-A-T Contemporary Songs"
+   ],
+   [
+    "greatest-of-all-time-pop-songs",
+    "G-O-A-T Pop Songs"
+   ],
+   [
+    "greatest-of-all-time-adult-alternative-songs",
+    "G-O-A-T Alternative Songs"
+   ]
+  ]
+ },
+ {
+  "id": "pop",
+  "title": "Pop",
+  "desc": "Get your favorite pop song from Billboard",
+  "options": [
+   [
+    "adult-contemporary",
+    "Adult Contemporary"
+   ],
+   [
+    "pop-songs",
+    "Pop Airplay"
+   ],
+   [
+    "adult-pop-songs",
+    "Adult Pop Airplay"
+   ],
+   [
+    "hot-dance-pop-songs",
+    "Dance/Pop Songs"
+   ]
+  ]
+ }
+]

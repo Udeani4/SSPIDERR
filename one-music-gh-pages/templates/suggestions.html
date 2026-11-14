@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% import "macros.html" as ui %}
+{% block title %}Suggestions{% endblock %}
+{% block content %}
+    {{ ui.hero("Suggested for you",
+               ("Picked from artists similar to the ones in your playlists: " if personal else "Picked from artists similar to today's most popular: ") ~ seeds[:5] | join(", "),
+               url_for('static', filename='img/bg-img/b4.jpg'), "Suggestions") }}
+    <section class="ss-section">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12 col-lg-10">
+                    {% if not personal %}
+                        <div class="ss-empty mb-4" style="text-align:left">
+                            <i class="fa fa-lightbulb-o" style="display:inline;margin-right:8px"></i>
+                            {% if current_user.is_authenticated %}
+                                Open <a href="{{ url_for('library.playlist') }}">your playlists</a> once so we can learn your taste, and these suggestions become personal.
+                            {% else %}
+                                <a href="{{ url_for('auth.login_page', next=request.path) }}">Log in</a> and connect Spotify to get suggestions based on your own playlists.
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                    {% for track in picks %}
+                        <div class="ss-chart-row">
+                            {{ ui.img(track['image'], "") }}
+                            <div class="ss-chart-text">
+                                {% if track['spotify_track_id'] %}
+                                    <a href="{{ url_for('music.song_page', song_id=track['spotify_track_id']) }}"><h6>{{ track['track_name'] }}</h6></a>
+                                {% else %}
+                                    <h6>{{ track['track_name'] }}</h6>
+                                {% endif %}
+                                <p><a href="{{ url_for('music.artist_page', artist=track['track_main_artist']) }}">{{ track['track_artist'] }}</a></p>
+                                {% if track['because'] %}<p class="ss-desc">Because you like {{ track['because'] }}</p>{% endif %}
+                            </div>
+                            <div class="ss-track__actions">
+                                {{ ui.preview(track.get('preview_url')) }}
+                                {{ ui.add_button(track['spotify_track_id']) }}
+                            </div>
+                        </div>
+                    {% else %}
+                        {{ ui.empty("We couldn't build suggestions right now. Please try again later.", "fa-lightbulb-o") }}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

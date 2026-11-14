@@ -1,0 +1,7 @@
+{% set steps = [("1", "Upload songs"), ("2", "Choose a playlist"), ("3", "We do the rest")] %}
+<ol class="ss-steps" aria-label="Progress">
+    {% for num, label in steps %}
+        {% set n = loop.index %}
+        <li class="{{ 'active' if n == step }}{{ ' done' if n < step }}" {{ 'aria-current="step"' | safe if n == step }}><b>{{ '✓' if n < step else num }}</b>{{ label }}</li>
+    {% endfor %}
+</ol>

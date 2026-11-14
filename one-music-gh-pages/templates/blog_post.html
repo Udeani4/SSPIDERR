@@ -1,284 +1,80 @@
+{% extends "base.html" %}
 {% from "bootstrap5/form.html" import render_form %}
-{% include "header.html" %}
+{% import "macros.html" as ui %}
+{% block title %}{{ post.title }}{% endblock %}
+{% block head %}
 <style>
-  /* Scoped only to this comments section */
-  .comments-section .commentList {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  .comments-section .commentList li {
-    display: flex;
-    align-items: flex-start;
-    margin-bottom: 20px;
-    background: #f9f9f9;
-    border-radius: 12px;
-    padding: 15px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-  }
-
-  .comments-section .commenterImage img {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    margin-right: 15px;
-    object-fit: cover;
-  }
-
-  .comments-section .commentText {
-    flex: 1;
-  }
-
-  .comments-section .commentText .sub-text {
-    display: block;
-    font-size: 13px;
-    color: #777;
-    margin-top: 5px;
-  }
-
-  .comments-section .no-comments {
-    color: #888;
-    font-style: italic;
-    margin-top: 10px;
-  }
+    .ss-comments { list-style: none; margin: 0; padding: 0; }
+    .ss-comments li { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 16px; background: var(--ss-soft);
+        border-radius: 12px; padding: 14px 16px; }
+    .ss-comments img { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+    .ss-comments .who { font-weight: 700; font-size: 14px; }
+    .ss-comments .when { font-size: 12px; color: var(--ss-muted); margin-left: 6px; }
+    .ss-comments .body { margin-top: 4px; }
+    .ss-comments .body p:last-child { margin-bottom: 0; }
+    .ss-comments form { margin-left: auto; }
+    .ss-comments form button { background: none; border: 0; color: #999; cursor: pointer; }
+    .ss-comments form button:hover { color: #dc2626; }
+    .ss-article { font-size: 17px; line-height: 1.75; }
 </style>
-        <!-- ##### Hero Area Start ##### -->
-        <section class="hero-area">
-            <div class="hero-slides owl-carousel">
-                <!-- Single Hero Slide -->
-                <div class="single-hero-slide d-flex align-items-center justify-content-center">
-                    <!-- Slide Img -->
-                    <div class="slide-img bg-img" style="background-image: url('{{ post.img_url }}'); background-size: contain;
-                background-repeat: no-repeat;
-                background-position: center;
-                background-color: black;"></div>
-                    <!-- Slide Content -->
-                    <div class="container" style="text-align: center">
-                        <div class="row">
-                            <div class="col-12">
-                               <div class="hero-slides-content text-center"
-                                     style="padding: 80px 0; max-width: 900px; margin: 0 auto;">
+{% endblock %}
+{% block content %}
+    {% call ui.media_hero(post.img_url, post.title, post.source ~ " · " ~ post.day ~ " " ~ post.month ~ " " ~ post.year) %}
+        {% if post.news_link and post.news_link != '#' %}
+            <div class="ss-hero-actions"><a href="{{ post.news_link }}" class="ss-btn accent" target="_blank" rel="noopener nofollow">Read the full story on {{ post.source }} <i class="fa fa-external-link"></i></a></div>
+        {% endif %}
+    {% endcall %}
 
-                                  <!-- Tagline -->
-                                  <h2 style="
-                                        font-size: 3rem;
-                                        font-weight: 800;
-                                        letter-spacing: 0.4rem;
-                                        text-transform: uppercase;
-                                        margin-bottom: 20px;
-                                        color: white;
-                                        text-shadow: 0 2px 6px rgba(0,0,0,0.4);
-                                      "
-                                      data-animation='fadeInUp' data-delay='300ms'>
-                                      RECENT <span style="color: white; opacity: 0.5"> RECENT </span>
-                                  </h2>
-
-                                  <!-- Headline -->
-                                  <h2 style="
-                                        font-size: 2rem;
-                                        font-weight: 500;
-                                        line-height: 1.5;
-                                        letter-spacing: 0.15rem;
-                                        max-width: 750px;
-                                        margin: 0 auto 15px;
-                                        color: white;
-                                        text-align: center;
-                                        text-shadow: 0 2px 6px rgba(0,0,0,0.4);
-                                      "
-                                      data-animation='fadeInUp' data-delay='100ms'>
-                                      {{ post.title }}
-                                  </h2>
-
-                                  <!-- Metadata -->
-                                  <p style="
-                                        font-size: 1rem;
-                                        color: #e0e0e0;
-                                        margin-bottom: 5px;
-                                        letter-spacing: 0.05rem;
-                                      "
-                                      data-animation='fadeInUp' data-delay='100ms'>
-                                      Release date: {{ post.date }}
-                                  </p>
-
-                                  <h6 style="
-                                        font-size: 0.95rem;
-                                        font-weight: 400;
-                                        letter-spacing: 0.1rem;
-                                        color: #d6d6d6;
-                                      "
-                                      data-animation='fadeInUp' data-delay='100ms'>
-                                      Source:
-                                      <a href='{{ post.news_link }}' style='color: #fff; text-decoration: underline;'>
-                                        {{ post.source }}
-                                      </a>
-                                  </h6>
-                                </div>
-
-                            </div>
-                        </div>
-                    </div>
-                    </div>
+    <section class="ss-section">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12 col-lg-8">
+                    <div class="ss-article description">{{ (post.body or post.subtitle) | clean_html }}</div>
                 </div>
             </div>
+        </div>
+    </section>
 
-        </section>
-
-<!--            Short description-->
-            <section class="latest-albums-area section-padding-100">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="section-heading style-2">
-                                <p>See what’s new</p>
-                                <h2>NEWS SUMMARY</h2>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row justify-content-center">
-                        <div class="col-12 col-lg-9">
-                            <div class="ablums-text text-center mb-70">
-                                <p class="description">{{ post.subtitle | safe }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <div class="row">
-                <!-- comments -->
-                <div class="col-12 col-lg-6 comments-section">
-                  <div class="weeks-top-area mb-100">
-                    <div class="section-heading text-left mb-50 wow fadeInUp" data-wow-delay="50ms">
-                      <p>Comments Section</p>
-                      <h2>{{ post.comments | length }} Comments</h2>
-                    </div>
-
-                    <div class="comment">
-                      <ul class="commentList">
-                      {% with messages = get_flashed_messages(with_categories=true) %}
-                          {% if messages %}
-                            {% for category, message in messages %}
-                              <div id="flash-message" class="flash {{ category }}">
-                                {{ message }}
-                              </div>
+    <section class="ss-section soft" id="comments">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12 col-lg-8">
+                    {{ ui.section_heading(post.comments | length ~ " comment" ~ ("" if post.comments | length == 1 else "s"), "Join the conversation") }}
+                    {% if post.comments %}
+                        <ul class="ss-comments">
+                            {% for comment in post.comments %}
+                                <li>
+                                    <img src="{{ (comment.comment_author.email if comment.comment_author else '') | gravatar }}" alt="" loading="lazy">
+                                    <div style="min-width:0;flex:1">
+                                        <span class="who">{{ comment.comment_author.display_name if comment.comment_author else 'Former member' }}</span>
+                                        <span class="when">{{ comment.created_at.strftime('%b %d, %Y %I:%M %p') }}</span>
+                                        <div class="body">{{ comment.text | clean_html }}</div>
+                                    </div>
+                                    {% if current_user.is_authenticated and comment.author_id == current_user.id %}
+                                        <form action="{{ url_for('news.delete_comment', comment_id=comment.id) }}" method="post"
+                                              onsubmit="return confirm('Delete this comment?');">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" title="Delete comment" aria-label="Delete comment"><i class="fa fa-trash"></i></button>
+                                        </form>
+                                    {% endif %}
+                                </li>
                             {% endfor %}
-                          {% endif %}
-                        {% endwith %}
+                        </ul>
+                    {% else %}
+                        <p class="ss-meta">No comments yet. Start the conversation!</p>
+                    {% endif %}
 
-                        {% for comment in post.comments %}
-                            <li style="display: flex; align-items: flex-start; margin-bottom: 15px;">
-                              <div class="commenterImage" style="margin-right: 10px;">
-                                <img src="{{ comment.comment_author.email | gravatar }}" alt="User" style="border-radius: 50%; width: 50px; height: 50px;">
-                              </div>
-
-                              <div class="commentText" style="flex: 1;">
-                                <p>{{ comment.text | safe }}</p>
-                                <span class="sub-text" style="font-size: 0.9rem; color: #ccc;">
-                                  {{ comment.comment_author.email.split('@')[0] }} •
-                                  {{ comment.created_at.strftime('%b %d, %Y %I:%M %p') }}
-                                </span>
-
-                                {% if current_user.is_authenticated and comment.author_id == current_user.id %}
-                                <form action="{{ url_for('delete_comment', comment_id=comment.id) }}" method="POST" style="display:inline;">
-                                  <button type="submit" style="
-                                      background: transparent;
-                                      border: none;
-                                      color: #ff5c5c;
-                                      font-size: 0.9rem;
-                                      margin-left: 10px;
-                                      cursor: pointer;
-                                    "
-                                    onclick="return confirm('Are you sure you want to delete this comment?');">
-                                    Delete
-                                  </button>
-                                </form>
-                                {% endif %}
-                              </div>
-                            </li>
-                          {% else %}
-                             <p class="no-comments">No comments yet. Be the first to comment!</p>
-                        {% endfor %}
-
-                      </ul>
+                    <div class="mt-5">
+                        {% if current_user.is_authenticated %}
+                            {{ ckeditor.load() }}
+                            {{ ckeditor.config(name='comment_text', height=160) }}
+                            {{ render_form(form, novalidate=True, button_map={"submit": "primary"}) }}
+                        {% else %}
+                            <a href="{{ url_for('auth.login_page', next=request.path ~ '#comments') }}" class="ss-btn accent">Log in to comment</a>
+                        {% endif %}
                     </div>
-                  </div>
                 </div>
-
-                <!-- comment editor -->
-                {% if current_user.is_authenticated %}
-                    <div class="col-12 col-lg-6 comments-section">
-                      <div class="new-hits-area mb-100">
-                        <div class="section-heading text-left mb-50 wow fadeInUp" data-wow-delay="50ms">
-                          <p>Post Section</p>
-                          <h2>Add a comment</h2>
-                        </div>
-
-                        <!-- Load CKEditor -->
-                        {{ ckeditor.load() }}
-                        {{ ckeditor.config(name='comment_text') }}
-                        <!-- Override the built-in script with the latest one -->
-<!--                        <script src="https://cdn.ckeditor.com/4.25.1-lts/standard/ckeditor.js"></script>-->
-                        <!-- Render form -->
-                        {{ render_form(form, novalidate=True, button_map={"submit": "primary"}) }}
-                      </div>
-                    </div>
-                {% endif %}
             </div>
-
-{% include "footer.html" %}
-         <!-- ##### All Javascript Script ##### -->
-    <!-- jQuery-2.2.4 js -->
-    <script src="{{ url_for('static', filename='js/jquery/jquery-2.2.4.min.js') }}"></script>
-    <!-- Popper js -->
-    <script src="{{ url_for('static', filename='js/bootstrap/popper.min.js') }}"></script>
-    <!-- Bootstrap js -->
-    <script src="{{ url_for('static', filename='js/bootstrap/bootstrap.min.js') }}"></script>
-    <!-- All Plugins js -->
-    <script src="{{ url_for('static', filename='js/plugins/plugins.js') }}"></script>
-    <!-- Active js -->
-    <script src="{{ url_for('static', filename='js/active.js') }}"></script>
-
-
-<script>
-    window.addEventListener("load", () => {
-      const boot = document.getElementById("boot-screen");
-      const app = document.getElementById("app");
-
-      // Small delay for smoothness (optional)
-      setTimeout(() => {
-        boot.style.opacity = "0";
-        boot.style.transition = "opacity 0.4s ease";
-
-        setTimeout(() => {
-          boot.remove();
-          app.hidden = false;
-        }, 400);
-      }, 300);
-    });
-</script>
-
-<script>
-    // animate the dots in "Calibrating ..."
-    let count = 1;
-    setInterval(() => {
-        document.getElementById("dots").textContent = ".".repeat(count);
-        count = count === 3 ? 1 : count + 1;
-    }, 500);
-
-    // hide overlay when page finishes loading
-    window.addEventListener("load", function () {
-        const overlay = document.getElementById("loading-overlay");
-        overlay.style.opacity = 0;
-
-        setTimeout(() => {
-            overlay.style.display = "none";
-        }, 500);
-    });
-</script>
-
-
-</body>
-
-</html>
-
+        </div>
+    </section>
+{% endblock %}

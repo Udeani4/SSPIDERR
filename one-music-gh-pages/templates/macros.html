@@ -1,0 +1,94 @@
+{# Reusable bits of markup. Import with:  {% import "macros.html" as ui %} #}
+
+{% macro img(src, alt="", class="", placeholder=None) -%}
+    <img src="{{ src or url_for('static', filename='img/core-img/track-placeholder.svg') }}" alt="{{ alt }}"
+         class="{{ class }}" loading="lazy" decoding="async"
+         {% if placeholder %}data-placeholder="{{ placeholder }}"{% endif %}>
+{%- endmacro %}
+
+{% macro preview(url) -%}
+    {% if url %}
+        <audio class="ss-preview" controls preload="none" src="{{ url }}" aria-label="30-second preview"></audio>
+    {% endif %}
+{%- endmacro %}
+
+{% macro add_button(track_id) -%}
+    {% if track_id %}
+        <button type="button" class="ss-add-btn" data-add-track="{{ track_id }}" title="Add to a Spotify playlist">
+            <i class="fa fa-plus-circle" aria-hidden="true"></i><span>Add</span>
+        </button>
+    {% endif %}
+{%- endmacro %}
+
+{#- One song row: cover, title/artist (linked to the song page), preview, add button. -#}
+{% macro track_row(title, artist, image=None, song_id=None, preview_url=None, add_id=None, rank=None, artist_link=True) -%}
+    <div class="ss-track">
+        {% if rank %}<span class="ss-track__rank">{{ rank }}</span>{% endif %}
+        {{ img(image, "", "ss-track__img") }}
+        <div class="ss-track__text">
+            {% if song_id %}
+                <a href="{{ url_for('music.song_page', song_id=song_id) }}"><p class="ss-track__title">{{ title }}</p></a>
+            {% else %}
+                <p class="ss-track__title">{{ title }}</p>
+            {% endif %}
+            {% if artist %}
+                {% if artist_link %}
+                    <a href="{{ url_for('music.artist_page', artist=artist.split(',')[0].split(' ft. ')[0].strip()) }}"><p class="ss-track__artist">{{ artist }}</p></a>
+                {% else %}
+                    <p class="ss-track__artist">{{ artist }}</p>
+                {% endif %}
+            {% endif %}
+        </div>
+        <div class="ss-track__actions">
+            {{ preview(preview_url) }}
+            {{ add_button(add_id) }}
+        </div>
+    </div>
+{%- endmacro %}
+
+{% macro empty(message, icon="fa-music") -%}
+    <div class="ss-empty"><i class="fa {{ icon }}" aria-hidden="true"></i>{{ message }}</div>
+{%- endmacro %}
+
+{% macro hero(title, subtitle=None, image=None, eyebrow=None) -%}
+    <section class="ss-page-hero" style="background-image: url('{{ image or url_for('static', filename='img/bg-img/breadcumb3.jpg') }}');">
+        <div class="container">
+            {% if eyebrow %}<p class="mb-2" style="letter-spacing:2px;text-transform:uppercase;font-size:13px;">{{ eyebrow }}</p>{% endif %}
+            <h1>{{ title }}</h1>
+            {% if subtitle %}<p>{{ subtitle }}</p>{% endif %}
+            {{ caller() if caller }}
+        </div>
+    </section>
+{%- endmacro %}
+
+{#- Big artwork header used by song / album / artist / playlist pages. Put links, stats and buttons in the call block. -#}
+{% macro media_hero(image, title, eyebrow=None) -%}
+    <section class="hero-area">
+        <div class="single-hero-slide d-flex align-items-center justify-content-center" style="min-height: 720px;">
+            <div class="slide-img bg-img" style="background-image: url('{{ image or url_for('static', filename='img/bg-img/bg-1.jpg') }}'); background-size: contain; background-repeat: no-repeat; background-position: center; background-color: #000; opacity: .55;"></div>
+            <div class="container text-center" style="position: relative; padding-top: 110px;">
+                <div class="hero-slides-content text-center">
+                    {% if eyebrow %}<h6>{{ eyebrow }}</h6>{% endif %}
+                    <h2 style="color:#fff">{{ title }}</h2>
+                    {{ caller() if caller }}
+                </div>
+            </div>
+        </div>
+    </section>
+{%- endmacro %}
+
+{% macro stats(items) -%}
+    {# items: list of (value, label) - empty values are skipped #}
+    <div class="ss-stats">
+        {% for value, label in items if value not in (None, '', 0) %}
+            <div><strong>{{ value | thousands }}</strong><span>{{ label }}</span></div>
+        {% endfor %}
+    </div>
+{%- endmacro %}
+
+{% macro section_heading(title, eyebrow=None, align="left") -%}
+    <div class="section-heading text-{{ align }} mb-50">
+        {% if eyebrow %}<p>{{ eyebrow }}</p>{% endif %}
+        <h2>{{ title }}</h2>
+    </div>
+{%- endmacro %}

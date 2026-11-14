@@ -1,106 +1,65 @@
-{% include "header.html" %}
-    <!-- ##### Breadcumb Area Start ##### -->
-    <section class="breadcumb-area bg-img bg-overlay" style="background-image: url(static/img/bg-img/breadcumb3.jpg);">
+{% extends "base.html" %}
+{% block title %}Create an account{% endblock %}
+{% block content %}
+    <section class="breadcumb-area bg-img bg-overlay" style="background-image: url('{{ url_for('static', filename='img/bg-img/breadcumb3.jpg') }}');">
         <div class="bradcumbContent">
-            <p>Join the groove</p> 
+            <p>Free, and takes a minute</p>
             <h2>Register</h2>
         </div>
     </section>
-    <!-- ##### Breadcumb Area End ##### -->
 
-    <!-- ##### Login Area Start ##### -->
     <section class="login-area section-padding-100">
         <div class="container">
             <div class="row justify-content-center">
-                <div class="col-12 col-lg-8">
+                <div class="col-12 col-md-8 col-lg-6">
                     <div class="login-content">
-                        <h3>Welcome</h3>
-                        <!-- Login Form -->
+                        <h3>Create your account</h3>
+                        <p class="ss-meta mb-4">After signing up you'll connect Spotify so we can add songs to your playlists.</p>
                         <div class="login-form">
-                            <form action="{{ url_for('register_page') }}" method="post">
+                            <form action="{{ url_for('auth.register_page') }}" method="post" id="register-form">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <div class="form-group">
-                                    <label for="exampleInputEmail1">Email address</label>
-                                    <input type="email" name ="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Enter E-mail">
-                                    <small id="emailHelp" class="form-text text-muted"><i class="fa fa-lock mr-2"></i>We'll never share your email with anyone else.</small>
+                                    <label for="reg-email">Email address</label>
+                                    <input type="email" name="email" class="form-control" id="reg-email" placeholder="you@example.com"
+                                           value="{{ email }}" required autocomplete="email" autofocus>
+                                    <small class="form-text text-muted"><i class="fa fa-lock mr-2"></i>We'll never share your email with anyone.</small>
                                 </div>
                                 <div class="form-group">
-                                    <label for="exampleInputPassword1">Create Password</label>
-                                    <input type="password" name ="password" class="form-control" id="exampleInputPassword1" placeholder="Password">
+                                    <label for="reg-password">Password</label>
+                                    <input type="password" name="password" class="form-control" id="reg-password" placeholder="At least 8 characters"
+                                           minlength="8" required autocomplete="new-password">
                                 </div>
                                 <div class="form-group">
-                                    <label for="exampleInputPassword1">Verify Password</label>
-                                    <input type="password" name ="verify_password" class="form-control" id="exampleInputPassword2" placeholder="Password">
+                                    <label for="reg-verify">Confirm password</label>
+                                    <input type="password" name="verify_password" class="form-control" id="reg-verify" placeholder="Type it again"
+                                           minlength="8" required autocomplete="new-password">
+                                    <small class="form-text" id="reg-match" aria-live="polite"></small>
                                 </div>
-                                <button type="submit" class="btn oneMusic-btn mt-30">Register</button>
+                                <button type="submit" class="btn oneMusic-btn mt-30">Create account</button>
                             </form>
-                            {% with messages = get_flashed_messages(with_categories=true) %}
-                              {% if messages %}
-                                {% for category, message in messages %}
-                                  <div id="flash-message" class="flash {{ category }}">
-                                    {{ message }}
-                                  </div>
-                                {% endfor %}
-                              {% endif %}
-                            {% endwith %}
+                            <p class="ss-alt-link">Already have an account? <a href="{{ url_for('auth.login_page') }}">Log in</a></p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
-    <!-- ##### Login Area End ##### -->
-
-{% include "footer.html" %}
-
-    <!-- ##### All Javascript Script ##### -->
-    <!-- jQuery-2.2.4 js -->
-    <script src="static/js/jquery/jquery-2.2.4.min.js"></script>
-    <!-- Popper js -->
-    <script src="static/js/bootstrap/popper.min.js"></script>
-    <!-- Bootstrap js -->
-    <script src="static/js/bootstrap/bootstrap.min.js"></script>
-    <!-- All Plugins js -->
-    <script src="static/js/plugins/plugins.js"></script>
-    <!-- Active js -->
-    <script src="static/js/active.js"></script>
-
+{% endblock %}
+{% block scripts %}
 <script>
-    window.addEventListener("load", () => {
-      const boot = document.getElementById("boot-screen");
-      const app = document.getElementById("app");
-
-      // Small delay for smoothness (optional)
-      setTimeout(() => {
-        boot.style.opacity = "0";
-        boot.style.transition = "opacity 0.4s ease";
-
-        setTimeout(() => {
-          boot.remove();
-          app.hidden = false;
-        }, 400);
-      }, 300);
-    });
+    (function () {
+        const pw = document.getElementById("reg-password");
+        const verify = document.getElementById("reg-verify");
+        const hint = document.getElementById("reg-match");
+        function check() {
+            if (!verify.value) { hint.textContent = ""; verify.setCustomValidity(""); return; }
+            const ok = pw.value === verify.value;
+            hint.textContent = ok ? "Passwords match" : "Passwords don't match yet";
+            hint.style.color = ok ? "#16a34a" : "#dc2626";
+            verify.setCustomValidity(ok ? "" : "Passwords don't match");
+        }
+        pw.addEventListener("input", check);
+        verify.addEventListener("input", check);
+    })();
 </script>
-
-<script>
-    // animate the dots in "Calibrating ..."
-    let count = 1;
-    setInterval(() => {
-        document.getElementById("dots").textContent = ".".repeat(count);
-        count = count === 3 ? 1 : count + 1;
-    }, 500);
-
-    // hide overlay when page finishes loading
-    window.addEventListener("load", function () {
-        const overlay = document.getElementById("loading-overlay");
-        overlay.style.opacity = 0;
-
-        setTimeout(() => {
-            overlay.style.display = "none";
-        }, 500);
-    });
-</script>
-
-</body>
-
-</html>
+{% endblock %}

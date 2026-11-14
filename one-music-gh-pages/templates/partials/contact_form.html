@@ -1,0 +1,33 @@
+{% set form = form or {} %}
+<form action="{{ url_for('main.contact') }}" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row">
+        <div class="col-md-6 col-lg-4">
+            <div class="form-group">
+                <label class="ss-visually-hidden" for="contact-name">Name</label>
+                <input type="text" class="form-control" id="contact-name" name="name" placeholder="Name" required maxlength="100" value="{{ form.get('name', '') }}" autocomplete="name">
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="form-group">
+                <label class="ss-visually-hidden" for="contact-email">Email</label>
+                <input type="email" class="form-control" id="contact-email" name="email" placeholder="E-mail" required maxlength="200" value="{{ form.get('email', '') }}" autocomplete="email">
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="form-group">
+                <label class="ss-visually-hidden" for="contact-subject">Subject</label>
+                <input type="text" class="form-control" id="contact-subject" name="subject" placeholder="Subject" maxlength="150" value="{{ form.get('subject', '') }}">
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="form-group">
+                <label class="ss-visually-hidden" for="contact-message">Message</label>
+                <textarea name="message" class="form-control" id="contact-message" cols="30" rows="8" placeholder="Message" required maxlength="5000">{{ form.get('message', '') }}</textarea>
+            </div>
+        </div>
+        <div class="col-12 text-center">
+            <button class="btn oneMusic-btn mt-30" type="submit">Send <i class="fa fa-angle-double-right"></i></button>
+        </div>
+    </div>
+</form>

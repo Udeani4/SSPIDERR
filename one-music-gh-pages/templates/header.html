@@ -1,216 +1,65 @@
-<!DOCTYPE html>
-<html lang="en">
+{% set endpoint = request.endpoint or '' %}
+<header class="header-area">
+    <div class="oneMusic-main-menu">
+        <div class="classy-nav-container breakpoint-off">
+            <div class="container">
+                <nav class="classy-navbar justify-content-between" id="oneMusicNav" aria-label="Main">
+                    <a href="{{ url_for('main.home') }}" class="nav-brand">
+                        <img src="{{ url_for('static', filename='img/core-img/sspiderr_icon_new.png') }}" alt="SSPIDERR home">
+                    </a>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="description" content="">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <!-- The above 4 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+                    <div class="classy-navbar-toggler">
+                        <span class="navbarToggler" aria-label="Open menu"><span></span><span></span><span></span></span>
+                    </div>
 
-    <!-- Title -->
-    <title>SSPIDERR</title>
-
-    <!-- Favicon -->
-    <link rel="icon" href="{{ url_for('static', filename='img/core-img/my_favicon_com.png') }}">
-
-    <!-- Stylesheet -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-
-    <!-- dropzone scripts-->
-    <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/dropzone@5/dist/min/dropzone.min.css" type="text/css" />
-<!--    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">-->
-    <style>
-
-    /* BOOT SCREEN WRAPPER */
-    #boot-screen {
-      position: fixed;
-      inset: 0;
-      background-color: #000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 10000;
-    }
-
-    /* LOGO */
-    .boot-logo {
-      width: 500px;
-      height: 500px;
-      object-fit: contain;
-
-      /* Subtle professional animation */
-      animation: logoPulse 1.6s ease-in-out infinite;
-    }
-
-    /* Animation */
-    @keyframes logoPulse {
-      0% {
-        opacity: 0.55;
-        transform: scale(0.96);
-      }
-      50% {
-        opacity: 1;
-        transform: scale(1);
-      }
-      100% {
-        opacity: 0.55;
-        transform: scale(0.96);
-      }
-    }
-
-
-    /* Loading text container */
-    .boot-loading {
-      margin-top: 32px; /* distance from animated image */
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 1rem;
-      letter-spacing: 0.5px;
-    }
-
-    /* Optional subtle dot animation */
-    .dots {
-      animation: dots 1.5s infinite;
-    }
-
-    @keyframes dots {
-      0%   { content: ""; }
-      33%  { content: "."; }
-      66%  { content: ".."; }
-      100% { content: "..."; }
-    }
-    </style>
-</head>
-<!-- Loading Overlay -->
-<!--    <div id="loading-overlay">-->
-<!--        <div class="loading-text">Calibrating <span id="dots">.</span></div>-->
-<!--    </div>-->
-
-<body>
-    <!-- BOOT SCREEN -->
-    <div id="boot-screen">
-      <img
-        src="/static/img/bg-img/sspidderr_icon_for_processing.png"
-        alt="App logo"
-        class="boot-logo"
-      />
-        <div class="boot-loading">
-            <p class="loading-class">Loading</p><span class="dots">...</span>
-        </div>
-    </div>
-
-    <div id="app" hidden>
-    <!-- Preloader -->
-    <div class="preloader d-flex align-items-center justify-content-center">
-        <div class="lds-ellipsis">
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-        </div>
-    </div>
-
-    <!-- ##### Header Area Start ##### -->
-    <header class="header-area">
-        <!-- Navbar Area -->
-        <div class="oneMusic-main-menu">
-            <div class="classy-nav-container breakpoint-off">
-                <div class="container">
-                    <!-- Menu -->
-                    <nav class="classy-navbar justify-content-between" id="oneMusicNav">
-
-                        <!-- Nav brand -->
-                        <a href="{{ url_for('home') }}" class="nav-brand"><img src="{{ url_for('static', filename='img/core-img/sspiderr_icon_new.png') }}" alt=""></a>
-
-                        <!-- Navbar Toggler -->
-                        <div class="classy-navbar-toggler">
-                            <span class="navbarToggler"><span></span><span></span><span></span></span>
+                    <div class="classy-menu">
+                        <div class="classycloseIcon">
+                            <div class="cross-wrap"><span class="top"></span><span class="bottom"></span></div>
                         </div>
 
-                        <!-- Menu -->
-                        <div class="classy-menu">
+                        <div class="classynav">
+                            <ul>
+                                <li><a href="{{ url_for('main.home') }}" class="{{ 'active' if endpoint == 'main.home' }}">Home</a></li>
+                                <li><a href="{{ url_for('music.see_whats_new') }}" class="{{ 'active' if endpoint.startswith('music.see') }}">Discover</a>
+                                    <ul class="dropdown">
+                                        <li><a href="{{ url_for('music.see_whats_new') }}">Billboard charts</a></li>
+                                        <li><a href="{{ url_for('music.afro_beats') }}">Afrobeats</a></li>
+                                        <li><a href="{{ url_for('main.US_top_40_songs') }}">US Top 40</a></li>
+                                        <li><a href="{{ url_for('main.time_travel_hits') }}">Time travel</a></li>
+                                        <li><a href="{{ url_for('main.award_winning_songs') }}">GRAMMY winners</a></li>
+                                        <li><a href="{{ url_for('main.AI_suggested_songs') }}">Suggestions</a></li>
+                                    </ul>
+                                </li>
+                                {% if current_user.is_authenticated %}
+                                    <li><a href="{{ url_for('library.playlist') }}" class="{{ 'active' if endpoint.startswith('library.') }}">Playlists</a></li>
+                                    <li><a href="{{ url_for('uploads.loader_page') }}" class="{{ 'active' if endpoint.startswith('uploads.') }}">Upload</a></li>
+                                {% endif %}
+                                <li><a href="{{ url_for('news.news_blog') }}" class="{{ 'active' if endpoint.startswith('news.') }}">News</a></li>
+                                <li><a href="{{ url_for('main.about_us') }}" class="{{ 'active' if endpoint == 'main.about_us' }}">About</a></li>
+                                <li><a href="{{ url_for('main.contact') }}" class="{{ 'active' if endpoint == 'main.contact' }}">Contact</a></li>
+                            </ul>
 
-                            <!-- Close Button -->
-                            <div class="classycloseIcon">
-                                <div class="cross-wrap"><span class="top"></span><span class="bottom"></span></div>
-                            </div>
-
-                            <!-- Nav Start -->
-                            <div class="classynav">
-                                <ul>
-                                    <li><a href="{{ url_for('home') }}">Home</a></li>
-                                    {% if current_user.is_authenticated: %}
-                                        <li><a href="{{ url_for('playlist') }}">playlists</a></li>
-                                    {% endif %}
-                                    <li><a href="#">Pages</a>
-                                        <ul class="dropdown">
-                                            <li><a href="{{ url_for('home') }}">Home</a></li>
-                                            {% if current_user.is_authenticated: %}
-                                                <li><a href="{{ url_for('playlist') }}">Playlists</a></li>
-                                            {% endif %}
-                                            <li><a href="{{ url_for('about_us') }}">About</a></li>
-                                            <li><a href="{{ url_for('news_blog') }}">News</a></li>
-                                            <li><a href="{{ url_for('contact') }}">Contact</a></li>
-                                            <li><a href="{{ url_for('elements') }}">Elements</a></li>
-                                            {% if not current_user.is_authenticated: %}
-                                                <li><a href="{{ url_for('login_page', next=request.path) }}">Login</a></li>
-                                            {% else: %}
-                                                <li><a href="{{ url_for('logout') }}">Logout</a></li>
-                                            {% endif %}
-<!--                                            <li><a href="#">Dropdown</a>-->
-<!--                                                <ul class="dropdown">-->
-<!--                                                    <li><a href="{{ url_for('file_upload') }}">Upload Test</a></li>-->
-<!--                                                    <li><a href="#">Even Dropdown</a></li>-->
-<!--                                                    <li><a href="#">Even Dropdown</a></li>-->
-<!--                                                    <li><a href="#">Even Dropdown</a>-->
-<!--                                                        <ul class="dropdown">-->
-<!--                                                            <li><a href="#">Deeply Dropdown</a></li>-->
-<!--                                                            <li><a href="#">Deeply Dropdown</a></li>-->
-<!--                                                            <li><a href="#">Deeply Dropdown</a></li>-->
-<!--                                                            <li><a href="#">Deeply Dropdown</a></li>-->
-<!--                                                            <li><a href="#">Deeply Dropdown</a></li>-->
-<!--                                                        </ul>-->
-<!--                                                    </li>-->
-<!--                                                    <li><a href="#">Even Dropdown</a></li>-->
-<!--                                                </ul>-->
-<!--                                            </li>-->
-                                        </ul>
-                                    </li>
-                                    <li><a href="{{ url_for('about_us') }}">About</a></li>
-                                    <li><a href="{{ url_for('news_blog') }}">News</a></li>
-                                    <li><a href="{{ url_for('contact') }}">Contact</a></li>
-                                </ul>
-
-                                <!-- Login/Register & Cart Button -->
-                                <div class="login-register-cart-button d-flex align-items-center">
-
-                                    {% if not current_user.is_authenticated: %}
-                                        <!-- Login/Register -->
-                                        <div class="login-register-btn mr-50">
-                                            <a href="{{ url_for('login_page', next=request.path) }}" id="loginBtn">Login / Register</a>
-                                        </div>
-                                    {% else: %}
-                                        <!--Logout-->
-                                        <div class="login-register-btn mr-50">
-                                            <a href="{{ url_for('logout') }}" id="logoutBtn">Logout</a>
+                            <div class="login-register-cart-button d-flex align-items-center">
+                                {% if current_user.is_authenticated %}
+                                    <span class="ss-user-chip d-none d-xl-inline">Hi, {{ current_user.display_name }}</span>
+                                    {% if not current_user.has_spotify %}
+                                        <div class="login-register-btn mr-30">
+                                            <a href="{{ url_for('auth.connect_spotify') }}" class="ss-nav-cta">Connect Spotify</a>
                                         </div>
                                     {% endif %}
-
-                                    <!-- Cart Button -->
-                                    <div class="cart-btn">
-                                        <p><span class="icon-shopping-cart"></span> <span class="quantity">1</span></p>
+                                    <div class="login-register-btn">
+                                        <a href="{{ url_for('auth.logout') }}" id="logoutBtn">Logout</a>
                                     </div>
-                                </div>
+                                {% else %}
+                                    <div class="login-register-btn">
+                                        <a href="{{ url_for('auth.login_page', next=request.path) }}" id="loginBtn">Login / Register</a>
+                                    </div>
+                                {% endif %}
                             </div>
-                            <!-- Nav End -->
-
                         </div>
-                    </nav>
-                </div>
+                    </div>
+                </nav>
             </div>
         </div>
-    </header>
-    <!-- ##### Header Area End ##### -->
+    </div>
+</header>

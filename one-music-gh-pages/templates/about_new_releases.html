@@ -1,4 +1,6 @@
-{% include "header.html" %}
+{% extends "base.html" %}
+{% block title %}About · New releases{% endblock %}
+{% block content %}
 <style>
        /* ----------------------------------------
        OVERVIEW PAGE BEAUTIFICATION
@@ -205,10 +207,10 @@
 
                     <div class="col-12 col-lg-6 text-center">
                         <div class="overview-image-box">
-                            <img src="{{ url_for('static', filename='img/bg-img/about_new_release_add_to_playlist.png') }}"
+                            <img loading="lazy" src="{{ url_for('static', filename='img/bg-img/about_new_release_add_to_playlist.png') }}"
                                  alt="Upload local songs"
                                  class="overview-img">
-                            <img src="{{ url_for('static', filename='img/bg-img/about_overview_add_playlist.png') }}"
+                            <img loading="lazy" src="{{ url_for('static', filename='img/bg-img/about_overview_add_playlist.png') }}"
                                  alt="Upload local songs."
                                  class="overview-img">
                         </div>
@@ -233,10 +235,10 @@
 
                     <div class="col-12 col-lg-6 text-center">
                         <div class="overview-image-box">
-                            <img src="{{ url_for('static', filename='img/bg-img/about_new_releases_seewhatsnew.png') }}"
+                            <img loading="lazy" src="{{ url_for('static', filename='img/bg-img/about_new_releases_seewhatsnew.png') }}"
                                  alt="Upload local songs"
                                  class="overview-img">
-                            <img src="{{ url_for('static', filename='img/bg-img/about_new_releases_seewhatsnew2.png') }}"
+                            <img loading="lazy" src="{{ url_for('static', filename='img/bg-img/about_new_releases_seewhatsnew2.png') }}"
                                  alt="Upload local songs"
                                  class="overview-img">
                         </div>
@@ -246,58 +248,4 @@
         </section>
 
     </section>
-{% include "footer.html" %}
-         <!-- ##### All Javascript Script ##### -->
-    <!-- jQuery-2.2.4 js -->
-    <script src="{{ url_for('static', filename='js/jquery/jquery-2.2.4.min.js') }}"></script>
-    <!-- Popper js -->
-    <script src="{{ url_for('static', filename='js/bootstrap/popper.min.js') }}"></script>
-    <!-- Bootstrap js -->
-    <script src="{{ url_for('static', filename='js/bootstrap/bootstrap.min.js') }}"></script>
-    <!-- All Plugins js -->
-    <script src="{{ url_for('static', filename='js/plugins/plugins.js') }}"></script>
-    <!-- Active js -->
-    <script src="{{ url_for('static', filename='js/active.js') }}"></script>
-
-     <!-- Modal Script -->
-<script>
-    window.addEventListener("load", () => {
-      const boot = document.getElementById("boot-screen");
-      const app = document.getElementById("app");
-
-      // Small delay for smoothness (optional)
-      setTimeout(() => {
-        boot.style.opacity = "0";
-        boot.style.transition = "opacity 0.4s ease";
-
-        setTimeout(() => {
-          boot.remove();
-          app.hidden = false;
-        }, 400);
-      }, 300);
-    });
-</script>
-
-<script>
-    // animate the dots in "Calibrating ..."
-    let count = 1;
-    setInterval(() => {
-        document.getElementById("dots").textContent = ".".repeat(count);
-        count = count === 3 ? 1 : count + 1;
-    }, 500);
-
-    // hide overlay when page finishes loading
-    window.addEventListener("load", function () {
-        const overlay = document.getElementById("loading-overlay");
-        overlay.style.opacity = 0;
-
-        setTimeout(() => {
-            overlay.style.display = "none";
-        }, 500);
-    });
-</script>
-
-</body>
-
-</html>
-
+{% endblock %}
