@@ -1,7 +1,6 @@
 """Extension objects, created unbound and initialised in `create_app()`."""
 from flask_bootstrap import Bootstrap5
 from flask_caching import Cache
-from flask_ckeditor import CKEditor
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_login import LoginManager
@@ -21,5 +20,4 @@ login_manager = LoginManager()
 csrf = CSRFProtect()
 cache = Cache()
 limiter = Limiter(key_func=get_remote_address)
-ckeditor = CKEditor()
 bootstrap = Bootstrap5()

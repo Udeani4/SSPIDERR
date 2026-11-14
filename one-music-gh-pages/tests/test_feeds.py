@@ -64,6 +64,7 @@ def test_refresh_news_dedupes_sanitises_and_trims(app, db, monkeypatch):
                               f"https://news/{i}", f"2026-11-{(i % 28) + 1:02d}T10:00:00Z", None) for i in range(10)]
     monkeypatch.setattr(news, "fetch_newsdata_news", lambda: articles[:6])
     monkeypatch.setattr(news, "fetch_billboard_news", lambda: articles[4:])        # 2 duplicates
+    monkeypatch.setattr(news, "og_image", lambda url: None)
     app.config["NEWS_KEEP_LATEST"] = 5
 
     # An old post with a comment must survive trimming.
@@ -86,3 +87,34 @@ def test_refresh_news_raises_when_no_source_works(app, monkeypatch):
     monkeypatch.setattr(news, "fetch_billboard_news", lambda: [])
     with pytest.raises(RuntimeError):
         news.refresh_news()
+
+
+
+def test_excerpt_html_limits_length_and_strips_markup():
+    raw = "".join(f'<p class="x">Paragraph {i} ' + "word " * 40 + "</p>" for i in range(10))
+    out = news.excerpt_html(raw, max_chars=500)
+    assert out.startswith("<p>Paragraph 0") and 'class=' not in out
+    assert len(out) < 800 and "Paragraph 9" not in out
+
+
+def test_og_image(monkeypatch):
+    monkeypatch.setattr(news.http, "get_text", lambda *a, **k:
+                        '<head><meta property="og:image" content="https://cdn.example/cover.jpg"></head>')
+    assert news.og_image("https://x") == "https://cdn.example/cover.jpg"
+    monkeypatch.setattr(news.http, "get_text", lambda *a, **k: "<head></head>")
+    assert news.og_image("https://x") is None
+
+
+def test_refresh_news_backfills_existing_posts(app, db, monkeypatch):
+    old = BlogPost(title="Story", body="<p>short</p>", created_id=1, day=1, month="Nov", year=2026,
+                   date=datetime(2026, 11, 1), news_link="https://news/1", img_url=news.DEFAULT_IMAGE)
+    db.session.add(old)
+    db.session.commit()
+    art = news._article("Billboard", "Story", "Summary", "<p>" + "Much longer text. " * 20 + "</p>",
+                        "https://news/1", "2026-11-01", None, byline="Jane", tags=["Pop"])
+    monkeypatch.setattr(news, "fetch_newsdata_news", lambda: [])
+    monkeypatch.setattr(news, "fetch_billboard_news", lambda: [art])
+    monkeypatch.setattr(news, "og_image", lambda url: "https://cdn/cover.jpg")
+    assert news.refresh_news() == 0
+    assert old.byline == "Jane" and old.tags == ["Pop"] and "Much longer" in old.body
+    assert old.img_url == "https://cdn/cover.jpg"

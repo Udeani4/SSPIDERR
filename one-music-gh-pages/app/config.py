@@ -78,8 +78,6 @@ class Config:
     CONTACT_RECIPIENT = os.environ.get("CONTACT_RECIPIENT") or os.environ.get("EMAIL_KEY")
 
     # --- Templates --------------------------------------------------------
-    CKEDITOR_PKG_TYPE = "basic"
-    CKEDITOR_SERVE_LOCAL = False
     BOOTSTRAP_SERVE_LOCAL = False
 
 

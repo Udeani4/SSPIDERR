@@ -224,9 +224,9 @@ def test_comment_html_is_sanitised(logged_in, post, db):
     res = logged_in.post("/blog-post/7", data={"comment_text": '<p>Nice</p><img src=x onerror="alert(1)">'})
     assert res.status_code == 302
     comment = Comment.query.one()
-    assert "onerror" not in comment.text and "Nice" in comment.text           # S1
-    page = logged_in.get("/blog-post/7").data
-    assert b"onerror" not in page
+    assert "<img" not in comment.text and "&lt;img" in comment.text and "Nice" in comment.text   # S1: escaped
+    page = logged_in.get("/blog-post/7").get_data(as_text=True)
+    assert "<img src=x" not in page
 
 
 def test_only_author_can_delete_comment(client, post, db):
@@ -319,3 +319,72 @@ def test_pages_never_download_audio_on_load(client, db, offline, catalog_client,
     assert not re.search(r'(src|href)="[^"]+\.(m4a|mp3|aac)"', html)
     if url == "/":
         assert 'data-preview="https://audio.example/p.m4a"' in html
+
+
+
+# --------------------------------------------------------------------- article page & comments
+def test_comment_plain_text_becomes_paragraphs(logged_in, post):
+    text = "\n".join(["First line", "same paragraph", "", "Second paragraph"])
+    logged_in.post("/blog-post/7", data={"comment_text": text})
+    assert Comment.query.one().text == "<p>First line<br>same paragraph</p><p>Second paragraph</p>"
+
+
+def test_comment_validation(logged_in, post):
+    res = logged_in.post("/blog-post/7", data={"comment_text": "x"})
+    assert res.status_code == 400 and Comment.query.count() == 0
+    res = logged_in.post("/blog-post/7", data={"comment_text": "y" * 2001})
+    assert res.status_code == 400 and Comment.query.count() == 0
+
+
+def test_new_comment_redirects_to_its_anchor(logged_in, post):
+    res = logged_in.post("/blog-post/7", data={"comment_text": "Great read"})
+    assert res.headers["Location"].endswith(f"#comment-{Comment.query.one().id}")
+
+
+def test_edit_own_comment(logged_in, user, post, db):
+    comment = Comment(text="<p>old</p>", author_id=user.id, post_id=post.id)
+    db.session.add(comment)
+    db.session.commit()
+    page = logged_in.get("/blog-post/7").get_data(as_text=True)
+    assert "class=\"ss-edit-form\"" in page and "You</span>" in page
+    logged_in.post(f"/comments/{comment.id}/edit", data={"comment_text": "new text"})
+    assert comment.text == "<p>new text</p>" and comment.edited_at is not None
+    assert "edited" in logged_in.get("/blog-post/7").get_data(as_text=True)
+
+
+def test_cannot_edit_someone_elses_comment(client, post, db):
+    author, other = make_user(), make_user("other@example.com")
+    comment = Comment(text="<p>mine</p>", author_id=author.id, post_id=post.id)
+    db.session.add(comment)
+    db.session.commit()
+    with client.session_transaction() as sess:
+        sess["_user_id"] = str(other.id)
+    assert client.post(f"/comments/{comment.id}/edit", data={"comment_text": "hacked"}).status_code == 403
+    assert comment.text == "<p>mine</p>"
+    assert "class=\"ss-edit-form\"" not in client.get("/blog-post/7").get_data(as_text=True)
+
+
+def test_comments_sort_and_anonymous_prompt(client, post, db):
+    from datetime import timedelta
+    user = make_user()
+    base = datetime(2026, 1, 1)
+    for i, text in enumerate(["first", "second"]):
+        db.session.add(Comment(text=f"<p>{text}</p>", author_id=user.id, post_id=post.id,
+                               created_at=base + timedelta(hours=i)))
+    db.session.commit()
+    oldest = client.get("/blog-post/7").get_data(as_text=True)
+    newest = client.get("/blog-post/7?sort=newest").get_data(as_text=True)
+    assert oldest.index("<p>first</p>") < oldest.index("<p>second</p>")
+    assert newest.index("<p>second</p>") < newest.index("<p>first</p>")
+    assert "Join the conversation" in oldest and "comment_text" not in oldest      # no composer when logged out
+
+
+def test_article_page_shows_details_and_source_link(client, db):
+    p = BlogPost(title="Big news", subtitle="Short dek", body="<p>Excerpt text.</p>", created_id=8, day=2, month="Nov",
+                 year=2026, news_link="https://billboard.com/a", source="Billboard", byline="Jane Doe",
+                 tags=["Rock", "Tour"], img_url="https://img/cover.jpg", date=datetime(2026, 11, 2))
+    db.session.add(p)
+    db.session.commit()
+    html = client.get("/blog-post/8").get_data(as_text=True)
+    for needle in ("Jane Doe", "Rock", "Read the full story", "https://img/cover.jpg", "min read", "og:title"):
+        assert needle in html, needle

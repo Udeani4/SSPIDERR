@@ -165,3 +165,14 @@ def offline(monkeypatch):
         {"category": "Record Of The Year", "title": "Song", "artist": "Artist", "kind": "song",
          "spotify_id": "a" * 22, "image": None, "preview_url": None}])
     return SimpleNamespace(track=track)
+
+
+@pytest.fixture(autouse=True)
+def no_real_http(monkeypatch):
+    """Safety net: any test that forgets to fake a request fails fast instead of waiting on the network."""
+    import app.services.http as http
+
+    def blocked(*args, **kwargs):
+        raise RuntimeError("Real HTTP request attempted in a test")
+    monkeypatch.setattr(http.HTTP, "get", blocked)
+    monkeypatch.setattr(http.HTTP_FAST, "get", blocked)

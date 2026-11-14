@@ -52,6 +52,8 @@ class BlogPost(db.Model):
     img_url: Mapped[str | None] = mapped_column(String(250), nullable=True)
     source: Mapped[str | None] = mapped_column(String(250), nullable=True)
     news_link: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    byline: Mapped[str | None] = mapped_column(String(200), nullable=True)   # original author
+    tags = mapped_column(JSON, nullable=True)                                # topic tags from the source
     # Public id used in /blog-post/<created_id> URLs.
     created_id: Mapped[int] = mapped_column(Integer, unique=True)
     day: Mapped[int] = mapped_column(Integer)
@@ -72,6 +74,7 @@ class Comment(db.Model):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     text: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=False), nullable=False, server_default=func.now())
+    edited_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=False), nullable=True)
     author_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("sspiderr_users.id", ondelete="SET NULL"), nullable=True)
     post_id: Mapped[int] = mapped_column(

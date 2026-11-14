@@ -9,7 +9,7 @@ from flask_wtf.csrf import CSRFError
 from sqlalchemy import event
 
 from .config import BASE_DIR, CONFIGS
-from .extensions import bootstrap, cache, ckeditor, csrf, db, limiter, login_manager, migrate
+from .extensions import bootstrap, cache, csrf, db, limiter, login_manager, migrate
 
 
 def _configure_logging(app):
@@ -61,7 +61,6 @@ def create_app(config_name=None, instance_path=None, **overrides):
     csrf.init_app(app)
     cache.init_app(app)
     limiter.init_app(app)
-    ckeditor.init_app(app)
     bootstrap.init_app(app)
     _enable_sqlite_wal(app)
 
@@ -87,6 +86,30 @@ def create_app(config_name=None, instance_path=None, **overrides):
     def inject_globals():
         from datetime import date
         return {"now_year": date.today().year}
+
+    @app.template_filter("timeago")
+    def timeago(value):
+        """'3 hours ago'. Stored datetimes are naive UTC."""
+        from datetime import datetime, timezone
+        if not value:
+            return ""
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=timezone.utc)
+        seconds = int((datetime.now(timezone.utc) - value).total_seconds())
+        if seconds < 60:
+            return "just now"
+        for unit, size in (("year", 31_536_000), ("month", 2_592_000), ("week", 604_800),
+                           ("day", 86_400), ("hour", 3_600), ("minute", 60)):
+            if seconds >= size:
+                n = seconds // size
+                return f"{n} {unit}{'s' if n != 1 else ''} ago"
+        return "just now"
+
+    @app.template_filter("reading_time")
+    def reading_time(html):
+        import re
+        words = len(re.sub(r"<[^>]+>", " ", html or "").split())
+        return max(1, round(words / 220))
 
     @app.template_filter("thousands")
     def thousands(value):
