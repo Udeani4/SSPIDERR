@@ -115,7 +115,7 @@
                                     <a href="{{ url_for('music.album_page', album_id=feature_artists_info['album_id']) }}"><h2>{{ feature_artists_info['album_name'] }}</h2></a>
                                 {% endif %}
                             </div>
-                            <div class="description">{{ (artist_description or {}).get('description') | clean_html }}</div>
+                            <div class="description" style="color:white">{{ (artist_description or {}).get('description') | clean_html }}</div>
                             {% if top_artist_album_track %}
                                 {% set best = top_artist_album_track[0] %}
                                 <div class="song-play-area">
