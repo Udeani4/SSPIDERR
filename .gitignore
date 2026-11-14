@@ -217,3 +217,14 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- SSPIDERR project-specific ---
+.idea/
+.sass-cache/
+ffcache*
+*.sqbpro
+one-music-gh-pages/static/uploads/
+one-music-gh-pages/instance/
+db-backups/
+scratch/
+.ruff_cache/
