@@ -223,8 +223,8 @@ __marimo__/
 .sass-cache/
 ffcache*
 *.sqbpro
-one-music-gh-pages/static/uploads/
-one-music-gh-pages/instance/
+SSPIDERR-APP/static/uploads/
+SSPIDERR-APP/instance/
 db-backups/
 scratch/
 .ruff_cache/

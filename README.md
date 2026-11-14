@@ -2,7 +2,7 @@
 
 A Flask music-discovery app. Browse what's hot (Billboard, Apple Music, Last.fm, Audiomack, GRAMMY winners), add any song to your Spotify playlists in one click, or upload your own music files and let SSPIDERR recognise them (Shazam) and build a Spotify playlist from them.
 
-The app lives in [`one-music-gh-pages/`](one-music-gh-pages/) and is built on the Colorlib "One Music" template.
+The app lives in [`SSPIDERR-APP/`](SSPIDERR-APP/) and is built on the Colorlib "One Music" template.
 
 ## Features
 
@@ -16,7 +16,7 @@ The app lives in [`one-music-gh-pages/`](one-music-gh-pages/) and is built on th
 ## Running it (Windows / PowerShell)
 
 ```powershell
-cd one-music-gh-pages
+cd SSPIDERR-APP
 python -m venv ..\.venv                     # once
 ..\.venv\Scripts\python -m pip install -r requirements-dev.txt
 Copy-Item .env.example .env                 # then fill in the keys
@@ -30,7 +30,7 @@ Your Spotify app's Redirect URI (Spotify dashboard) must match `SSPIDERR_SPOTIFY
 ## Tests
 
 ```powershell
-cd one-music-gh-pages
+cd SSPIDERR-APP
 ..\.venv\Scripts\python -m pytest     # no network needed: every external API is faked
 ..\.venv\Scripts\ruff check .
 ```
@@ -40,7 +40,7 @@ GitHub Actions runs both on every push (`.github/workflows/ci.yml`).
 ## Project layout
 
 ```
-one-music-gh-pages/
+SSPIDERR-APP/
   app/
     __init__.py      create_app(): config, extensions, blueprints, error pages
     config.py        every environment variable, read once

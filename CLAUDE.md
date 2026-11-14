@@ -4,9 +4,9 @@ Guidance for Claude Code in this repository. It overrides `C:\Users\pc\Downloads
 
 ## What this is
 
-SSPIDERR, a Flask music-discovery app. All code is in `one-music-gh-pages/`. See README.md for features and layout. `improvement-guide.md` lists the review findings (IDs like B3, S1, P1) and their status.
+SSPIDERR, a Flask music-discovery app. All code is in `SSPIDERR-APP/`. See README.md for features and layout. `improvement-guide.md` lists the review findings (IDs like B3, S1, P1) and their status.
 
-## Commands (run from `one-music-gh-pages/`, PowerShell)
+## Commands (run from `SSPIDERR-APP/`, PowerShell)
 
 ```powershell
 ..\.venv\Scripts\python -m pytest            # 180+ tests, no network

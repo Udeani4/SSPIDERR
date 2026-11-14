@@ -5,7 +5,7 @@ Date: 2026-11-09   Branch: index-efficiency
 1. WHAT IT IS
 ----------------------------------------------------------------------
 SSPIDERR is a Flask music-discovery web app. It lives in
-one-music-gh-pages/, which is a Colorlib "One Music" HTML template
+SSPIDERR-APP/, which is a Colorlib "One Music" HTML template
 converted to Jinja.
 
 Main features:

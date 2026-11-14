@@ -1,7 +1,7 @@
 # SSPIDERR: Improvement Guide
 
 _Written 2026-11-10 against branch `index-efficiency` (HEAD `c4d9421` plus the uncommitted `main.py` change)._
-_All line numbers refer to `one-music-gh-pages/main.py` unless another file is named._
+_All line numbers refer to `SSPIDERR-APP/main.py` unless another file is named._
 
 This guide supersedes `PROJECT_ANALYSIS.txt` (2026-11-09). Everything in that file was checked against the code again. Two of its points are corrected in §0, and about 30 problems it didn't cover are added here.
 
@@ -83,21 +83,21 @@ git commit -m "Remove unused BootstrapMade template folders"
 If you still want them, restore them with `git restore .` and move them to a separate repo.
 
 ### R2. Stop tracking junk files
-- `one-music-gh-pages/ffcache*`: three Firefox cache dumps of 4.4 MB each.
-- `one-music-gh-pages/.sass-cache/`: build artefacts.
+- `SSPIDERR-APP/ffcache*`: three Firefox cache dumps of 4.4 MB each.
+- `SSPIDERR-APP/.sass-cache/`: build artefacts.
 - `.idea/`: PyCharm settings. They are user-specific, and `misc.xml` still points at a "Day 37" interpreter.
-- `one-music-gh-pages/static/uploads/`: user data. It must never be committed.
-- `one-music-gh-pages/instance/my_songs.sqbpro`: a DB Browser project file.
+- `SSPIDERR-APP/static/uploads/`: user data. It must never be committed.
+- `SSPIDERR-APP/instance/my_songs.sqbpro`: a DB Browser project file.
 
 Add to `.gitignore`:
 ```gitignore
 .idea/
 .sass-cache/
 ffcache*
-one-music-gh-pages/static/uploads/
+SSPIDERR-APP/static/uploads/
 *.sqbpro
 ```
-Then `git rm -r --cached .idea one-music-gh-pages/.sass-cache one-music-gh-pages/ffcache*` and commit.
+Then `git rm -r --cached .idea SSPIDERR-APP/.sass-cache SSPIDERR-APP/ffcache*` and commit.
 
 ### R3. Images are 113 MB and some are 20 MB each
 `.git` is already 177 MB. The worst files:
@@ -129,7 +129,7 @@ Also add an `.env.example` with every key name and no values. The app reads 20 e
 
 ### R6. Give this repo its own `CLAUDE.md`
 Claude Code currently picks up `C:\Users\pc\Downloads\CLAUDE.md`. That file describes a **LangChain bootcamp project**, not SSPIDERR, and it tells Claude things like "use uv" and "Python ≥3.13" that don't apply here. Create `SPIDER WEB APP/CLAUDE.md` (run `/init`) that covers:
-- what the app is, where the code lives (`one-music-gh-pages/`) and how to run it
+- what the app is, where the code lives (`SSPIDERR-APP/`) and how to run it
 - the rules from this guide (e.g. "never pass `current_user` into a thread", "every `requests.get` gets a `timeout=`")
 - "Don't commit `.env`, `instance/` or `static/uploads/`."
 
@@ -412,7 +412,7 @@ Besides R3: both `jquery-2.2.4` and `jquery-3.2.1` are shipped, so check which o
 ### A1. Split `main.py` (3,726 lines) into a package
 Suggested layout. Each file stays under about 400 lines:
 ```
-one-music-gh-pages/
+SSPIDERR-APP/
   app/
     __init__.py          # create_app(): config, db, login_manager, csrf, cache, blueprints
     config.py            # reads env vars once; Config / DevConfig / ProdConfig
@@ -499,7 +499,7 @@ None of the 37 templates uses `{% extends %}`. Each one includes `header.html`/`
 ### F2. Remove dead or demo templates
 Check whether these are still reachable: `elements.html` (1,149 lines of template demo), `test-dropzone.html`, `pop-up-playlist.html`, `selected-playlist.html`, `initial_loader.html`, `remember_this_4_index` (no extension). Delete the ones nothing renders. To check:
 ```powershell
-Select-String -Path one-music-gh-pages\main.py -Pattern "render_template\('([^']+)'" | % { $_.Matches.Groups[1].Value } | Sort-Object -Unique
+Select-String -Path SSPIDERR-APP\main.py -Pattern "render_template\('([^']+)'" | % { $_.Matches.Groups[1].Value } | Sort-Object -Unique
 ```
 Compare that list to `templates/` (remember the `{% include %}`s).
 
@@ -554,14 +554,14 @@ Subagents are separate Claude workers. Each starts with a fresh context, does on
 ### 8.2 Prompts you can paste
 
 **Audit fan-out (read-only, safe to run all three at once).** In one message:
-> Use 3 Explore subagents in parallel on `one-music-gh-pages/`:
+> Use 3 Explore subagents in parallel on `SSPIDERR-APP/`:
 > 1. List every `requests.get/post` call in main.py with its line number, URL, and whether it has `timeout=` and uses `params=` (vs f-string URL).
 > 2. List every route and, for each, whether it has `@login_required`, every attribute of `current_user` it reads, and every `return None`.
 > 3. List every template under `templates/`, whether any `render_template` or `{% include %}` references it, and which ones contain the add-to-playlist modal JS.
 > Return tables only.
 
 **Plan the split before doing it:**
-> Use a Plan subagent: read `one-music-gh-pages/main.py` and `improvement-guide.md` §5 A1. Produce an ordered move list (function → target module), the import graph between new modules, and every `url_for('x')` in templates that must change to `url_for('bp.x')`. No edits.
+> Use a Plan subagent: read `SSPIDERR-APP/main.py` and `improvement-guide.md` §5 A1. Produce an ordered move list (function → target module), the import graph between new modules, and every `url_for('x')` in templates that must change to `url_for('bp.x')`. No edits.
 
 **Parallel implementation after A1 (worktrees):**
 > Spawn 3 general-purpose subagents, each with `isolation: "worktree"`, on top of the branch `refactor/split-main`:
