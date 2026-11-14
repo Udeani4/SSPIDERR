@@ -54,8 +54,16 @@ def get_json(url, *, params=None, headers=None, timeout=DEFAULT_TIMEOUT, default
             return default
         return response.json()
     except (requests.RequestException, ValueError) as exc:
-        log.warning("GET %s failed: %s", url, exc)
+        log.warning("GET %s failed: %s", url.split("?")[0], describe(exc))
         return default
+
+
+def describe(exc):
+    """Error text without URLs, so API keys in query strings never reach the logs."""
+    response = getattr(exc, "response", None)
+    if response is not None:
+        return f"HTTP {response.status_code}"
+    return type(exc).__name__
 
 
 def get_text(url, *, params=None, browser=False, timeout=DEFAULT_TIMEOUT):

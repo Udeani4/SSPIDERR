@@ -289,3 +289,15 @@ def test_csrf_is_enforced(tmp_path):
 def test_jobs_status_endpoint(logged_in):
     data = logged_in.get("/status/jobs").get_json()
     assert set(data) == {"home_feed", "news_feed"} and data["home_feed"]["due"] is True
+
+
+def test_missing_spotify_id_is_filled_in(client, fake_sp, offline, monkeypatch, db):
+    import app.services.catalog as catalog
+    monkeypatch.setattr(catalog, "new_releases", lambda limit=10: [])
+    user = make_user()
+    user.spotify_user_id = None
+    db.session.commit()
+    with client.session_transaction() as sess:
+        sess["_user_id"] = str(user.id)
+    assert client.get("/playlist").status_code == 200
+    assert user.spotify_user_id == "me"

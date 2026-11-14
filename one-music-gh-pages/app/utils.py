@@ -2,9 +2,12 @@
 from functools import wraps
 from urllib.parse import urlparse
 
+import spotipy
 from flask import g, redirect, request, url_for
 from flask_login import current_user, login_required
+from sqlalchemy.exc import IntegrityError
 
+from .extensions import db
 from .services.spotify import user_client
 
 
@@ -29,6 +32,14 @@ def spotify_required(view):
         sp = user_client(current_user)
         if sp is None:
             return redirect(url_for("auth.connect_spotify", next=request.full_path.rstrip("?")))
+        if not current_user.spotify_user_id:
+            # Accounts connected by the old code sometimes lack the Spotify id.
+            try:
+                current_user.spotify_user_id = sp.me()["id"]
+                db.session.commit()
+            except (spotipy.SpotifyException, IntegrityError):
+                db.session.rollback()
+                return redirect(url_for("auth.connect_spotify", next=request.full_path.rstrip("?")))
         g.sp = sp
         return view(*args, **kwargs)
     return wrapper

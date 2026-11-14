@@ -98,16 +98,31 @@ def artist_image(name, index=0):
     if artist and artist.get("images"):
         return _image(artist["images"], index)
 
+    return _google_image(name)
+
+
+_google_disabled = False
+
+
+def _google_image(name):
+    """Optional fallback. Switches itself off for this process after a 4xx (bad key, quota, API shut down)."""
+    global _google_disabled
     cfg = current_app.config
-    if cfg.get("GOOGLE_CLOUD_API_KEY") and cfg.get("GOOGLE_SEARCH_ENGINE_ID"):
-        data = http.get_json("https://www.googleapis.com/customsearch/v1", params={
+    if _google_disabled or not (cfg.get("GOOGLE_CLOUD_API_KEY") and cfg.get("GOOGLE_SEARCH_ENGINE_ID")):
+        return None
+    try:
+        response = http.get("https://www.googleapis.com/customsearch/v1", params={
             "q": name, "cx": cfg["GOOGLE_SEARCH_ENGINE_ID"], "key": cfg["GOOGLE_CLOUD_API_KEY"],
             "searchType": "image", "num": 3,
-        }, default={})
-        items = (data or {}).get("items") or []
-        if items:
-            return items[0].get("link")
-    return None
+        }, retry=False, timeout=(3, 8))
+        items = response.json().get("items") or []
+        return items[0].get("link") if items else None
+    except Exception as exc:
+        status = getattr(getattr(exc, "response", None), "status_code", None)
+        if status and 400 <= status < 500:
+            _google_disabled = True
+            log.warning("Google image search disabled for this run (HTTP %s)", status)
+        return None
 
 
 @cache.memoize(timeout=DAY / 4)

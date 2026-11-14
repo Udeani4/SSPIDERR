@@ -31,9 +31,11 @@ VALID_CHART = re.compile(r"^[a-z0-9-]{2,60}$")
 def normalise_artists(raw):
     """'A Featuring B & C' -> 'A, B, C'. Only standalone x/X/&/+ are separators (B2)."""
     s = html.unescape(raw or "").strip()
+    # Billboard sometimes glues words together: "SnakeFeaturing", "FeaturingLana".
+    s = re.sub(r"(?<=[a-z])(?=Featuring)", " ", s)
+    s = re.sub(r"(Featuring)(?=[A-Z])", r"\1 ", s)
     s = re.sub(r"(?i)\s*\b(?:featuring\b|feat\.|feat\b|ft\.)\s*", ", ", s)
     s = re.sub(r"\s+(?:&|\+|x|X|with|With)\s+", ", ", s)
-    s = re.sub(r"(?<=[a-z])(?=Featuring)", " ", s)     # "SnakeFeaturing" -> "Snake Featuring"
     s = re.sub(r"\s*,\s*", ", ", s)
     s = re.sub(r"(,\s*){2,}", ", ", s)
     s = re.sub(r"\s+", " ", s)

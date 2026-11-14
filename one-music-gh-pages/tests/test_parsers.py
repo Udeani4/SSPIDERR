@@ -14,6 +14,8 @@ from app.utils import safe_next
     ("Morgan Wallen With Tate McRae", "Morgan Wallen, Tate McRae"),
     ("Feather Jones x Sam", "Feather Jones, Sam"),
     ("A feat. B", "A, B"),
+    ("Zach Bryan FeaturingLana Del Rey", "Zach Bryan, Lana Del Rey"),   # glued by Billboard
+    ("DJ SnakeFeaturing Selena", "DJ Snake, Selena"),
 ])
 def test_normalise_artists(raw, expected):
     assert scrapers.normalise_artists(raw) == expected
@@ -137,3 +139,13 @@ def test_safe_next(target, expected):
 def test_gravatar_url_is_https():
     assert gravatar_url("A@B.com").startswith("https://www.gravatar.com/avatar/")
     assert gravatar_url("a@b.com") == gravatar_url(" A@B.com ")
+
+
+def test_http_errors_never_log_urls():
+    import requests
+
+    from app.services.http import describe
+    response = requests.Response()
+    response.status_code = 403
+    err = requests.HTTPError("403 for url: https://x/?key=SECRET", response=response)
+    assert describe(err) == "HTTP 403" and "SECRET" not in describe(err)
