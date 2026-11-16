@@ -75,8 +75,8 @@ def parse_billboard_chart(page_html, limit=10):
         if not title_tag:
             continue
         artist_tag = row.select_one("span.c-label.a-no-trucate")
-        name = html.unescape(title_tag.get_text(strip=True))
-        artist = normalise_artists(artist_tag.get_text(strip=True)) if artist_tag else ""
+        name = html.unescape(title_tag.get_text(" ", strip=True))
+        artist = normalise_artists(artist_tag.get_text(" ", strip=True)) if artist_tag else ""
         results.append({"song": name, "artist": artist, "main_artist": main_artist(artist) or ""})
         if len(results) >= limit:
             break
@@ -112,8 +112,8 @@ def parse_audiomack_chart(page_html, limit=10):
             continue
         artist_tag = data.find("h2", class_="ChartsItem-artist")
         title_tag = data.find("h2", class_="ChartsItem-title")
-        artist = artist_tag.get_text(strip=True) if artist_tag else "Unknown Artist"
-        title = title_tag.get_text(strip=True) if title_tag else "Unknown Title"
+        artist = artist_tag.get_text(" ", strip=True) if artist_tag else "Unknown Artist"
+        title = title_tag.get_text(" ", strip=True) if title_tag else "Unknown Title"
         out.append({"artist": artist, "title": title, "main_artist": main_artist(artist) or artist})
         if len(out) >= limit:
             break
