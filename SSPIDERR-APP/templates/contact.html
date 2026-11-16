@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Contact{% endblock %}
+{% block content %}
+    <section class="breadcumb-area bg-img bg-overlay" style="background-image: url('{{ url_for('static', filename='img/bg-img/breadcumb.jpg') }}');">
+        <div class="bradcumbContent">
+            <p>You can reach us @</p>
+            <h2>Contact</h2>
+        </div>
+    </section>
+
+    <section class="contact-area section-padding-100-0">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 col-lg-3">
+                    <div class="contact-content mb-100">
+                        <div class="contact-title mb-50"><h5>Contact info</h5></div>
+                        <div class="single-contact-info d-flex align-items-center">
+                            <div class="icon mr-30"><span class="icon-placeholder" aria-hidden="true"></span></div>
+                            <p>14 ELEGANZA RD, LEKKI PENNISULA 2, LAGOS NIGERIA</p>
+                        </div>
+                        <div class="single-contact-info d-flex align-items-center">
+                            <div class="icon mr-30"><span class="icon-smartphone" aria-hidden="true"></span></div>
+                            <p><a href="tel:+2348137704474">+234 813 770 4474</a></p>
+                        </div>
+                        <div class="single-contact-info d-flex align-items-center">
+                            <div class="icon mr-30"><span class="icon-mail" aria-hidden="true"></span></div>
+                            <p><a href="mailto:udeaniizu04@gmail.com">udeaniizu04@gmail.com</a></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-9">
+                    <div class="map-area mb-100">
+                        <iframe title="Map showing our location in Lekki, Lagos" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3964.490418146128!2d3.509007473587851!3d6.459377923908069!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x103bf697e11c13bb%3A0xdf9a0e202b9374ad!2s14%20Orchid%20Rd%2C%20Lekki%20Penninsula%20II%2C%20Lagos%20106104%2C%20Lagos!5e0!3m2!1sen!2sng!4v1762214554125!5m2!1sen!2sng" width="600" height="450" style="border:0;" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="contact-area section-padding-0-100">
+        <div class="container">
+            <div class="section-heading">
+                <p>Send us a message</p>
+                <h2>Get in touch</h2>
+            </div>
+            <div class="contact-form-area">
+                {% include "partials/contact_form.html" %}
+            </div>
+        </div>
+    </section>
+{% endblock %}

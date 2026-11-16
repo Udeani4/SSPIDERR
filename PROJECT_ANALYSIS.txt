@@ -1,0 +1,159 @@
+SSPIDERR - PROJECT ANALYSIS
+Date: 2026-11-09   Branch: index-efficiency
+======================================================================
+
+1. WHAT IT IS
+----------------------------------------------------------------------
+SSPIDERR is a Flask music-discovery web app. It lives in
+SSPIDERR-APP/, which is a Colorlib "One Music" HTML template
+converted to Jinja.
+
+Main features:
+  - Home / discovery: top albums, songs and artists pulled from iTunes
+    RSS, Deezer, Billboard, Last.fm and Spotify, with Unsplash for
+    placeholder images.
+  - Afro-beats page: scrapes Audiomack charts and matches the songs on
+    Spotify.
+  - News blog: articles from NewsData.io and Billboard RSS are stored
+    as BlogPost rows; users can leave CKEditor comments.
+  - Song, artist and album pages: details from Spotify, Last.fm, iTunes.
+  - The main feature, upload -> recognise -> playlist: users drop audio
+    files in, Shazam (shazamio) identifies them, the matches are
+    searched on Spotify and added to a playlist the user picks.
+  - Auth with Flask-Login, Spotify OAuth with tokens stored on User,
+    and a contact form that sends email over Gmail SMTP.
+
+Stack: Flask, SQLAlchemy on SQLite (instance/my_songs.db), spotipy,
+shazamio, BeautifulSoup, ThreadPoolExecutor.
+
+
+2. REPO STATE (worth sorting out first)
+----------------------------------------------------------------------
+  - 456 deleted files are unstaged. These are four old BootstrapMade
+    templates (Imperial/, KnightOne/, Siimple/, SnapFolio/) that are
+    deleted on disk but still tracked. If removing them was intentional,
+    run "git rm -r" on them and commit.
+  - Junk is tracked: three ffcache* files (4.4 MB each), .sass-cache/
+    and .idea/.
+  - Secrets are handled correctly: .env, .cache and the database are
+    gitignored and were never committed.
+  - No requirements.txt or pyproject.toml, so nobody else can reproduce
+    the environment.
+  - main.py is one 3,726-line file with every model, route, scraper and
+    API helper in it. test.py and awards-test.py are scratch scripts,
+    not tests.
+  - Uncommitted change on index-efficiency: it passes spotify_user_id
+    into the thread pool instead of current_user. It's correct and safe
+    to commit.
+
+
+3. BUGS
+----------------------------------------------------------------------
+3.1 The same thread-pool bug is still in home().
+    main.py:1129 sends get_spotify_client_for_request(current_user) to
+    a worker thread. current_user only exists inside the request, so in
+    the worker it fails. The try/except at line 850 swallows the error,
+    so logged-in users silently get the app-level Spotify client instead
+    of their own. Fix it the same way as your playlist change: get the
+    client in the main thread, or pass the plain values in.
+
+3.2 get_valid_spotify_token(user) ignores its argument.
+    At main.py:2695 it builds DBTokenCache(current_user, db) instead of
+    using "user". When the token is refreshed it also saves only the new
+    access token and drops any new refresh token.
+
+3.3 The scheduler's run counter is shared by every visitor.
+    should_run_24h_task uses a module-level number_of_run, so the first
+    visitor changes the logic for everyone until the server restarts.
+    This is probably why it "works for now" and then breaks. Each user's
+    state should live in the database or in their session.
+    The note in the code about running at midnight points to the cleaner
+    design: one background job (e.g. APScheduler) refreshes a single
+    shared HomeData row on a schedule, and the home page only reads from
+    the database.
+
+3.4 login_page sets status.last_run but never commits it (main.py:2037),
+    so the change is lost.
+
+3.5 Several views return None: loader_page, display_uploads, and
+    song_processing_stream (main.py:3568). In Flask that's a 500 error.
+    Anonymous visitors also crash get_valid_spotify_token, because
+    AnonymousUserMixin has no spotify_acc_tok attribute.
+
+3.6 Upload processing is shared across all users:
+      - Every user uploads into the same static/uploads folder.
+      - Progress is tracked in one global STATUS dict.
+      - Every visit to "/" deletes the uploads folder, so if one user
+        opens the home page while another user's upload is processing,
+        that upload is wiped.
+
+3.7 Recognised songs aren't filtered by user. main.py:3545 selects them
+    by playlist_id only, while the cleanup at main.py:3488 deletes them
+    by user.
+
+3.8 The song-processing "stream" isn't a stream.
+    /song-processing-stream runs the whole job inside the request
+    (Shazam, Spotify searches, time.sleep calls) and then redirects. It
+    blocks a worker for minutes and will hit timeouts in production. It
+    should run as a background job, with the page polling /status.
+
+
+4. SECURITY
+----------------------------------------------------------------------
+  - No CSRF protection on the raw forms for login, register, contact,
+    create-playlist and upload. CommentForm is a FlaskForm, but nothing
+    else is.
+  - Stored XSS: templates/blog_post.html:176 renders
+    "comment.text | safe", so any user can inject HTML or JavaScript
+    into the page for everyone who views it. Clean the HTML with bleach
+    or nh3 before saving it. The Last.fm summaries rendered with
+    "| safe" carry a smaller version of the same risk.
+  - Open redirect: the "next" parameter in login_page and
+    create_playlist is used without checking where it points.
+  - app.run(debug=True) exposes the Werkzeug debugger if this is ever
+    deployed as is.
+  - Weak password hashing: passwords use pbkdf2:sha256 with
+    salt_length=8. Werkzeug's default (scrypt) is stronger, so just
+    drop the arguments.
+  - /upload-song needs no login and has no file-size limit
+    (MAX_CONTENT_LENGTH).
+  - The contact form calls SMTP on every submission with no rate limit
+    and no error handling.
+
+
+5. PERFORMANCE (the real reason pages are slow)
+----------------------------------------------------------------------
+  - get_user_playlists makes several API calls per playlist:
+      * sp.playlist() for the image.
+      * A full paginated get_playlist_tracks just to count tracks, even
+        though item['tracks']['total'] is already in the response.
+      * Sometimes a second get_playlist_tracks call, plus an Unsplash
+        request.
+    refresh_user_library then downloads all the tracks again. Use the
+    data that's already in the playlist listing and fetch tracks once,
+    and /playlist, /loader-page and /display-uploads will get much
+    faster.
+  - The home page waits on every API before it renders anything. The
+    24-hour-cache or background-job approach in 3.3 takes that work out
+    of the request entirely.
+  - Heavy print and inspect logging on every request, and the home page
+    creates and deletes a folder on every visit.
+
+
+6. SUGGESTED ORDER OF WORK
+----------------------------------------------------------------------
+  1. Commit the current fix. Clean up git: commit the template
+     deletions, untrack ffcache*, .sass-cache and .idea, and add a
+     requirements.txt.
+  2. Fix the current_user thread bug in home() and the "user" argument
+     in get_valid_spotify_token.
+  3. Replace should_run_24h_task with one scheduled background refresh.
+  4. Make uploads per user: a folder per user, status stored per user
+     or per job, and processing moved off the request thread.
+  5. Security pass: CSRF (Flask-WTF CSRFProtect), cleaning comment
+     HTML, and validating "next".
+  6. Split main.py into separate modules (models, Spotify services,
+     scrapers) using Flask blueprints.
+
+The fixes in step 2 are small and likely to visibly fix how the home page behaves
+for logged-in users.

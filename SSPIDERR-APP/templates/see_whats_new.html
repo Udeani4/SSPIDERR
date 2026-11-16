@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% import "macros.html" as ui %}
+{% block title %}Billboard charts{% endblock %}
+{% block head %}
+<style>
+    .ss-chart-section { padding: 0 0 70px; }
+    .ss-chart-banner { position: relative; height: 340px; display: flex; align-items: center; justify-content: center; text-align: center;
+        color: #fff; background: #111 center/cover no-repeat; margin-bottom: 30px; }
+    .ss-chart-banner::before { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,.55); }
+    .ss-chart-banner > div { position: relative; }
+    .ss-chart-banner h2 { color: #fff; text-transform: uppercase; font-size: clamp(1.6rem, 5vw, 2.8rem); margin-bottom: 6px; }
+    .ss-chart-banner p { color: rgba(255,255,255,.85); margin: 0; }
+    .ss-chart-form { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; justify-content: center; margin: -60px auto 30px;
+        position: relative; z-index: 2; background: #fff; border-radius: 14px; padding: 18px; box-shadow: var(--ss-shadow); max-width: 820px; }
+    .ss-chart-form .ss-field { margin: 0; flex: 1 1 220px; }
+    .ss-chart-form .ss-btn { flex: 0 0 auto; }
+    .ss-jump { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 18px; }
+    .ss-jump a { color: #fff; border: 1px solid rgba(255,255,255,.5); border-radius: 999px; padding: 4px 14px; font-size: 13px; }
+    .ss-jump a:hover { background: #fff; color: #000; }
+</style>
+{% endblock %}
+{% block content %}
+    {% call ui.hero("See what's new", "Live Billboard charts from the US and around the world. Pick a chart (and a past week if you like), then add any song to your playlist.", url_for('static', filename='img/bg-img/breadcumb2.jpg'), "Discover") %}
+        <nav class="ss-jump" aria-label="Chart sections">
+            {% for s in sections %}<a href="#{{ s.id }}">{{ s.title | title }}</a>{% endfor %}
+        </nav>
+    {% endcall %}
+
+    {% for s in sections %}
+        <section class="ss-chart-section" id="{{ s.id }}">
+            <div class="ss-chart-banner" style="background-image: url('{{ url_for('static', filename=section_images.get(s.id, 'img/bg-img/bg-1.jpg')) }}');">
+                <div>
+                    <h2>{{ s.title }}</h2>
+                    <p>{{ s.desc }}</p>
+                </div>
+            </div>
+            <div class="container">
+                <form class="ss-chart-form" action="{{ url_for('music.see_whats_new_results') }}" method="get" data-chart-form="{{ s.id }}">
+                    <div class="ss-field">
+                        <label for="{{ s.id }}-keyword">Chart</label>
+                        <select id="{{ s.id }}-keyword" name="keyword">
+                            {% for value, label in s.options %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="ss-field" style="flex: 0 1 190px;">
+                        <label for="{{ s.id }}-date">Week of <span class="ss-meta">(optional)</span></label>
+                        <input type="date" id="{{ s.id }}-date" name="release-date" min="1958-08-04" max="{{ today }}">
+                    </div>
+                    <button type="submit" class="ss-btn accent">Show chart</button>
+                </form>
+                <div class="row justify-content-center">
+                    <div class="col-12 col-lg-10" id="{{ s.id }}-results" aria-live="polite" data-autoload="{{ '1' if loop.first else '0' }}">
+                        {{ ui.empty("Choose a chart and press “Show chart”.", "fa-bar-chart") }}
+                    </div>
+                </div>
+            </div>
+        </section>
+    {% endfor %}
+{% endblock %}
+{% block scripts %}
+<script>
+    (function () {
+        async function load(form) {
+            const target = document.getElementById(`${form.dataset.chartForm}-results`);
+            const params = new URLSearchParams(new FormData(form));   // sends the date too
+            if (!params.get("release-date")) params.delete("release-date");
+            const button = form.querySelector("button[type=submit]");
+            button.disabled = true;
+            target.innerHTML = '<div class="ss-empty"><span class="ss-spinner"></span><p class="mt-2 mb-0">Loading chart... this can take a few seconds.</p></div>';
+            try {
+                const res = await fetch(`${form.action}?${params}`, { headers: { "Accept": "text/html" } });
+                if (!res.ok) throw new Error();
+                target.innerHTML = await res.text();
+            } catch (e) {
+                target.innerHTML = '<div class="ss-empty"><i class="fa fa-exclamation-triangle"></i>Something went wrong. Please try again.</div>';
+            } finally {
+                button.disabled = false;
+            }
+        }
+        document.querySelectorAll("[data-chart-form]").forEach((form) => {
+            form.addEventListener("submit", (e) => { e.preventDefault(); load(form); });
+            const results = document.getElementById(`${form.dataset.chartForm}-results`);
+            if (results.dataset.autoload === "1") load(form);       // show the Hot 100 straight away
+        });
+    })();
+</script>
+{% endblock %}

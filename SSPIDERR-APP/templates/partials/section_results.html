@@ -1,0 +1,53 @@
+{#- Chart rows for "See what's new", US Top 40, Time travel. Rendered standalone (AJAX) or included. -#}
+{% import "macros.html" as ui %}
+{% if error %}
+    {{ ui.empty(error, "fa-exclamation-triangle") }}
+{% elif not full_chart_info %}
+    {{ ui.empty("No results for this chart.", "fa-bar-chart") }}
+{% elif endpoint_type == 'albums' %}
+    {% for album in full_chart_info %}
+        <div class="ss-chart-row">
+            <span class="ss-track__rank">{{ loop.index }}</span>
+            {{ ui.img(album['image'], album['album_name'] ~ " cover") }}
+            <div class="ss-chart-text">
+                {% if album['spotify_album_id'] %}
+                    <a href="{{ url_for('music.album_page', album_id=album['spotify_album_id']) }}"><h6>{{ album['album_name'] }}</h6></a>
+                {% else %}
+                    <h6>{{ album['album_name'] }}</h6>
+                {% endif %}
+                <p><a href="{{ url_for('music.artist_page', artist=album['album_main_artist']) }}">{{ album['album_artist'] }}</a></p>
+                <p class="ss-desc">{{ album['description'] }}</p>
+            </div>
+        </div>
+    {% endfor %}
+{% elif endpoint_type == 'artists' %}
+    {% for artist in full_chart_info %}
+        <div class="ss-chart-row">
+            <span class="ss-track__rank">{{ loop.index }}</span>
+            {{ ui.img(artist['artist_image'], artist['artist_name']) }}
+            <div class="ss-chart-text">
+                <a href="{{ url_for('music.artist_page', artist=artist['artist_name']) }}"><h6>{{ artist['artist_name'] }}</h6></a>
+                <p class="ss-desc">{{ artist['artist_description'] }}</p>
+            </div>
+        </div>
+    {% endfor %}
+{% else %}
+    {% for song in full_chart_info %}
+        <div class="ss-chart-row">
+            <span class="ss-track__rank">{{ loop.index }}</span>
+            {{ ui.img(song['image'], "") }}
+            <div class="ss-chart-text">
+                {% if song['spotify_track_id'] %}
+                    <a href="{{ url_for('music.song_page', song_id=song['spotify_track_id']) }}"><h6>{{ song['track_name'] }}</h6></a>
+                {% else %}
+                    <h6>{{ song['track_name'] }}</h6>
+                {% endif %}
+                <p><a href="{{ url_for('music.artist_page', artist=song['track_main_artist']) }}">{{ song['track_artist'] }}</a></p>
+            </div>
+            <div class="ss-track__actions">
+                {{ ui.preview(song.get('preview_url')) }}
+                {{ ui.add_button(song['spotify_track_id']) }}
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% import "macros.html" as ui %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+    {{ ui.hero(title, subtitle, url_for('static', filename='img/bg-img/b2.jpg'), "Charts") }}
+    <section class="ss-section">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12 col-lg-10">
+                    {% include "partials/section_results.html" %}
+                    <p class="text-center mt-4"><a href="{{ url_for('music.see_whats_new') }}" class="ss-btn ghost">More charts</a></p>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

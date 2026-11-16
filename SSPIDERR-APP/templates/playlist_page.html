@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% import "macros.html" as ui %}
+{% block title %}{{ playlist1['name'] }}{% endblock %}
+{% block content %}
+    {% call ui.media_hero(playlist_image, playlist1['name'], "Playlist") %}
+        {% if playlist1.get('description') %}<p class="text-visible">{{ playlist1['description'] | striptags }}</p>{% endif %}
+        {{ ui.stats([
+            (playlist_tracks | length, "Songs"),
+            (avg_popularity, "Avg. popularity"),
+            ((total_duration ~ "h " ~ total_minutes ~ "m") if (total_duration or total_minutes) else None, "Total length"),
+        ]) }}
+        <div class="ss-hero-actions">
+            {% if (playlist1.get('external_urls') or {}).get('spotify') %}
+                <a href="{{ playlist1['external_urls']['spotify'] }}" class="ss-btn spotify" target="_blank" rel="noopener"><i class="fa fa-spotify"></i> Open in Spotify</a>
+            {% endif %}
+            {% if is_owner %}
+                <a href="{{ url_for('uploads.loader_page') }}" class="ss-btn accent"><i class="fa fa-upload"></i> Add local songs</a>
+            {% endif %}
+        </div>
+    {% endcall %}
+
+    <section class="ss-section">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12 col-lg-10">
+                    {{ ui.section_heading(playlist1['name'], "Songs in") }}
+                    {% for song in playlist_tracks %}
+                        {{ ui.track_row(song['name'], song['artist'], song['image'], song['id'], song['preview_url'], song['id'], loop.index) }}
+                    {% else %}
+                        {{ ui.empty("This playlist is empty. Find songs on the home page and press Add.", "fa-music") }}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

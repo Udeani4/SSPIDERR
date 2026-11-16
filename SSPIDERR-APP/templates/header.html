@@ -1,0 +1,65 @@
+{% set endpoint = request.endpoint or '' %}
+<header class="header-area">
+    <div class="oneMusic-main-menu">
+        <div class="classy-nav-container breakpoint-off">
+            <div class="container">
+                <nav class="classy-navbar justify-content-between" id="oneMusicNav" aria-label="Main">
+                    <a href="{{ url_for('main.home') }}" class="nav-brand">
+                        <img src="{{ url_for('static', filename='img/core-img/sspiderr_icon_new.png') }}" alt="SSPIDERR home">
+                    </a>
+
+                    <div class="classy-navbar-toggler">
+                        <span class="navbarToggler" aria-label="Open menu"><span></span><span></span><span></span></span>
+                    </div>
+
+                    <div class="classy-menu">
+                        <div class="classycloseIcon">
+                            <div class="cross-wrap"><span class="top"></span><span class="bottom"></span></div>
+                        </div>
+
+                        <div class="classynav">
+                            <ul>
+                                <li><a href="{{ url_for('main.home') }}" class="{{ 'active' if endpoint == 'main.home' }}">Home</a></li>
+                                <li><a href="{{ url_for('music.see_whats_new') }}" class="{{ 'active' if endpoint.startswith('music.see') }}">Discover</a>
+                                    <ul class="dropdown">
+                                        <li><a href="{{ url_for('music.see_whats_new') }}">Billboard charts</a></li>
+                                        <li><a href="{{ url_for('music.afro_beats') }}">Afrobeats</a></li>
+                                        <li><a href="{{ url_for('main.US_top_40_songs') }}">US Top 40</a></li>
+                                        <li><a href="{{ url_for('main.time_travel_hits') }}">Time travel</a></li>
+                                        <li><a href="{{ url_for('main.award_winning_songs') }}">GRAMMY winners</a></li>
+                                        <li><a href="{{ url_for('main.AI_suggested_songs') }}">Suggestions</a></li>
+                                    </ul>
+                                </li>
+                                {% if current_user.is_authenticated %}
+                                    <li><a href="{{ url_for('library.playlist') }}" class="{{ 'active' if endpoint.startswith('library.') }}">Playlists</a></li>
+                                    <li><a href="{{ url_for('uploads.loader_page') }}" class="{{ 'active' if endpoint.startswith('uploads.') }}">Upload</a></li>
+                                {% endif %}
+                                <li><a href="{{ url_for('news.news_blog') }}" class="{{ 'active' if endpoint.startswith('news.') }}">News</a></li>
+                                <li><a href="{{ url_for('main.about_us') }}" class="{{ 'active' if endpoint == 'main.about_us' }}">About</a></li>
+                                <li><a href="{{ url_for('main.contact') }}" class="{{ 'active' if endpoint == 'main.contact' }}">Contact</a></li>
+                            </ul>
+
+                            <div class="login-register-cart-button d-flex align-items-center">
+                                {% if current_user.is_authenticated %}
+                                    <span class="ss-user-chip d-none d-xl-inline">Hi, {{ current_user.display_name }}</span>
+                                    {% if not current_user.has_spotify %}
+                                        <div class="login-register-btn mr-30">
+                                            <a href="{{ url_for('auth.connect_spotify') }}" class="ss-nav-cta">Connect Spotify</a>
+                                        </div>
+                                    {% endif %}
+                                    <div class="login-register-btn">
+                                        <a href="{{ url_for('auth.logout') }}" id="logoutBtn">Logout</a>
+                                    </div>
+                                {% else %}
+                                    <div class="login-register-btn">
+                                        <a href="{{ url_for('auth.login_page', next=request.path) }}" id="loginBtn">Login / Register</a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </div>
+</header>

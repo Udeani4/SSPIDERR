@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Create a playlist{% endblock %}
+{% block content %}
+    <section class="breadcumb-area bg-img bg-overlay" style="background-image: url('{{ url_for('static', filename='img/bg-img/create_playlist_img.jpg') }}');">
+        <div class="bradcumbContent">
+            <p>Saved straight to your Spotify</p>
+            <h2>New playlist</h2>
+        </div>
+    </section>
+
+    <section class="login-area section-padding-100">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12 col-md-8 col-lg-6">
+                    <div class="login-content">
+                        <h3>Create a playlist</h3>
+                        <div class="create-playlist-form">
+                            <form action="{{ url_for('library.create_playlist') }}" method="post">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+                                <div class="form-group">
+                                    <label for="playlist-name">Name</label>
+                                    <input class="form-control" id="playlist-name" name="name" placeholder="e.g. Sunday chill" required maxlength="100"
+                                           value="{{ name }}" autofocus>
+                                    <small class="form-text text-muted">We'll create it in your Spotify account.</small>
+                                </div>
+                                <div class="form-group">
+                                    <label for="playlist-description">Description <span class="ss-meta">(optional)</span></label>
+                                    <textarea class="form-control" id="playlist-description" name="description" rows="3" maxlength="300"
+                                              placeholder="What's this playlist for?">{{ description }}</textarea>
+                                </div>
+                                <button type="submit" class="btn oneMusic-btn mt-30">Create playlist</button>
+                                {% if next %}<a href="{{ next }}" class="ml-3">Cancel</a>{% endif %}
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

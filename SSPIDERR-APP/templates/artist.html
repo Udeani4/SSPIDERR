@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% import "macros.html" as ui %}
+{% set sp = artist_data['spotify'] %}
+{% block title %}{{ artist_data['artist_name'] }}{% endblock %}
+{% block content %}
+    {% call ui.media_hero(sp['artist_art'], artist_data['artist_name'], "Artist") %}
+        {% if sp['artist_latest_album_id'] %}
+            <p class="text-visible">Latest album: <a href="{{ url_for('music.album_page', album_id=sp['artist_latest_album_id']) }}" style="color:#fff;text-decoration:underline">{{ sp['artist_latest_album'] }}</a></p>
+        {% endif %}
+        {{ ui.stats([
+            (sp['followers'], "Followers"),
+            (artist_data['lastfm']['listeners'], "Listeners"),
+            (artist_data['lastfm']['playcount'], "Plays"),
+            (sp['popularity'], "Popularity"),
+        ]) }}
+        {% if sp['genres'] %}
+            <div class="ss-tags">{% for genre in sp['genres'][:5] %}<span>{{ genre }}</span>{% endfor %}</div>
+        {% endif %}
+        <div class="ss-hero-actions">
+            {% if sp['url'] %}<a href="{{ sp['url'] }}" class="ss-btn spotify" target="_blank" rel="noopener"><i class="fa fa-spotify"></i> Spotify</a>{% endif %}
+            {% if sp['top_tracks'] %}<a href="{{ url_for('music.song_page', song_id=sp['top_tracks'][0]['id']) }}" class="btn oneMusic-btn">Top song: {{ sp['top_tracks'][0]['name'] }}</a>{% endif %}
+        </div>
+    {% endcall %}
+
+    {% if artist_data['lastfm']['summary'] %}
+        <section class="ss-section">
+            <div class="container">
+                {{ ui.section_heading("Biography", "Last.fm", "center") }}
+                <div class="row justify-content-center">
+                    <div class="col-12 col-lg-9"><div class="description text-center">{{ artist_data['lastfm']['summary'] | clean_html }}</div></div>
+                </div>
+            </div>
+        </section>
+    {% endif %}
+
+    <section class="ss-section soft">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 col-lg-6 mb-5">
+                    {{ ui.section_heading("Top tracks", "Most played") }}
+                    {% for track in artist_top_tracks %}
+                        {{ ui.track_row(track['track_name'], track['artist_names'], track['track_image'], track['track_id'],
+                                        track.get('preview_url'), track['track_id'], loop.index, False) }}
+                    {% else %}
+                        {{ ui.empty("No top tracks found.") }}
+                    {% endfor %}
+                </div>
+                <div class="col-12 col-lg-6 mb-5">
+                    {{ ui.section_heading("Latest releases", "Newest first") }}
+                    {% for track in sp['latest_tracks'] %}
+                        {{ ui.track_row(track['name'], track['album_name'] ~ (" · " ~ track['release_date'][:4] if track['release_date'] else ""),
+                                        track['track_image'], track['id'], None, track['id'], None, False) }}
+                    {% else %}
+                        {{ ui.empty("No recent releases found.") }}
+                    {% endfor %}
+                </div>
+                {% if artist_latest_album_info %}
+                    <div class="col-12 col-lg-6 mb-5">
+                        {{ ui.section_heading(sp['artist_latest_album'], "Latest album") }}
+                        {% for track in artist_latest_album_info %}
+                            {{ ui.track_row(track['track_name'], track['track_artists'], track['track_image'], track['track_id'],
+                                            None, track['track_id'], loop.index, False) }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                <div class="col-12 col-lg-6 mb-5">
+                    {{ ui.section_heading("Albums", "Discography") }}
+                    {% for album in artist_albums %}
+                        <div class="ss-track">
+                            {{ ui.img(album['image'], "", "ss-track__img") }}
+                            <div class="ss-track__text">
+                                <a href="{{ url_for('music.album_page', album_id=album['id']) }}"><p class="ss-track__title">{{ album['name'] }}</p></a>
+                                <p class="ss-track__artist">{{ (album['release_date'] or '')[:4] }} · {{ album['total_tracks'] }} tracks</p>
+                            </div>
+                        </div>
+                    {% else %}
+                        {{ ui.empty("No albums found.") }}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {% if related_artists_data %}
+        <section class="ss-section">
+            <div class="container">
+                {{ ui.section_heading("Fans also like", "Similar artists", "center") }}
+                <div class="ss-grid">
+                    {% for artist in related_artists_data %}
+                        <a class="ss-tile round" href="{{ url_for('music.artist_page', artist=artist['name']) }}">
+                            {{ ui.img(artist['image'], artist['name']) }}
+                            <h5>{{ artist['name'] }}</h5>
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+    {% endif %}
+{% endblock %}

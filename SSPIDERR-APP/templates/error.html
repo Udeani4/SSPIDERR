@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+    <section class="ss-error-page">
+        <div>
+            <div class="code">{{ code }}</div>
+            <h2 class="mt-3">{{ title }}</h2>
+            <p class="ss-meta mb-4">{{ message }}</p>
+            <div class="d-flex justify-content-center flex-wrap" style="gap:10px">
+                <a href="{{ url_for('main.home') }}" class="ss-btn accent">Go to the home page</a>
+                <a href="javascript:history.back()" class="ss-btn ghost">Go back</a>
+            </div>
+        </div>
+    </section>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% import "macros.html" as ui %}
+{% block title %}Time travel{% endblock %}
+{% block content %}
+    {% call ui.hero("Time travel", "What was the world listening to? Pick any week since August 1958 and see the Billboard Hot 100.", url_for('static', filename='img/bg-img/b3.jpg'), "Charts") %}
+        <form method="get" action="{{ url_for('main.time_travel_hits') }}" class="d-flex flex-wrap justify-content-center mt-4" style="gap:10px">
+            <label class="ss-visually-hidden" for="tt-date">Week</label>
+            <input type="date" id="tt-date" name="date" value="{{ chart_date or '' }}" min="1958-08-04" max="{{ today }}" required
+                   style="border-radius:999px;border:0;padding:10px 18px;">
+            <button class="ss-btn accent" type="submit">Travel</button>
+        </form>
+        <div class="ss-jump">
+            {% for label, d in [("Your birth year?", "1990-06-02"), ("1985", "1985-07-13"), ("1999", "1999-12-25"), ("2010", "2010-08-14")] %}
+                <a href="{{ url_for('main.time_travel_hits', date=d) }}">{{ label }}</a>
+            {% endfor %}
+        </div>
+    {% endcall %}
+    <section class="ss-section">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12 col-lg-10">
+                    {% if chart_date %}
+                        {{ ui.section_heading("Hot 100 · week of " ~ chart_date, "Billboard") }}
+                        {% include "partials/section_results.html" %}
+                    {% else %}
+                        {{ ui.empty("Pick a date above to see that week's chart.", "fa-calendar") }}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

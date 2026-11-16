@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% import "macros.html" as ui %}
+{% block title %}Upload songs{% endblock %}
+{% block head %}
+    <link rel="stylesheet" href="https://unpkg.com/dropzone@5.9.3/dist/min/dropzone.min.css">
+{% endblock %}
+{% block content %}
+    {% call ui.hero("Turn your local songs into a Spotify playlist", "Drop your music files below. We recognise each song, find it on Spotify and add it to the playlist you choose.", url_for('static', filename='img/bg-img/bg-image-loader1.jpg'), "Local → Spotify") %}
+        <div class="mt-4">{% with step = 1 %}{% include "partials/upload_steps.html" %}{% endwith %}</div>
+    {% endcall %}
+
+    <section class="ss-section">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12 col-lg-8">
+                    <div class="ss-card">
+                        <form action="{{ url_for('uploads.file_upload') }}" class="dropzone ss-dropzone" id="song-dropzone">
+                            <div class="dz-message">
+                                <i class="fa fa-cloud-upload" style="font-size:44px;color:var(--ss-accent)" aria-hidden="true"></i><br>
+                                <strong>Drop music files here</strong> or click to choose<br>
+                                <span class="ss-meta">{{ extensions | join(", ") }} · up to 50 MB each</span>
+                            </div>
+                        </form>
+
+                        <div class="mt-4">
+                            <h5 class="mb-2">Ready to process <span class="ss-meta" id="pending-count">({{ files | length }})</span></h5>
+                            <ul class="ss-file-list" id="pending-list">
+                                {% for name in files %}
+                                    <li data-file="{{ name }}"><i class="fa fa-music" aria-hidden="true"></i><span title="{{ name }}">{{ name }}</span>
+                                        <button type="button" data-remove="{{ name }}" aria-label="Remove {{ name }}">&times;</button></li>
+                                {% endfor %}
+                            </ul>
+                            <p class="ss-meta" id="pending-empty" {{ 'hidden' if files }}>No songs uploaded yet.</p>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center flex-wrap mt-4" style="gap:12px">
+                            <p class="ss-meta mb-0"><i class="fa fa-info-circle"></i> Tip: clear recordings of the original song work best.</p>
+                            <a href="{{ url_for('uploads.display_uploads') }}" class="ss-btn accent" id="continue-btn" {{ '' if files else 'hidden' }}>
+                                Choose a playlist <i class="fa fa-angle-double-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+{% block scripts %}
+<script src="https://unpkg.com/dropzone@5.9.3/dist/min/dropzone.min.js"></script>
+<script>
+    Dropzone.autoDiscover = false;
+    (function () {
+        const list = document.getElementById("pending-list");
+        const empty = document.getElementById("pending-empty");
+        const count = document.getElementById("pending-count");
+        const next = document.getElementById("continue-btn");
+        const csrf = document.querySelector('meta[name="csrf-token"]').content;
+
+        function refresh() {
+            const n = list.children.length;
+            count.textContent = `(${n})`;
+            empty.hidden = n > 0;
+            next.hidden = n === 0;
+        }
+        function addRow(name) {
+            const li = document.createElement("li");
+            li.dataset.file = name;
+            li.innerHTML = '<i class="fa fa-music" aria-hidden="true"></i><span></span><button type="button" aria-label="Remove">&times;</button>';
+            li.querySelector("span").textContent = name;
+            li.querySelector("button").dataset.remove = name;
+            list.appendChild(li);
+            refresh();
+        }
+
+        const dz = new Dropzone("#song-dropzone", {
+            paramName: "file",
+            maxFilesize: 50,
+            parallelUploads: 2,
+            timeout: 0,
+            acceptedFiles: {{ extensions | join(",") | tojson }},
+            headers: { "X-CSRFToken": csrf },
+            dictInvalidFileType: "That file type isn't supported.",
+        });
+        dz.on("success", (file, response) => {
+            addRow(response.filename);
+            setTimeout(() => dz.removeFile(file), 1200);
+        });
+        dz.on("error", (file, response) => {
+            const message = (response && response.message) || (typeof response === "string" ? response : "Upload failed");
+            SSPIDERR.toast(`${file.name}: ${message}`, "error", 8000);
+        });
+        dz.on("queuecomplete", () => {
+            if (list.children.length) SSPIDERR.toast("Upload finished. Choose a playlist when you're ready.", "success");
+        });
+
+        list.addEventListener("click", async (event) => {
+            const name = event.target.dataset.remove;
+            if (!name) return;
+            const res = await SSPIDERR.fetch(`/uploads/${encodeURIComponent(name)}/delete`, { method: "POST" });
+            if (res.ok) { event.target.closest("li").remove(); refresh(); }
+            else SSPIDERR.toast("Couldn't remove that file.", "error");
+        });
+    })();
+</script>
+{% endblock %}

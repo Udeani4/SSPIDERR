@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% import "macros.html" as ui %}
+{% block title %}Choose a playlist{% endblock %}
+{% block content %}
+    {% call ui.hero("Where should these songs go?", "Pick one of your playlists, or create a new one.", url_for('static', filename='img/bg-img/bg-image-loader2.jpg'), "Local → Spotify") %}
+        <div class="mt-4">{% with step = 2 %}{% include "partials/upload_steps.html" %}{% endwith %}</div>
+    {% endcall %}
+
+    <section class="ss-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 col-lg-4 mb-4">
+                    <div class="ss-card">
+                        <h5>{{ files | length }} song{{ '' if files | length == 1 else 's' }} to process</h5>
+                        <ul class="ss-file-list">
+                            {% for name in files %}<li><i class="fa fa-music" aria-hidden="true"></i><span title="{{ name }}">{{ name }}</span></li>{% endfor %}
+                        </ul>
+                        <a href="{{ url_for('uploads.loader_page') }}" class="ss-btn ghost block mt-3"><i class="fa fa-plus"></i> Add or remove songs</a>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-8">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap mb-3" style="gap:10px">
+                        <h4 class="mb-0">Your playlists</h4>
+                        <a href="{{ url_for('library.create_playlist', next=request.path) }}" class="ss-btn accent"><i class="fa fa-plus"></i> New playlist</a>
+                    </div>
+                    {% if playlist_list %}
+                        <div class="ss-grid" id="playlist-choices">
+                            {% for playlist in playlist_list %}
+                                <button type="button" class="ss-tile" style="border:0;background:none;padding:0;cursor:pointer"
+                                        data-playlist-id="{{ playlist['id'] }}" data-playlist-name="{{ playlist['name'] }}">
+                                    {{ ui.img(playlist['image'], playlist['name'] ~ " cover") }}
+                                    <h5>{{ playlist['name'] }}</h5>
+                                    <p>{{ playlist['num_tracks'] }} song{{ '' if playlist['num_tracks'] == 1 else 's' }}</p>
+                                </button>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ ui.empty("You don't have a playlist you can add to yet. Create one to continue.", "fa-list") }}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+{% block scripts %}
+<script>
+    document.getElementById("playlist-choices")?.addEventListener("click", async (event) => {
+        const tile = event.target.closest("[data-playlist-id]");
+        if (!tile) return;
+        if (!confirm(`Recognise these songs and add them to “${tile.dataset.playlistName}”?`)) return;
+        document.querySelectorAll("[data-playlist-id]").forEach((b) => b.disabled = true);
+        SSPIDERR.toast("Starting...", "info", 2000);
+        try {
+            const res = await SSPIDERR.fetch("{{ url_for('uploads.create_job') }}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ playlist_id: tile.dataset.playlistId, playlist_name: tile.dataset.playlistName }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Couldn't start processing.");
+            window.location = `/song-processing/${encodeURIComponent(tile.dataset.playlistId)}?job=${data.job_id}`;
+        } catch (err) {
+            SSPIDERR.toast(err.message, "error", 8000);
+            document.querySelectorAll("[data-playlist-id]").forEach((b) => b.disabled = false);
+        }
+    });
+</script>
+{% endblock %}

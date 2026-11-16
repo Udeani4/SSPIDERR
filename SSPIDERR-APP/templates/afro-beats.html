@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% import "macros.html" as ui %}
+{% block title %}Afrobeats charts{% endblock %}
+
+{% macro song_list(rows) -%}
+    {% for track in rows %}
+        {{ ui.track_row(track['title'], track['artist'], track['artist_image'], track['spotify_song_id'],
+                        track.get('preview_url'), track['spotify_song_id'], loop.index, False) }}
+    {% else %}
+        {{ ui.empty("Audiomack didn't return this chart right now.") }}
+    {% endfor %}
+{%- endmacro %}
+
+{% macro album_list(rows) -%}
+    {% for album in rows %}
+        <div class="ss-track">
+            <span class="ss-track__rank">{{ loop.index }}</span>
+            {{ ui.img(album['album_image'], "", "ss-track__img") }}
+            <div class="ss-track__text">
+                {% if album['spotify_album_id'] %}
+                    <a href="{{ url_for('music.album_page', album_id=album['spotify_album_id']) }}"><p class="ss-track__title">{{ album['title'] }}</p></a>
+                {% else %}
+                    <p class="ss-track__title">{{ album['title'] }}</p>
+                {% endif %}
+                <p class="ss-track__artist">{{ album['artist'] }}</p>
+            </div>
+        </div>
+    {% else %}
+        {{ ui.empty("Audiomack didn't return this chart right now.") }}
+    {% endfor %}
+{%- endmacro %}
+
+{% block content %}
+    {% set feature = top_afro_album %}
+    {% call ui.media_hero(top_afro_artist_img or (feature['album_image'] if feature), feature['artist'] if feature else "Afrobeats", "Hottest Afrobeats") %}
+        {% if feature %}
+            <p class="text-visible">Top album: <a href="{{ url_for('music.album_page', album_id=feature['spotify_album_id']) }}" style="color:#fff;text-decoration:underline">{{ feature['title'] }}</a></p>
+            {{ ui.stats([
+                (top_afro_artist_info.get('followers'), "Followers"),
+                (top_afro_artist_info.get('popularity'), "Popularity"),
+            ]) }}
+            <div class="ss-hero-actions">
+                <a href="{{ url_for('music.artist_page', artist=feature['main_artist']) }}" class="btn oneMusic-btn">About {{ feature['main_artist'] }}</a>
+                {% if top_afro_album_song %}
+                    <button type="button" class="ss-btn accent" data-add-track="{{ top_afro_album_song[0]['id'] }}"><i class="fa fa-plus-circle"></i> Add “{{ top_afro_album_song[0]['name'] }}”</button>
+                {% endif %}
+            </div>
+        {% else %}
+            <p class="text-visible">The Nigerian and African charts from Audiomack.</p>
+        {% endif %}
+    {% endcall %}
+
+    <section class="ss-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 col-lg-6 mb-5">
+                    {{ ui.section_heading("Top songs", "Audiomack") }}
+                    {{ song_list(top_tracks) }}
+                </div>
+                <div class="col-12 col-lg-6 mb-5">
+                    {{ ui.section_heading("Trending now", "Audiomack") }}
+                    {{ song_list(trending_tracks) }}
+                </div>
+                <div class="col-12 col-lg-6 mb-5">
+                    {{ ui.section_heading("Top albums", "Audiomack") }}
+                    {{ album_list(top_albums) }}
+                </div>
+                <div class="col-12 col-lg-6 mb-5">
+                    {{ ui.section_heading("Trending albums", "Audiomack") }}
+                    {{ album_list(trending_albums) }}
+                </div>
+                <div class="col-12 mb-5">
+                    {{ ui.section_heading("Just released", "Fresh uploads") }}
+                    {{ song_list(recent_tracks) }}
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

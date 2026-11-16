@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% import "macros.html" as ui %}
+{% block title %}Discover the hottest music{% endblock %}
+
+{% macro hero_slide(eyebrow, title, image, link) -%}
+    <div class="single-hero-slide d-flex align-items-center justify-content-center">
+        <div class="slide-img bg-img" style="background-image: url('{{ image or url_for('static', filename='img/bg-img/bg-1.jpg') }}'); background-size: contain; background-repeat: no-repeat; background-position: center; background-color: #000;"></div>
+        <div class="container text-center">
+            <div class="hero-slides-content text-center">
+                <h6 data-animation="fadeInUp" data-delay="100ms">{{ eyebrow }}</h6>
+                <h2 data-animation="fadeInUp" data-delay="300ms">{{ title or "Loading the charts..." }} <span>{{ title }}</span></h2>
+                <div class="ss-hero-actions">
+                    {% if link %}
+                        <a data-animation="fadeInUp" data-delay="500ms" href="{{ link }}" class="btn oneMusic-btn">Discover <i class="fa fa-angle-double-right"></i></a>
+                    {% endif %}
+                    {% if current_user.is_authenticated %}
+                        <a data-animation="fadeInUp" data-delay="650ms" href="{{ url_for('uploads.loader_page') }}" class="btn oneMusic-btn">Upload local songs <i class="fa fa-angle-double-right"></i></a>
+                    {% else %}
+                        <a data-animation="fadeInUp" data-delay="650ms" href="{{ url_for('auth.register_page') }}" class="btn oneMusic-btn">Create free account</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{%- endmacro %}
+
+{% block content %}
+    <section class="hero-area">
+        <div class="hero-slides owl-carousel">
+            {{ hero_slide("Hottest album", album_name, album_art, url_for('music.album_page', album_id=album_id) if album_id) }}
+            {{ hero_slide("Hottest song", song_name, song_art, url_for('music.song_page', song_id=song_id) if song_id) }}
+            {{ hero_slide("Hottest artist", artist_name, artist_art, url_for('music.artist_page', artist=artist_name) if artist_name) }}
+        </div>
+    </section>
+
+    {# ---------------- Top albums ---------------- #}
+    <section class="latest-albums-area section-padding-100">
+        <div class="container">
+            <div class="section-heading style-2">
+                <a href="{{ url_for('music.see_whats_new') }}" class="see-new-link">See what’s new</a>
+                <h2>Top albums right now</h2>
+            </div>
+            {% if top_albums | length >= 3 %}
+                <div class="row justify-content-center">
+                    <div class="col-12 col-lg-9">
+                        <div class="ablums-text text-center mb-70">
+                            <p>Right now {{ top_albums[0]['artist_name'] }}'s <strong>{{ top_albums[0]['album_name'] }}</strong>,
+                               {{ top_albums[1]['artist_name'] }}'s <strong>{{ top_albums[1]['album_name'] }}</strong> and
+                               {{ top_albums[2]['artist_name'] }}'s <strong>{{ top_albums[2]['album_name'] }}</strong> are leading the charts.
+                               Open any album to hear its tracks and add your favourites to a Spotify playlist in one click.</p>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            {% if top_albums %}
+                <div class="albums-slideshow owl-carousel">
+                    {% for album in top_albums %}
+                        <div class="single-album">
+                            {{ ui.img(album['artwork_medium'] or album['artwork_url_original'], album['album_name'] ~ " cover") }}
+                            <div class="album-info">
+                                <a href="{{ url_for('music.album_page', album_id=album['album_id']) }}"><h5>{{ loop.index }}. {{ album['album_name'] }}</h5></a>
+                                <a href="{{ url_for('music.artist_page', artist=album['artist_name']) }}"><p class="mb-0">{{ album['artist_name'] }}</p></a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                {{ ui.empty("The charts are being refreshed. Check back in a minute.", "fa-refresh") }}
+            {% endif %}
+        </div>
+    </section>
+
+    {# ---------------- Ways to find new songs ---------------- #}
+    <section class="oneMusic-buy-now-area has-fluid bg-gray section-padding-100">
+        <div class="container">
+            <div class="section-heading style-2">
+                <a href="{{ url_for('music.see_whats_new') }}" class="see-new-link">See what’s new</a>
+                <h2>Find new songs for your playlist</h2>
+            </div>
+            <div class="ss-grid">
+                {% set cards = [
+                    (url_for('music.afro_beats'), url_for('static', filename='img/core-img/afrobeat-img2.png'), "Top Naija hits", "Afrobeats charts"),
+                    (url_for('main.US_top_40_songs'), url_for('static', filename='img/bg-img/b2.jpg'), "US Top 40", "Billboard Hot 100"),
+                    (url_for('main.time_travel_hits'), url_for('static', filename='img/bg-img/b3.jpg'), "Time travel", "Any week since 1958"),
+                    (url_for('main.AI_suggested_songs'), url_for('static', filename='img/bg-img/b4.jpg'), "Suggestions", "Based on your taste"),
+                    (url_for('main.award_winning_songs'), url_for('static', filename='img/bg-img/b1.jpg'), "Award winners", "GRAMMY winners"),
+                    (url_for('music.see_whats_new'), url_for('static', filename='img/bg-img/a1.jpg'), "World charts", "60+ countries"),
+                ] %}
+                {% for href, image, title, sub in cards %}
+                    <a class="ss-tile" href="{{ href }}">
+                        {{ ui.img(image, "") }}
+                        <h5>{{ title }}</h5>
+                        <p>{{ sub }}</p>
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    {# ---------------- Featured artist ---------------- #}
+    {% if feature_artists_info and feature_artists_info.get('artist_name') %}
+        <section class="featured-artist-area section-padding-100 bg-img bg-overlay bg-fixed" style="background-image: url('{{ url_for('static', filename='img/bg-img/bg-4.jpg') }}');">
+            <div class="container">
+                <div class="row align-items-end">
+                    <div class="col-12 col-md-5 col-lg-4">
+                        <div class="featured-artist-thumb">
+                            {{ ui.img(feature_artists_info.get('artist_image'), feature_artists_info.get('artist_name')) }}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-7 col-lg-8">
+                        <div class="featured-artist-content">
+                            <div class="section-heading white text-left mb-30">
+                                <a href="{{ url_for('music.artist_page', artist=feature_artists_info['artist_name']) }}"><p>Featured artist · {{ feature_artists_info['artist_name'] }}</p></a>
+                                {% if feature_artists_info.get('album_id') %}
+                                    <a href="{{ url_for('music.album_page', album_id=feature_artists_info['album_id']) }}"><h2>{{ feature_artists_info['album_name'] }}</h2></a>
+                                {% endif %}
+                            </div>
+                            <div class="description" style="color:white">{{ (artist_description or {}).get('description') | clean_html }}</div>
+                            {% if top_artist_album_track %}
+                                {% set best = top_artist_album_track[0] %}
+                                <div class="song-play-area">
+                                    <div class="song-name">
+                                        <a href="{{ url_for('music.song_page', song_id=best['id']) }}"><p>Most popular: {{ best['name'] }}</p></a>
+                                    </div>
+                                    <div class="mt-3 d-flex align-items-center" style="gap:12px">
+                                        {{ ui.preview(best.get('preview_url'), "Play " ~ best['name'], True) }}
+                                        {{ ui.add_button(best['id']) }}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    {% endif %}
+
+    {# ---------------- Charts ---------------- #}
+    <section class="miscellaneous-area section-padding-100-0">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 col-lg-6">
+                    <div class="weeks-top-area mb-100">
+                        <div class="section-heading text-left mb-50">
+                            <p>Global · Last.fm</p>
+                            <h2>This week’s top 10</h2>
+                        </div>
+                        {% for track in this_weeks_hits %}
+                            {{ ui.track_row(track['name'], track['artist'], track['image'], track['spotify_song_id'],
+                                            track.get('preview_url'), track['spotify_song_id'], loop.index) }}
+                        {% else %}
+                            {{ ui.empty("No chart data yet.") }}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-6">
+                    <div class="new-hits-area mb-100">
+                        <div class="section-heading text-left mb-50">
+                            <p>Latest releases</p>
+                            <h2>Best hits of the year</h2>
+                        </div>
+                        {% for track in best_2025_hits %}
+                            {{ ui.track_row(track['name'], track['artist'], track['image'], track['track_id'],
+                                            track.get('preview_url'), track['id'], loop.index) }}
+                        {% else %}
+                            {{ ui.empty("No chart data yet.") }}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="popular-artists-area mb-100">
+                        <div class="section-heading text-left mb-50">
+                            <p>Billboard Artist 100</p>
+                            <h2>Popular artists</h2>
+                        </div>
+                        <div class="ss-grid">
+                            {% for artist, image in artist_section_dict.items() %}
+                                <a class="ss-tile round" href="{{ url_for('music.artist_page', artist=artist) }}">
+                                    {{ ui.img(image, artist) }}
+                                    <h5>{{ artist }}</h5>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% if feed_updated_at %}
+                <p class="ss-updated">Charts updated {{ feed_updated_at.strftime('%d %b %Y, %H:%M') }} UTC · refreshed daily</p>
+            {% endif %}
+        </div>
+    </section>
+
+    {# ---------------- Contact ---------------- #}
+    <section class="contact-area section-padding-100 bg-img bg-overlay bg-fixed has-bg-img" style="background-image: url('{{ url_for('static', filename='img/bg-img/bg-2.jpg') }}');">
+        <div class="container">
+            <div class="section-heading white"><h2>Get in touch</h2></div>
+            <div class="contact-form-area">
+                {% include "partials/contact_form.html" %}
+            </div>
+        </div>
+    </section>
+{% endblock %}

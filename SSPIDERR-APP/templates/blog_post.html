@@ -1,0 +1,334 @@
+{% extends "base.html" %}
+{% import "macros.html" as ui %}
+{% block title %}{{ post.title }}{% endblock %}
+{% block description %}{{ (post.subtitle or post.title) | striptags | truncate(155) }}{% endblock %}
+{% block head %}
+<meta property="og:type" content="article">
+<meta property="og:title" content="{{ post.title }}">
+<meta property="og:description" content="{{ (post.subtitle or '') | striptags | truncate(200) }}">
+{% if has_image %}<meta property="og:image" content="{{ post.img_url }}">{% endif %}
+<style>
+    /* ---------- article header ---------- */
+    .ss-article-hero { position: relative; color: #fff; padding: 170px 0 56px; background: #111 center/cover no-repeat; }
+    .ss-article-hero::before { content: ""; position: absolute; inset: 0;
+        background: linear-gradient(180deg, rgba(10,10,14,.75) 0%, rgba(10,10,14,.82) 55%, rgba(10,10,14,.96) 100%); }
+    .ss-article-hero > .container { position: relative; }
+    .ss-crumbs { font-size: 13px; letter-spacing: .5px; text-transform: uppercase; margin-bottom: 18px; }
+    .ss-crumbs a { color: rgba(255,255,255,.75); }
+    .ss-crumbs a:hover { color: #fff; }
+    .ss-crumbs span { color: rgba(255,255,255,.45); margin: 0 8px; }
+    .ss-article-hero h1 { color: #fff; font-size: clamp(1.7rem, 4vw, 2.9rem); line-height: 1.2; font-weight: 700; margin: 0 0 16px; }
+    .ss-dek { color: rgba(255,255,255,.85); font-size: 1.15rem; line-height: 1.6; max-width: 760px; margin-bottom: 24px; }
+    .ss-byline { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; font-size: 14px; color: rgba(255,255,255,.8); }
+    .ss-byline strong { color: #fff; }
+    .ss-byline .dot { opacity: .5; }
+    .ss-chip { display: inline-block; background: rgba(255,255,255,.14); color: #fff; border-radius: 999px; padding: 3px 12px;
+        font-size: 12px; font-weight: 600; margin: 0 6px 8px 0; }
+
+    /* ---------- body ---------- */
+    .ss-article-wrap { padding: 50px 0 30px; }
+    .ss-cover { margin: -10px 0 32px; }
+    .ss-cover img { width: 100%; max-height: 520px; object-fit: cover; border-radius: 14px; display: block; background: #222; }
+    .ss-cover figcaption { font-size: 12px; color: var(--ss-muted); margin-top: 8px; }
+    .ss-prose { font-size: 18px; line-height: 1.8; color: #2a2a2e; }
+    .ss-prose p { font-size: 18px; line-height: 1.8; color: #2a2a2e; margin-bottom: 1.2em; }
+    .ss-prose p:first-child::first-letter { float: left; font-size: 3.4em; line-height: .9; padding: 6px 10px 0 0; font-weight: 700; color: var(--ss-accent); }
+    .ss-prose a { color: var(--ss-accent); text-decoration: underline; }
+    .ss-source-card { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;
+        border: 1px solid #ececf0; border-left: 4px solid var(--ss-accent); border-radius: 12px; padding: 18px 22px; margin: 28px 0; background: #fff; }
+    .ss-source-card p { margin: 0; color: var(--ss-muted); font-size: 14px; }
+    .ss-source-card strong { color: var(--ss-ink); display: block; font-size: 16px; }
+    .ss-share { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 18px 0; border-top: 1px solid #eee; border-bottom: 1px solid #eee; }
+    .ss-share > span { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--ss-muted); margin-right: 6px; }
+    .ss-share a, .ss-share button { width: 38px; height: 38px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+        border: 1px solid #ddd; background: #fff; color: var(--ss-ink); font-size: 16px; cursor: pointer; transition: all .15s ease; }
+    .ss-share a:hover, .ss-share button:hover { background: var(--ss-ink); color: #fff; border-color: var(--ss-ink); }
+    .ss-pager { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 30px 0 10px; }
+    .ss-pager a { display: block; border: 1px solid #ececf0; border-radius: 12px; padding: 14px 16px; color: var(--ss-ink); transition: border-color .15s; }
+    .ss-pager a:hover { border-color: var(--ss-accent); }
+    .ss-pager small { display: block; color: var(--ss-muted); text-transform: uppercase; letter-spacing: .5px; font-size: 11px; margin-bottom: 4px; }
+    .ss-pager .next { text-align: right; grid-column: 2; }
+    .ss-pager span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-weight: 600; font-size: 14px; }
+    @media (max-width: 575px) { .ss-pager { grid-template-columns: 1fr; } .ss-pager .next { grid-column: 1; text-align: left; } }
+
+    /* ---------- sidebar ---------- */
+    .ss-aside { position: sticky; top: 110px; }
+    .ss-aside h5 { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--ss-muted); margin-bottom: 14px; }
+    .ss-mini { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f0f0f3; color: var(--ss-ink); }
+    .ss-mini:last-child { border-bottom: 0; }
+    .ss-mini img { width: 84px; height: 64px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: #222; }
+    .ss-mini b { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-size: 14px; line-height: 1.35; }
+    .ss-mini small { color: var(--ss-muted); font-size: 12px; }
+    .ss-mini:hover b { color: var(--ss-accent); }
+
+    /* ---------- comments ---------- */
+    .ss-comments-wrap { background: var(--ss-soft); padding: 60px 0 80px; }
+    .ss-comments-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 22px; }
+    .ss-comments-head h2 { font-size: 26px; margin: 0; display: flex; align-items: center; gap: 10px; }
+    .ss-count-badge { background: var(--ss-ink); color: #fff; border-radius: 999px; font-size: 13px; padding: 2px 10px; }
+    .ss-sort { display: inline-flex; background: #fff; border-radius: 999px; padding: 3px; border: 1px solid #e3e4e8; }
+    .ss-sort a { padding: 5px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--ss-muted); }
+    .ss-sort a.on { background: var(--ss-ink); color: #fff; }
+    .ss-composer, .ss-join { background: #fff; border-radius: 14px; padding: 18px; box-shadow: 0 2px 10px rgba(0,0,0,.04); margin-bottom: 26px; }
+    .ss-composer { display: flex; gap: 14px; align-items: flex-start; }
+    .ss-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: #ddd; }
+    .ss-composer form { flex: 1; min-width: 0; }
+    .ss-composer textarea, .ss-edit-form textarea { width: 100%; border: 1px solid #dfe1e6; border-radius: 10px; padding: 12px 14px; font-size: 15px;
+        line-height: 1.5; resize: vertical; min-height: 96px; background: #fcfcfd; }
+    .ss-composer textarea:focus, .ss-edit-form textarea:focus { outline: none; border-color: var(--ss-accent); box-shadow: 0 0 0 3px rgba(255,71,87,.12); background: #fff; }
+    .ss-composer-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
+    .ss-composer-foot small { color: var(--ss-muted); }
+    .ss-counter.warn { color: #b45309; font-weight: 700; }
+    .ss-join { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+    .ss-join p { margin: 0; }
+    .ss-comment-list { list-style: none; margin: 0; padding: 0; }
+    .ss-comment { display: flex; gap: 14px; background: #fff; border-radius: 14px; padding: 18px; margin-bottom: 14px;
+        box-shadow: 0 2px 10px rgba(0,0,0,.04); scroll-margin-top: 120px; transition: box-shadow .4s ease; }
+    .ss-comment:target { box-shadow: 0 0 0 3px var(--ss-accent); animation: ss-flash 2s ease; }
+    @keyframes ss-flash { 0% { background: #fff1f2; } 100% { background: #fff; } }
+    .ss-comment-main { flex: 1; min-width: 0; }
+    .ss-comment-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; font-size: 13px; color: var(--ss-muted); }
+    .ss-comment-meta strong { color: var(--ss-ink); font-size: 15px; }
+    .ss-you { background: #ecfdf3; color: #067647; border-radius: 999px; font-size: 11px; font-weight: 700; padding: 1px 8px; text-transform: uppercase; }
+    .ss-comment-body { margin-top: 6px; font-size: 15px; line-height: 1.65; color: #2a2a2e; overflow-wrap: anywhere; }
+    .ss-comment-body p { font-size: 15px; line-height: 1.65; color: #2a2a2e; margin: 0 0 .6em; }
+    .ss-comment-body p:last-child { margin-bottom: 0; }
+    .ss-comment-actions { display: flex; gap: 14px; margin-top: 10px; }
+    .ss-comment-actions button { background: none; border: 0; padding: 0; color: var(--ss-muted); font-size: 13px; font-weight: 600; cursor: pointer; }
+    .ss-comment-actions button:hover { color: var(--ss-ink); }
+    .ss-comment-actions .danger:hover { color: #dc2626; }
+    .ss-edit-form { margin-top: 10px; }
+    .ss-edit-form .row-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
+    .ss-btn.small { padding: 8px 18px; font-size: 14px; }
+    .ss-comments-empty { text-align: center; padding: 34px 16px; color: var(--ss-muted); }
+    .ss-comments-empty i { font-size: 34px; color: #c9ccd3; display: block; margin-bottom: 10px; }
+</style>
+{% endblock %}
+
+{% block content %}
+{% set share_url = request.url_root.rstrip('/') ~ url_for('news.blog_post', post_id=post.created_id) %}
+{% set has_source = post.news_link and post.news_link != '#' %}
+
+<article itemscope itemtype="https://schema.org/NewsArticle">
+    <header class="ss-article-hero" {% if has_image %}style="background-image: url('{{ post.img_url }}');"{% endif %}>
+        <div class="container">
+            <div class="row"><div class="col-12 col-lg-9">
+                <nav class="ss-crumbs" aria-label="Breadcrumb">
+                    <a href="{{ url_for('news.news_blog') }}">News</a><span>/</span><a href="{{ url_for('news.news_blog') }}">{{ post.source }}</a>
+                </nav>
+                {% if post.tags %}<div>{% for tag in post.tags[:4] %}<span class="ss-chip">{{ tag }}</span>{% endfor %}</div>{% endif %}
+                <h1 itemprop="headline">{{ post.title }}</h1>
+                {% if post.subtitle and post.subtitle | striptags != post.title %}
+                    <p class="ss-dek">{{ post.subtitle | striptags | truncate(240) }}</p>
+                {% endif %}
+                <div class="ss-byline">
+                    {% if post.byline %}<span>By <strong itemprop="author">{{ post.byline }}</strong></span><span class="dot">•</span>{% endif %}
+                    <span>{{ post.source }}</span><span class="dot">•</span>
+                    <time datetime="{{ post.date.isoformat() }}" itemprop="datePublished">{{ post.date.day }} {{ post.date.strftime('%B %Y') }}</time>
+                    <span class="dot">•</span><span>{{ post.body | reading_time }} min read</span>
+                    <span class="dot">•</span><a href="#comments" style="color:#fff">{{ comments | length }} comment{{ '' if comments | length == 1 else 's' }}</a>
+                </div>
+            </div></div>
+        </div>
+    </header>
+
+    <div class="ss-article-wrap">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 col-lg-8">
+                    {% if has_image %}
+                        <figure class="ss-cover">
+                            <img src="{{ post.img_url }}" alt="{{ post.title }}" itemprop="image" decoding="async">
+                            <figcaption>Image: {{ post.source }}</figcaption>
+                        </figure>
+                    {% endif %}
+
+                    <div class="ss-prose" itemprop="articleBody">{{ post.body | clean_html }}</div>
+
+                    {% if has_source %}
+                        <div class="ss-source-card">
+                            <div>
+                                <strong>Continue reading on {{ post.source }}</strong>
+                                <p>This is a short excerpt. The full story is published by {{ post.source }}.</p>
+                            </div>
+                            <a href="{{ post.news_link }}" class="ss-btn accent small" target="_blank" rel="noopener nofollow">Read the full story <i class="fa fa-external-link"></i></a>
+                        </div>
+                    {% endif %}
+
+                    <div class="ss-share">
+                        <span>Share</span>
+                        <a href="https://wa.me/?text={{ (post.title ~ ' ' ~ share_url) | urlencode }}" target="_blank" rel="noopener" aria-label="Share on WhatsApp"><i class="fa fa-whatsapp"></i></a>
+                        <a href="https://twitter.com/intent/tweet?url={{ share_url | urlencode }}&text={{ post.title | urlencode }}" target="_blank" rel="noopener" aria-label="Share on X"><i class="fa fa-twitter"></i></a>
+                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ share_url | urlencode }}" target="_blank" rel="noopener" aria-label="Share on Facebook"><i class="fa fa-facebook"></i></a>
+                        <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ share_url | urlencode }}" target="_blank" rel="noopener" aria-label="Share on LinkedIn"><i class="fa fa-linkedin"></i></a>
+                        <button type="button" data-copy="{{ share_url }}" aria-label="Copy link"><i class="fa fa-link"></i></button>
+                    </div>
+
+                    {% if newer or older %}
+                        <nav class="ss-pager" aria-label="More articles">
+                            {% if older %}<a href="{{ url_for('news.blog_post', post_id=older.created_id) }}"><small>&larr; Previous</small><span>{{ older.title }}</span></a>{% endif %}
+                            {% if newer %}<a class="next" href="{{ url_for('news.blog_post', post_id=newer.created_id) }}"><small>Next &rarr;</small><span>{{ newer.title }}</span></a>{% endif %}
+                        </nav>
+                    {% endif %}
+                </div>
+
+                <aside class="col-12 col-lg-4 mt-5 mt-lg-0">
+                    <div class="ss-aside">
+                        <h5>More news</h5>
+                        {% for item in related %}
+                            <a class="ss-mini" href="{{ url_for('news.blog_post', post_id=item.created_id) }}">
+                                {{ ui.img(item.img_url, "", "", url_for('static', filename='img/music_blog_def_image.jpeg')) }}
+                                <div><b>{{ item.title }}</b><small>{{ item.source }} · {{ item.date | timeago }}</small></div>
+                            </a>
+                        {% endfor %}
+                        <a href="{{ url_for('news.news_blog') }}" class="ss-btn ghost small mt-3">All news</a>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </div>
+</article>
+
+{# ======================= Comments ======================= #}
+<section class="ss-comments-wrap" id="comments" aria-labelledby="comments-title">
+    <div class="container">
+        <div class="row"><div class="col-12 col-lg-8">
+            <div class="ss-comments-head">
+                <h2 id="comments-title">Comments <span class="ss-count-badge">{{ comments | length }}</span></h2>
+                {% if comments | length > 1 %}
+                    <div class="ss-sort" role="group" aria-label="Sort comments">
+                        <a href="{{ url_for('news.blog_post', post_id=post.created_id, sort='oldest') }}#comments" class="{{ 'on' if sort == 'oldest' }}">Oldest</a>
+                        <a href="{{ url_for('news.blog_post', post_id=post.created_id, sort='newest') }}#comments" class="{{ 'on' if sort == 'newest' }}">Newest</a>
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if current_user.is_authenticated %}
+                <div class="ss-composer">
+                    <img class="ss-avatar" src="{{ current_user.email | gravatar }}" alt="">
+                    <form method="post" action="{{ url_for('news.blog_post', post_id=post.created_id) }}#comments" data-comment-form>
+                        {{ form.csrf_token }}
+                        <label for="comment_text" class="ss-visually-hidden">Your comment</label>
+                        <textarea id="comment_text" name="comment_text" maxlength="{{ comment_max }}" required
+                                  placeholder="Share your thoughts, {{ current_user.display_name }}...">{{ form.comment_text.data or '' }}</textarea>
+                        <div class="ss-composer-foot">
+                            <small>Be respectful. Leave a blank line to start a new paragraph. <kbd>Ctrl</kbd>+<kbd>Enter</kbd> to post.</small>
+                            <div class="d-flex align-items-center" style="gap:12px">
+                                <small class="ss-counter" data-counter>0 / {{ comment_max }}</small>
+                                <button type="submit" class="ss-btn accent small" disabled>Post comment</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            {% else %}
+                <div class="ss-join">
+                    <p><strong>Join the conversation.</strong> <span class="ss-meta">Log in to share what you think.</span></p>
+                    <div class="d-flex" style="gap:8px">
+                        <a href="{{ url_for('auth.login_page', next=url_for('news.blog_post', post_id=post.created_id) ~ '#comments') }}" class="ss-btn accent small">Log in</a>
+                        <a href="{{ url_for('auth.register_page') }}" class="ss-btn ghost small">Create account</a>
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if comments %}
+                <ul class="ss-comment-list">
+                    {% for comment in comments %}
+                        {% set author = comment.comment_author %}
+                        {% set mine = current_user.is_authenticated and comment.author_id == current_user.id %}
+                        <li class="ss-comment" id="comment-{{ comment.id }}">
+                            <img class="ss-avatar" src="{{ (author.email if author else '') | gravatar }}" alt="" loading="lazy">
+                            <div class="ss-comment-main">
+                                <div class="ss-comment-meta">
+                                    <strong>{{ author.display_name if author else 'Former member' }}</strong>
+                                    {% if mine %}<span class="ss-you">You</span>{% endif %}
+                                    <a href="#comment-{{ comment.id }}" class="ss-meta">
+                                        <time datetime="{{ comment.created_at.isoformat() }}" title="{{ comment.created_at.strftime('%d %b %Y, %H:%M') }} UTC">{{ comment.created_at | timeago }}</time>
+                                    </a>
+                                    {% if comment.edited_at %}<span title="Edited {{ comment.edited_at | timeago }}">· edited</span>{% endif %}
+                                </div>
+                                <div class="ss-comment-body" data-comment-body>{{ comment.text | clean_html }}</div>
+
+                                {% if mine %}
+                                    <div class="ss-comment-actions" data-comment-actions>
+                                        <button type="button" data-edit><i class="fa fa-pencil"></i> Edit</button>
+                                        <form method="post" action="{{ url_for('news.delete_comment', comment_id=comment.id) }}" data-confirm="Delete this comment? This can't be undone.">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="danger"><i class="fa fa-trash-o"></i> Delete</button>
+                                        </form>
+                                    </div>
+                                    <form class="ss-edit-form" method="post" action="{{ url_for('news.edit_comment', comment_id=comment.id) }}" hidden data-edit-form>
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <label class="ss-visually-hidden" for="edit-{{ comment.id }}">Edit your comment</label>
+                                        <textarea id="edit-{{ comment.id }}" name="comment_text" maxlength="{{ comment_max }}" required>{{ comment.text | comment_text }}</textarea>
+                                        <div class="row-actions">
+                                            <button type="button" class="ss-btn ghost small" data-cancel>Cancel</button>
+                                            <button type="submit" class="ss-btn accent small">Save</button>
+                                        </div>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="ss-comments-empty">
+                    <i class="fa fa-comments-o" aria-hidden="true"></i>
+                    No comments yet. Be the first to say something.
+                </div>
+            {% endif %}
+        </div></div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    // Composer: live counter, enable button only with enough text, Ctrl/Cmd+Enter to post.
+    const form = document.querySelector("[data-comment-form]");
+    if (form) {
+        const box = form.querySelector("textarea");
+        const counter = form.querySelector("[data-counter]");
+        const button = form.querySelector("button[type=submit]");
+        const max = parseInt(box.getAttribute("maxlength"), 10);
+        const update = () => {
+            const n = box.value.trim().length;
+            counter.textContent = `${box.value.length} / ${max}`;
+            counter.classList.toggle("warn", box.value.length > max * 0.9);
+            button.disabled = n < 2;
+        };
+        box.addEventListener("input", update);
+        box.addEventListener("keydown", (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && !button.disabled) form.requestSubmit();
+        });
+        form.addEventListener("submit", () => { button.disabled = true; button.textContent = "Posting..."; });
+        update();
+    }
+
+    // Inline edit / cancel.
+    document.querySelectorAll(".ss-comment").forEach((li) => {
+        const editBtn = li.querySelector("[data-edit]");
+        if (!editBtn) return;
+        const editForm = li.querySelector("[data-edit-form]");
+        const body = li.querySelector("[data-comment-body]");
+        const actions = li.querySelector("[data-comment-actions]");
+        const toggle = (editing) => {
+            editForm.hidden = !editing; body.hidden = editing; actions.hidden = editing;
+            if (editing) { const t = editForm.querySelector("textarea"); t.focus(); t.setSelectionRange(t.value.length, t.value.length); }
+        };
+        editBtn.addEventListener("click", () => toggle(true));
+        editForm.querySelector("[data-cancel]").addEventListener("click", () => toggle(false));
+    });
+
+    // Confirm before deleting.
+    document.querySelectorAll("form[data-confirm]").forEach((f) =>
+        f.addEventListener("submit", (e) => { if (!confirm(f.dataset.confirm)) e.preventDefault(); }));
+
+    // Copy link.
+    document.querySelectorAll("[data-copy]").forEach((btn) => btn.addEventListener("click", async () => {
+        try { await navigator.clipboard.writeText(btn.dataset.copy); SSPIDERR.toast("Link copied", "success", 2500); }
+        catch (e) { prompt("Copy this link:", btn.dataset.copy); }
+    }));
+})();
+</script>
+{% endblock %}

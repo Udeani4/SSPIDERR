@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% import "macros.html" as ui %}
+{% block title %}{{ song_data['song_name'] }} - {{ song_data['artist_name'] }}{% endblock %}
+{% block content %}
+    {% call ui.media_hero(song_data['itunes']['artwork'], song_data['song_name'], "Song") %}
+        <a href="{{ url_for('music.artist_page', artist=song_data['artist_name']) }}"><h4 style="color:#fff">{{ song_data['artist_name'] }}</h4></a>
+        {% if song_data['spotify']['album']['id'] %}
+            <p class="text-visible">from <a href="{{ url_for('music.album_page', album_id=song_data['spotify']['album']['id']) }}" style="color:#fff;text-decoration:underline">{{ song_data['spotify']['album']['name'] }}</a>
+            {% if song_data['spotify']['release_date'] %} · {{ song_data['spotify']['release_date'][:4] }}{% endif %}</p>
+        {% endif %}
+        {{ ui.stats([
+            (song_data['lastfm']['listeners'], "Listeners"),
+            (song_data['lastfm']['playcount'], "Plays"),
+            (song_data['spotify']['popularity'], "Popularity"),
+        ]) }}
+        {% if song_data['lastfm']['tags'] %}
+            <div class="ss-tags">{% for tag in song_data['lastfm']['tags'][:5] %}<span>{{ tag }}</span>{% endfor %}</div>
+        {% endif %}
+        <div class="ss-hero-actions">
+            {{ ui.preview(song_data['preview_url'], "Play " ~ song_data['song_name'], True) }}
+        </div>
+        <div class="ss-hero-actions" style="margin-top:16px">
+            {% if song_data['spotify']['id'] %}
+                <button type="button" class="ss-btn accent" data-add-track="{{ song_data['spotify']['id'] }}"><i class="fa fa-plus-circle"></i> Add to playlist</button>
+            {% endif %}
+            {% if song_data['spotify']['url'] %}
+                <a href="{{ song_data['spotify']['url'] }}" class="ss-btn spotify" target="_blank" rel="noopener"><i class="fa fa-spotify"></i> Spotify</a>
+            {% endif %}
+            {% if song_data['itunes']['itunes_url'] %}
+                <a href="{{ song_data['itunes']['itunes_url'] }}" class="ss-btn ghost" style="color:#fff;border-color:#fff" target="_blank" rel="noopener"><i class="fa fa-apple"></i> Apple Music</a>
+            {% endif %}
+        </div>
+    {% endcall %}
+
+    {% if song_data['lastfm']['summary'] %}
+        <section class="ss-section">
+            <div class="container">
+                {{ ui.section_heading("About this song", "Last.fm", "center") }}
+                <div class="row justify-content-center">
+                    <div class="col-12 col-lg-9"><div class="description text-center">{{ song_data['lastfm']['summary'] | clean_html }}</div></div>
+                </div>
+            </div>
+        </section>
+    {% endif %}
+
+    {% if song_album_tracks %}
+        <section class="ss-section soft">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-12 col-lg-10">
+                        {{ ui.section_heading("More from this album", song_data['spotify']['album']['name']) }}
+                        {% for track in song_album_tracks %}
+                            {{ ui.track_row(track['name'], track['artist'], track['image'], track['id'], None, track['id'], loop.index) }}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </section>
+    {% endif %}
+{% endblock %}

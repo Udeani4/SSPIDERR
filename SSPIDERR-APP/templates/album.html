@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% import "macros.html" as ui %}
+{% block title %}{{ album_data['album_name'] }} - {{ album_data['artist_name'] }}{% endblock %}
+{% block content %}
+    {% call ui.media_hero(album_data['itunes']['artwork'], album_data['album_name'], "Album") %}
+        <a href="{{ url_for('music.artist_page', artist=album_data['artist_name']) }}"><h4 style="color:#fff">{{ album_data['artist_name'] }}</h4></a>
+        {% if album_data['spotify']['release_date'] %}<p class="text-visible">Released {{ album_data['spotify']['release_date'][:10] }}</p>{% endif %}
+        {{ ui.stats([
+            (album_tracks | length, "Tracks"),
+            (album_data['lastfm']['listeners'], "Listeners"),
+            (album_data['lastfm']['playcount'], "Plays"),
+            (album_data['spotify']['popularity'], "Popularity"),
+        ]) }}
+        <div class="ss-hero-actions">
+            {% if album_data['spotify']['url'] %}
+                <a href="{{ album_data['spotify']['url'] }}" class="ss-btn spotify" target="_blank" rel="noopener"><i class="fa fa-spotify"></i> Open in Spotify</a>
+            {% endif %}
+        </div>
+    {% endcall %}
+
+    {% if album_data['lastfm']['summary'] %}
+        <section class="ss-section">
+            <div class="container">
+                {{ ui.section_heading("About this album", "Last.fm", "center") }}
+                <div class="row justify-content-center">
+                    <div class="col-12 col-lg-9"><div class="description text-center">{{ album_data['lastfm']['summary'] | clean_html }}</div></div>
+                </div>
+            </div>
+        </section>
+    {% endif %}
+
+    <section class="ss-section soft">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12 col-lg-10">
+                    {{ ui.section_heading("Track list", album_data['album_name']) }}
+                    {% for track in album_tracks %}
+                        {{ ui.track_row(track['name'], track['artist'], track['image'], track['id'], None,
+                                        track['id'] if album_data['spotify']['id'] else None, loop.index) }}
+                    {% else %}
+                        {{ ui.empty("We couldn't find the tracks for this album.") }}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

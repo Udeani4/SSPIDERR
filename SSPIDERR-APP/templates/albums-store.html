@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% import "macros.html" as ui %}
+{% block title %}My playlists{% endblock %}
+{% block content %}
+    <section class="breadcumb-area bg-img bg-overlay" style="background-image: url('{{ url_for('static', filename='img/bg-img/breadcumb3.jpg') }}');">
+        <div class="bradcumbContent">
+            <p>Let's add more...</p>
+            <h2>My playlists</h2>
+        </div>
+    </section>
+
+    <section class="ss-section">
+        <div class="container">
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-4" style="gap: 12px;">
+                <p class="ss-meta mb-0">{{ playlist_list | length }} playlist{{ '' if playlist_list | length == 1 else 's' }} on Spotify</p>
+                <div class="d-flex" style="gap: 10px;">
+                    <a href="{{ url_for('uploads.loader_page') }}" class="ss-btn ghost"><i class="fa fa-upload"></i> Upload songs</a>
+                    <a href="{{ url_for('library.create_playlist', next=request.path) }}" class="ss-btn accent"><i class="fa fa-plus"></i> New playlist</a>
+                </div>
+            </div>
+            {% if playlist_list %}
+                <div class="ss-grid">
+                    {% for playlist in playlist_list %}
+                        <a class="ss-tile" href="{{ url_for('library.playlist_page', playlist_id=playlist['id']) }}">
+                            {{ ui.img(playlist['image'], playlist['name'] ~ " cover") }}
+                            <h5 title="{{ playlist['name'] }}">{{ playlist['name'] }}</h5>
+                            <p>{{ playlist['num_tracks'] }} song{{ '' if playlist['num_tracks'] == 1 else 's' }}{% if not playlist['editable'] %} · by {{ playlist['owner'] }}{% endif %}</p>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                {{ ui.empty("You don't have any playlists yet. Create one to get started.", "fa-list") }}
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="ss-section soft">
+        <div class="container">
+            {{ ui.section_heading("Latest albums", "New on Spotify", "center") }}
+            {% if latest_albums %}
+                <div class="ss-grid">
+                    {% for album in latest_albums %}
+                        <div class="ss-tile">
+                            <a href="{{ url_for('music.album_page', album_id=album['album_id']) }}">
+                                {{ ui.img(album['album_image'], album['album_name'] ~ " cover") }}
+                                <h5 title="{{ album['album_name'] }}">{{ album['album_name'] }}</h5>
+                            </a>
+                            <a href="{{ url_for('music.artist_page', artist=album['main_artist']) }}"><p>{{ album['main_artist'] }}</p></a>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                {{ ui.empty("New releases couldn't be loaded right now.") }}
+            {% endif %}
+        </div>
+    </section>
+{% endblock %}
