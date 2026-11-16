@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% import "about/_parts.html" as about %}
+{% block title %}About · {{ section.label }}{% endblock %}
+{% block description %}{{ section.summary }}{% endblock %}
+{% block content %}
+    <section class="ss-about-hero {{ '' if show_cover else 'no-cover' }}">
+        <div class="container">
+            <nav class="ss-about-crumbs" aria-label="Breadcrumb">
+                <a href="{{ url_for('main.about_us') }}">About</a><span>/</span>{{ section.label }}
+            </nav>
+            <h1><i class="fa {{ section.icon }}" aria-hidden="true"></i> {{ section.label }}</h1>
+            <p class="ss-about-lead">{{ section.tagline }}</p>
+        </div>
+    </section>
+
+    <div class="container">
+        {% if show_cover %}<div class="ss-about-cover">{{ about.shot(section.cover, "") }}</div>{% endif %}
+        {{ about.section_nav(sections, section.slug) }}
+        <p class="ss-about-summary">{{ section.summary }}</p>
+    </div>
+
+    {% for f in section.features %}
+        <section class="ss-feature {{ 'alt' if loop.index is even }}">
+            <div class="container">
+                <div class="row align-items-center {{ 'flex-lg-row-reverse' if loop.index is even }}">
+                    <div class="col-12 col-lg-5 mb-4 mb-lg-0">
+                        <span class="ss-feature__num">{{ '%02d' | format(loop.index) }}</span>
+                        <h2 class="ss-feature__title">{{ f.title }}</h2>
+                        <p class="ss-feature__text">{{ f.text }}</p>
+                        {% if f.points %}
+                            <ul class="ss-feature__points">
+                                {% for point in f.points %}<li><i class="fa fa-check" aria-hidden="true"></i>{{ point }}</li>{% endfor %}
+                            </ul>
+                        {% endif %}
+                        <div class="d-flex flex-wrap align-items-center mt-4" style="gap:14px">
+                            {% if f.cta %}<a href="{{ url_for(f.cta[1]) }}" class="ss-btn accent">{{ f.cta[0] }} <i class="fa fa-angle-right"></i></a>{% endif %}
+                            {% if f.more %}<a href="{{ url_for('main.about_us', name=f.more) }}" class="ss-link-more">How it works <i class="fa fa-long-arrow-right"></i></a>{% endif %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-7">
+                        <div class="ss-shots {{ 'mobile' if f.mobile }} {{ 'stack' if f.shots | length > 1 and not f.mobile }}">
+                            {% for file, caption in f.shots %}{{ about.shot(file, caption, f.mobile) }}{% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    {% endfor %}
+
+    {% if section.notes %}
+        <section class="ss-section soft">
+            <div class="container">
+                <h2 class="ss-about-h2 text-center">Good to know</h2>
+                <div class="ss-notes">
+                    {% for icon, text in section.notes %}
+                        <div class="ss-note"><i class="fa {{ icon }}" aria-hidden="true"></i><p>{{ text }}</p></div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+    {% endif %}
+
+    <section class="ss-section">
+        <div class="container">
+            <nav class="ss-pager-about" aria-label="Other sections">
+                {% if prev %}<a href="{{ url_for('main.about_us', name=prev.slug) }}"><small>&larr; Previous</small><strong>{{ prev.label }}</strong></a>{% else %}<span></span>{% endif %}
+                {% if next %}<a class="next" href="{{ url_for('main.about_us', name=next.slug) }}"><small>Next &rarr;</small><strong>{{ next.label }}</strong></a>{% endif %}
+            </nav>
+        </div>
+    </section>
+
+    {{ about.lightbox() }}
+{% endblock %}

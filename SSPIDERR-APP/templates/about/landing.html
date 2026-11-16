@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% import "about/_parts.html" as about %}
+{% block title %}About SSPIDERR{% endblock %}
+{% block description %}SSPIDERR brings music charts, your Spotify playlists and your own music files together. Find what's hot and add it to Spotify in one click.{% endblock %}
+{% block content %}
+    <section class="ss-about-hero big">
+        <div class="container">
+            <p class="ss-about-eyebrow">About SSPIDERR</p>
+            <h1>Discover the music.<br>Keep the music.</h1>
+            <p class="ss-about-lead">SSPIDERR brings the world's music charts, your Spotify playlists and your own music
+                files together, so finding a great song and saving it is one click, not ten.</p>
+            <div class="d-flex flex-wrap justify-content-center mt-4" style="gap:12px">
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('music.see_whats_new') }}" class="ss-btn accent">Explore the charts</a>
+                    <a href="{{ url_for('uploads.loader_page') }}" class="ss-btn ghost light">Upload your songs</a>
+                {% else %}
+                    <a href="{{ url_for('auth.register_page') }}" class="ss-btn accent">Create a free account</a>
+                    <a href="{{ url_for('music.see_whats_new') }}" class="ss-btn ghost light">Explore the charts</a>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+        <div class="ss-about-cover">{{ about.shot("home-charts.jpg", "") }}</div>
+        {{ about.section_nav(sections) }}
+    </div>
+
+    {# ---------------- How it works ---------------- #}
+    <section class="ss-section">
+        <div class="container">
+            <h2 class="ss-about-h2 text-center">How it works</h2>
+            <p class="ss-about-sub text-center">Three steps from &ldquo;what's that song?&rdquo; to &ldquo;it's in my playlist&rdquo;.</p>
+            <ol class="ss-steps-grid">
+                {% for icon, title, text in steps %}
+                    <li>
+                        <span class="ss-steps-grid__icon"><i class="fa {{ icon }}" aria-hidden="true"></i></span>
+                        <span class="ss-steps-grid__num">Step {{ loop.index }}</span>
+                        <h3>{{ title }}</h3>
+                        <p>{{ text }}</p>
+                    </li>
+                {% endfor %}
+            </ol>
+        </div>
+    </section>
+
+    {# ---------------- Feature cards ---------------- #}
+    <section class="ss-section soft">
+        <div class="container">
+            <h2 class="ss-about-h2 text-center">Take the tour</h2>
+            <p class="ss-about-sub text-center">Each part of SSPIDERR, with screenshots and a quick guide.</p>
+            <div class="ss-tour">
+                {% for s in sections %}
+                    <a class="ss-tour__card" href="{{ url_for('main.about_us', name=s.slug) }}">
+                        <img src="{{ url_for('static', filename='img/about/' ~ s.cover) }}" alt="" loading="lazy" decoding="async">
+                        <div class="ss-tour__body">
+                            <h3><i class="fa {{ s.icon }}" aria-hidden="true"></i> {{ s.label }}</h3>
+                            <p>{{ s.tagline }}</p>
+                            <span class="ss-link-more">Learn more <i class="fa fa-long-arrow-right"></i></span>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    {# ---------------- Facts ---------------- #}
+    <section class="ss-facts">
+        <div class="container">
+            <div class="ss-facts__grid">
+                <div><strong>70+</strong><span>charts to explore</span></div>
+                <div><strong>50+</strong><span>countries</span></div>
+                <div><strong>Daily</strong><span>fresh home page at midnight</span></div>
+                <div><strong>1 click</strong><span>to add a song to Spotify</span></div>
+            </div>
+        </div>
+    </section>
+
+    {# ---------------- FAQ ---------------- #}
+    <section class="ss-section">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12 col-lg-9">
+                    <h2 class="ss-about-h2 text-center">Questions people ask</h2>
+                    <div class="ss-faq">
+                        {% for q, a in faq %}
+                            <details {{ 'open' if loop.first }}>
+                                <summary>{{ q }}</summary>
+                                <p>{{ a }}</p>
+                            </details>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {# ---------------- Reviews ---------------- #}
+    <section class="ss-section soft" id="reviews">
+        <div class="container">
+            <h2 class="ss-about-h2 text-center">What people say</h2>
+            {% if sorted_data %}
+                <div class="ss-reviews">
+                    {% for review in sorted_data[:9] %}
+                        <figure class="ss-review">
+                            <blockquote>&ldquo;{{ review.text }}&rdquo;</blockquote>
+                            <figcaption>
+                                <img src="{{ (review.review_author.email if review.review_author else '') | gravatar }}" alt="" loading="lazy">
+                                <span><strong>{{ review.review_author.display_name if review.review_author else 'Former member' }}</strong>
+                                <small>{{ review.created_at | timeago }}</small></span>
+                            </figcaption>
+                        </figure>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="ss-about-sub text-center">No reviews yet. Be the first!</p>
+            {% endif %}
+
+            <div class="ss-review-form">
+                {% if current_user.is_authenticated %}
+                    <form action="{{ url_for('main.about_us') }}" method="post">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <label for="review"><strong>Leave a review</strong> <span class="ss-meta">· what do you think of SSPIDERR?</span></label>
+                        <div class="d-flex flex-wrap" style="gap:10px">
+                            <input type="text" name="review" id="review" required maxlength="1000"
+                                   placeholder="Share your experience in a sentence or two">
+                            <button type="submit" class="ss-btn accent">Post review</button>
+                        </div>
+                    </form>
+                {% else %}
+                    <p class="mb-0"><a href="{{ url_for('auth.login_page', next=url_for('main.about_us') ~ '#reviews') }}" class="ss-btn accent">Log in to leave a review</a></p>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    {# ---------------- Contact ---------------- #}
+    <section class="ss-about-cta">
+        <div class="container text-center">
+            <h2>Questions, ideas or found a bug?</h2>
+            <p>We read every message.</p>
+            <a href="{{ url_for('main.contact') }}" class="ss-btn accent">Get in touch</a>
+        </div>
+    </section>
+
+    {{ about.lightbox() }}
+{% endblock %}

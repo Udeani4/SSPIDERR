@@ -1,0 +1,49 @@
+{# Shared pieces for the About pages. #}
+
+{% macro shot(file, caption, mobile=False) -%}
+    <figure class="ss-shot{{ ' mobile' if mobile }}">
+        <div class="ss-shot__frame">
+            {% if not mobile %}<div class="ss-shot__bar" aria-hidden="true"><span></span><span></span><span></span></div>{% endif %}
+            <button type="button" class="ss-shot__open" data-lightbox="{{ url_for('static', filename='img/about/' ~ file) }}"
+                    data-caption="{{ caption }}" aria-label="Enlarge screenshot: {{ caption }}">
+                <img src="{{ url_for('static', filename='img/about/' ~ file) }}" alt="Screenshot: {{ caption }}" loading="lazy" decoding="async">
+            </button>
+        </div>
+        {% if caption %}<figcaption>{{ caption }}</figcaption>{% endif %}
+    </figure>
+{%- endmacro %}
+
+{% macro lightbox() -%}
+    <div class="ss-lightbox" id="ss-lightbox" role="dialog" aria-modal="true" aria-label="Screenshot" hidden>
+        <button type="button" class="ss-lightbox__close" aria-label="Close">&times;</button>
+        <figure><img alt=""><figcaption></figcaption></figure>
+    </div>
+    <script>
+    (function () {
+        const box = document.getElementById("ss-lightbox");
+        const img = box.querySelector("img"), cap = box.querySelector("figcaption");
+        let opener = null;
+        const close = () => { box.hidden = true; document.documentElement.style.overflow = ""; opener && opener.focus(); };
+        document.addEventListener("click", (e) => {
+            const btn = e.target.closest("[data-lightbox]");
+            if (btn) {
+                opener = btn;
+                img.src = btn.dataset.lightbox; img.alt = btn.dataset.caption || ""; cap.textContent = btn.dataset.caption || "";
+                box.hidden = false; document.documentElement.style.overflow = "hidden";
+                box.querySelector(".ss-lightbox__close").focus();
+            } else if (!box.hidden && (e.target === box || e.target.closest(".ss-lightbox__close"))) close();
+        });
+        document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !box.hidden) close(); });
+    })();
+    </script>
+{%- endmacro %}
+
+{% macro section_nav(sections, current=None) -%}
+    <nav class="ss-about-nav" aria-label="About sections">
+        <a href="{{ url_for('main.about_us') }}" class="{{ 'on' if not current }}">About</a>
+        {% for s in sections %}
+            <a href="{{ url_for('main.about_us', name=s.slug) }}" class="{{ 'on' if current == s.slug }}"
+               {{ 'aria-current="page"' | safe if current == s.slug }}><i class="fa {{ s.icon }}" aria-hidden="true"></i> {{ s.label }}</a>
+        {% endfor %}
+    </nav>
+{%- endmacro %}

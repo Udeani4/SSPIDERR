@@ -149,3 +149,10 @@ def test_http_errors_never_log_urls():
     response.status_code = 403
     err = requests.HTTPError("403 for url: https://x/?key=SECRET", response=response)
     assert describe(err) == "HTTP 403" and "SECRET" not in describe(err)
+
+
+def test_billboard_artist_split_across_tags_keeps_spaces():
+    page = ('<li class="o-chart-results-list__item"><h3>BbY WOW</h3>'
+            '<span class="c-label a-no-trucate">Karol G<span>With</span>Judeline</span></li>')
+    rows = scrapers.parse_billboard_chart(page)
+    assert rows[0]["artist"] == "Karol G, Judeline" and rows[0]["main_artist"] == "Karol G"

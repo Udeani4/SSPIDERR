@@ -37,6 +37,18 @@ cd SSPIDERR-APP
 
 GitHub Actions runs both on every push (`.github/workflows/ci.yml`).
 
+## Screenshots for the About pages
+
+The screenshots in `SSPIDERR-APP/static/img/about/` are generated from a private demo copy of the app (demo user and sample playlists, never your real Spotify account):
+
+```powershell
+cd SSPIDERR-APP
+..\.venv\Scripts\python -m playwright install chromium   # once
+..\.venv\Scripts\python tools\screenshots\capture.py     # all screenshots, or name some: capture.py charts song
+```
+
+The About page text lives in `SSPIDERR-APP/app/data/about.py`.
+
 ## Project layout
 
 ```

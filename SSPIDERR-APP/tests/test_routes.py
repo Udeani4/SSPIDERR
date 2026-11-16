@@ -388,3 +388,22 @@ def test_article_page_shows_details_and_source_link(client, db):
     html = client.get("/blog-post/8").get_data(as_text=True)
     for needle in ("Jane Doe", "Rock", "Read the full story", "https://img/cover.jpg", "min read", "og:title"):
         assert needle in html, needle
+
+
+
+def test_about_pages_and_their_screenshots_exist(client, app):
+    from pathlib import Path
+
+    from markupsafe import escape
+
+    from app.data import about
+    static = Path(app.static_folder) / "img" / "about"
+    assert client.get("/about-us").status_code == 200
+    for section in about.SECTIONS:
+        assert (static / section["cover"]).is_file(), section["cover"]
+        for feature in section["features"]:
+            for file, _caption in feature["shots"]:
+                assert (static / file).is_file(), file
+        html = client.get(f"/about-us/{section['slug']}").get_data(as_text=True)
+        assert str(escape(section["label"])) in html and 'alt="Upload local songs"' not in html
+    assert client.get("/about-us/not-a-section").status_code == 302

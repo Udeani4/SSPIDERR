@@ -3,3 +3,5 @@
 pytest==9.2.0
 ruff==0.17.5
 pillow==13.0.0
+# Screenshot tool for the About pages (tools/screenshots/capture.py); then: python -m playwright install chromium
+playwright==1.56.0

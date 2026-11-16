@@ -8,21 +8,13 @@ from flask import Blueprint, abort, current_app, flash, jsonify, redirect, rende
 from flask_login import current_user, login_required
 
 from .. import tasks
+from ..data import about as about_content
 from ..extensions import db, limiter
 from ..models import ReviewComment
 from ..services import charts, home_feed
 
 log = logging.getLogger(__name__)
 bp = Blueprint("main", __name__)
-
-ABOUT_PAGES = {
-    "overview": "about_overview.html",
-    "discover": "about_discover.html",
-    "new_releases": "about_new_releases.html",
-    "newsroom": "about_newsroom.html",
-    "local_spotify": "about_local_spotify.html",
-    "playlist_hub": "about_playlist_hub.html",
-}
 
 EMPTY_FEED = {
     "album_art": None, "album_name": None, "album_id": None,
@@ -87,10 +79,19 @@ def about_us(name):
 
     if name is None:
         reviews = ReviewComment.query.order_by(ReviewComment.created_at.desc()).limit(50).all()
-        return render_template("event.html", sorted_data=reviews)
-    if name in ABOUT_PAGES:
-        return render_template(ABOUT_PAGES[name])
-    return redirect(url_for("main.about_us"))
+        return render_template("about/landing.html", sorted_data=reviews, sections=about_content.SECTIONS,
+                               steps=about_content.STEPS, faq=about_content.FAQ)
+    section = about_content.BY_SLUG.get(name)
+    if section is None:
+        return redirect(url_for("main.about_us"))
+    index = about_content.SECTIONS.index(section)
+    used_below = {file for feature in section["features"] for file, _caption in feature["shots"]}
+    return render_template(
+        "about/section.html", section=section, sections=about_content.SECTIONS,
+        show_cover=section["cover"] not in used_below,
+        prev=about_content.SECTIONS[index - 1] if index > 0 else None,
+        next=about_content.SECTIONS[index + 1] if index + 1 < len(about_content.SECTIONS) else None,
+    )
 
 
 def send_email(name, email, subject, message):

@@ -228,3 +228,6 @@ SSPIDERR-APP/instance/
 db-backups/
 scratch/
 .ruff_cache/
+
+# Screenshot tool demo data
+SSPIDERR-APP/tools/screenshots/.demo/
