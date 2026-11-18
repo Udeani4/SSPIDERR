@@ -13,6 +13,17 @@
             <div class="row justify-content-center">
                 <div class="col-12 col-md-9 col-lg-7">
                     <div class="login-content text-center">
+                        {% if invite_only %}
+                            <div class="ss-invite-only" role="alert">
+                                <i class="fa fa-lock" aria-hidden="true"></i>
+                                <div>
+                                    <strong>Spotify didn't let this account connect</strong>
+                                    <p>{{ invite_message }}</p>
+                                    <p class="mb-0">You can still browse the charts, artists and news without Spotify.
+                                        <a href="{{ url_for('main.contact') }}">Contact us</a> to request access.</p>
+                                </div>
+                            </div>
+                        {% endif %}
                         <h3>Link your Spotify account</h3>
                         <p class="mb-4">SSPIDERR needs permission to <strong>read your playlists</strong> and <strong>add songs to them</strong>.
                             We never post anything, follow anyone or change your account.</p>

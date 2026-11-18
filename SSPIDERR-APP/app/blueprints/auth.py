@@ -98,7 +98,9 @@ def connect_spotify():
     """Explains why we need Spotify before sending the user to Spotify's consent page."""
     if current_user.has_spotify:
         return redirect(url_for("library.playlist"))
-    return render_template("connect_spotify.html", next=safe_next(request.args.get("next")))
+    return render_template("connect_spotify.html", next=safe_next(request.args.get("next")),
+                           invite_only=request.args.get("invite_only") == "1",
+                           invite_message=spotify.INVITE_ONLY_MESSAGE)
 
 
 @bp.route("/spotify-login")
@@ -131,6 +133,11 @@ def spotify_callback():
         access_token = spotify.oauth_manager(user).get_access_token(code, as_dict=False, check_cache=False)
         spotify_user_id = spotipy.Spotify(auth=access_token, requests_timeout=15).me()["id"]
     except (spotipy.SpotifyException, spotipy.SpotifyOauthError) as exc:
+        if isinstance(exc, spotipy.SpotifyException) and exc.http_status == 403:
+            # Development Mode: this Spotify account isn't on the app's user list.
+            log.info("Spotify refused user %s (not on the Development Mode user list)", user.id)
+            spotify.clear_tokens(user)          # tokens were saved before /me failed
+            return redirect(url_for("auth.connect_spotify", invite_only=1, next=session.get("spotify_next")))
         log.warning("Spotify callback failed: %s", exc)
         flash("We couldn't connect to Spotify. Please try again.", "error")
         return redirect(url_for("main.home"))

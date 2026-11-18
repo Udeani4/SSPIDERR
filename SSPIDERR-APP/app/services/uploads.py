@@ -23,7 +23,7 @@ from werkzeug.utils import secure_filename
 from ..extensions import db
 from ..models import UploadJob, UploadJobItem, User, utcnow
 from . import catalog
-from .spotify import get_playlist_tracks, user_client
+from .spotify import INVITE_ONLY_MESSAGE, get_playlist_tracks, is_not_registered, user_client
 
 log = logging.getLogger(__name__)
 
@@ -241,7 +241,9 @@ def _send_to_spotify(job, sp):
     # Skip songs that are already in the playlist (no duplicates on re-runs).
     try:
         existing = {t["uri"] for t in get_playlist_tracks(sp, job.playlist_id)}
-    except spotipy.SpotifyException:
+    except spotipy.SpotifyException as exc:
+        if is_not_registered(exc):
+            raise
         existing = set()
 
     uris = []
@@ -279,6 +281,8 @@ def _send_to_spotify(job, sp):
                     item.added = True
             _update(job, message=f"Added {added} of {len(uris)} songs to the playlist")
         except spotipy.SpotifyException as exc:
+            if is_not_registered(exc):
+                raise                                   # stop the job with the invite-only explanation
             log.warning("Adding batch to playlist %s failed: %s", job.playlist_id, exc)
             for item in job.items:
                 if item.spotify_uri in batch:
@@ -316,9 +320,14 @@ def process_job(app, job_id):
             _update(job, state="done", finished_at=utcnow(), message=message)
         except Exception as exc:
             db.session.rollback()
-            log.exception("Upload job %s failed", job_id)
             job = db.session.get(UploadJob, job_id)
-            _update(job, state="failed", finished_at=utcnow(), message=f"Processing failed: {exc}")
+            if is_not_registered(exc):
+                log.info("Upload job %s stopped: user not on the Spotify Development Mode list", job_id)
+                message = f"Processing stopped. {INVITE_ONLY_MESSAGE}"
+            else:
+                log.exception("Upload job %s failed", job_id)
+                message = f"Processing failed: {exc}"
+            _update(job, state="failed", finished_at=utcnow(), message=message)
         finally:
             shutil.rmtree(folder, ignore_errors=True)
 

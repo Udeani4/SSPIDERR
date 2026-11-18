@@ -24,6 +24,23 @@ from ..extensions import db
 
 log = logging.getLogger(__name__)
 
+INVITE_ONLY_MESSAGE = (
+    "Spotify connection is invite-only for now. SSPIDERR runs in Spotify's Development Mode, which only lets "
+    "a few approved Spotify accounts connect. Ask the site owner to add the email address of your Spotify account."
+)
+
+
+def is_not_registered(exc):
+    """True when Spotify refuses a user because they aren't on the app's Development Mode user list.
+
+    Spotify answers HTTP 403 with a message like "...the user may not be registered".
+    """
+    if getattr(exc, "http_status", None) != 403:
+        return False
+    text = f"{getattr(exc, 'msg', '')} {exc}".lower()
+    return "not be registered" in text or "not registered" in text
+
+
 PLAYLIST_PLACEHOLDER = "/static/img/core-img/playlist-placeholder.svg"
 TRACK_PLACEHOLDER = "/static/img/core-img/track-placeholder.svg"
 

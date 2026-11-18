@@ -389,3 +389,11 @@ img.ss-lazy-fade.loaded { opacity: 1; }
   .ss-about-cover { margin-top: -80px; }
   .ss-feature { padding: 56px 0; }
 }
+
+/* Spotify Development Mode: account not on the user list */
+.ss-invite-only { display: flex; gap: 14px; text-align: left; background: #fff7ed; border: 1px solid #fed7aa; border-left: 4px solid #f59e0b;
+  border-radius: 12px; padding: 16px 18px; margin-bottom: 28px; }
+.ss-invite-only .fa { font-size: 22px; color: #b45309; margin-top: 2px; }
+.ss-invite-only strong { display: block; color: #7c2d12; margin-bottom: 4px; }
+.ss-invite-only p { color: #7c2d12; font-size: 14px; line-height: 1.6; margin-bottom: 6px; }
+.ss-invite-only a { color: #b45309; font-weight: 700; text-decoration: underline; }

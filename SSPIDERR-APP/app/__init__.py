@@ -159,6 +159,14 @@ def _register_error_handlers(app):
 
     @app.errorhandler(spotipy.SpotifyException)
     def spotify_error(e):
+        from flask_login import current_user
+
+        from .services import spotify as spotify_service
+        if spotify_service.is_not_registered(e):
+            # Removed from (or never on) the Development Mode user list: disconnect so they aren't stuck.
+            if current_user.is_authenticated and current_user.has_spotify:
+                spotify_service.clear_tokens(current_user._get_current_object())
+            return render_error(403, "Spotify access is invite-only", spotify_service.INVITE_ONLY_MESSAGE)
         app.logger.warning("Unhandled Spotify error on %s: %s", request.path, e)
         if getattr(e, "http_status", None) == 404:
             return render_error(404, "Not found on Spotify", "Spotify doesn't have that item.")

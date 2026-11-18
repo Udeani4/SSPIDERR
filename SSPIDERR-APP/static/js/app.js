@@ -90,6 +90,13 @@
       const res = await ssFetch("/api/my-playlists");
       const data = await res.json();
       if (res.status === 401) { window.location = `${loginUrl}?next=${encodeURIComponent(location.pathname)}`; return; }
+      if (res.status === 403 && data.invite_only) {
+        const note = document.createElement("div");
+        note.className = "ss-modal__state";
+        note.textContent = data.error;
+        listBox.replaceChildren(note);
+        return;
+      }
       if (res.status === 403 && data.connect) {
         renderState(`${data.error}<br><br><a class="ss-btn spotify" href="${data.connect}?next=${encodeURIComponent(location.pathname)}">Connect Spotify</a>`);
         return;

@@ -42,6 +42,9 @@ def api_my_playlists():
     try:
         playlists = cached_playlists(sp, current_user)
     except spotipy.SpotifyException as exc:
+        if spotify_service.is_not_registered(exc):
+            spotify_service.clear_tokens(current_user._get_current_object())
+            return jsonify({"error": spotify_service.INVITE_ONLY_MESSAGE, "invite_only": True}), 403
         log.warning("Listing playlists failed: %s", exc)
         return jsonify({"error": "Spotify didn't respond. Try again in a moment."}), 502
     editable = [{"id": p["id"], "name": p["name"], "image": p["image"], "tracks": p["tracks"]}
@@ -65,6 +68,9 @@ def add_to_playlist():
     try:
         sp.playlist_add_items(playlist_id, [f"spotify:track:{track_id}"])
     except spotipy.SpotifyException as exc:
+        if spotify_service.is_not_registered(exc):
+            spotify_service.clear_tokens(current_user._get_current_object())
+            return jsonify({"error": spotify_service.INVITE_ONLY_MESSAGE, "invite_only": True}), 403
         log.warning("Add to playlist failed: %s", exc)
         message = ("You can only add songs to playlists you own or collaborate on."
                    if exc.http_status in (401, 403) else "Spotify couldn't add that song.")
