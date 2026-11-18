@@ -117,9 +117,11 @@ def downgrade():
         sa.Column("user_id", sa.String(50)),
     )
     with op.batch_alter_table("blog_posts") as batch:
-        batch.alter_column("month", type_=sa.Integer(), existing_type=sa.String(10), existing_nullable=False)
+        batch.alter_column("month", type_=sa.Integer(), existing_type=sa.String(10), existing_nullable=False,
+                           postgresql_using="EXTRACT(MONTH FROM date)::integer")
     with op.batch_alter_table("home_data") as batch:
-        batch.alter_column("album_id", type_=sa.BigInteger(), existing_type=sa.String(100))
+        batch.alter_column("album_id", type_=sa.BigInteger(), existing_type=sa.String(100),
+                           postgresql_using="NULLIF(regexp_replace(album_id, '[^0-9]', '', 'g'), '')::bigint")
         batch.add_column(sa.Column("new_time_tag", sa.DateTime()))
         batch.add_column(sa.Column("user_id", sa.Integer()))
         batch.drop_column("created_at")

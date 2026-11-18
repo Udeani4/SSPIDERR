@@ -27,6 +27,16 @@ $env:FLASK_DEBUG = "1"; ..\.venv\Scripts\python main.py   # development, http://
 
 Your Spotify app's Redirect URI (Spotify dashboard) must match `SSPIDERR_SPOTIFY_REDIRECT_URI`, e.g. `http://127.0.0.1:5000/callback`.
 
+## Hosting on Render
+
+`render.yaml` (repo root) is a Render Blueprint: it creates the web app and a free PostgreSQL database.
+
+1. In Render: **New -> Blueprint**, pick this GitHub repository, and enter the values it asks for (copy them from `SSPIDERR-APP/.env`).
+2. In the Spotify Developer Dashboard, add `https://<your-service>.onrender.com/callback` as a Redirect URI and use the same value for `SSPIDERR_SPOTIFY_REDIRECT_URI`.
+3. Pushing to `main` redeploys automatically.
+
+Free plan: the app sleeps after 15 idle minutes (about a minute to wake), and the free database expires after 30 days unless upgraded.
+
 ## Tests
 
 ```powershell

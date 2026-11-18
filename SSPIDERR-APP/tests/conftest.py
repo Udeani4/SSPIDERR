@@ -1,4 +1,5 @@
 """Shared fixtures. No test touches the network: every external call is faked."""
+import os
 import time
 from types import SimpleNamespace
 
@@ -70,7 +71,9 @@ def playlist_item(pid, name="Mix", owner="me", total=3, images=True, snapshot="s
 
 @pytest.fixture
 def app(tmp_path):
-    app = create_app("testing", instance_path=tmp_path / "instance")
+    # Default: in-memory SQLite. Set TEST_DATABASE_URL to run the suite against PostgreSQL.
+    extra = {"SQLALCHEMY_DATABASE_URI": os.environ["TEST_DATABASE_URL"]} if os.environ.get("TEST_DATABASE_URL") else {}
+    app = create_app("testing", instance_path=tmp_path / "instance", **extra)
     with app.app_context():
         _db.create_all()
         yield app

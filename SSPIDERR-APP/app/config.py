@@ -13,6 +13,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
 
+def database_url(raw):
+    """Use the psycopg 3 driver for PostgreSQL URLs (Render gives 'postgres://' or 'postgresql://')."""
+    for prefix in ("postgres://", "postgresql://"):
+        if raw.startswith(prefix):
+            return "postgresql+psycopg://" + raw[len(prefix):]
+    return raw
+
+
 def _bool(name, default=False):
     value = os.environ.get(name)
     if value is None:
@@ -29,8 +37,14 @@ class Config:
     # --- Database ---------------------------------------------------------
     # A relative sqlite path is resolved against the instance/ folder by
     # Flask-SQLAlchemy, so this keeps using instance/my_songs.db.
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", "sqlite:///my_songs.db")
-    SQLALCHEMY_ENGINE_OPTIONS = {"connect_args": {"timeout": 15}}
+    # On Render, DATABASE_URL points at the PostgreSQL database (see render.yaml).
+    SQLALCHEMY_DATABASE_URI = database_url(os.environ.get("DATABASE_URL", "sqlite:///my_songs.db"))
+    SQLALCHEMY_ENGINE_OPTIONS = (
+        {"connect_args": {"timeout": 15}} if SQLALCHEMY_DATABASE_URI.startswith("sqlite")
+        else {"pool_pre_ping": True, "pool_recycle": 300}      # survive the database dropping idle connections
+    )
+    # Behind a proxy that sets X-Forwarded-* headers (Render, other hosts): set TRUST_PROXY=1.
+    TRUST_PROXY = _bool("TRUST_PROXY", False)
 
     # --- Security ---------------------------------------------------------
     WTF_CSRF_TIME_LIMIT = None                      # token lives as long as the session

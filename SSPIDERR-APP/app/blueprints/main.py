@@ -49,6 +49,17 @@ def home():
     return render_template("index.html", **_feed_context(snapshot))
 
 
+@bp.route("/healthz")
+@limiter.exempt
+def healthz():
+    """Lightweight check for the hosting platform: the app is up and the database answers."""
+    try:
+        db.session.execute(db.text("SELECT 1"))
+        return {"status": "ok"}
+    except Exception:
+        return {"status": "database unavailable"}, 503
+
+
 @bp.route("/status/jobs")
 @login_required
 def jobs_status():

@@ -8,7 +8,7 @@ from flask import Flask, jsonify, render_template, request
 from flask_wtf.csrf import CSRFError
 from sqlalchemy import event
 
-from .config import BASE_DIR, CONFIGS
+from .config import BASE_DIR, CONFIGS, database_url
 from .extensions import bootstrap, cache, csrf, db, limiter, login_manager, migrate
 
 
@@ -44,6 +44,14 @@ def create_app(config_name=None, instance_path=None, **overrides):
     )
     app.config.from_object(CONFIGS[config_name])
     app.config.update(overrides)
+    uri = app.config["SQLALCHEMY_DATABASE_URI"] = database_url(app.config["SQLALCHEMY_DATABASE_URI"])
+    if not uri.startswith("sqlite") and "connect_args" in app.config.get("SQLALCHEMY_ENGINE_OPTIONS", {}):
+        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True, "pool_recycle": 300}
+    if app.config.get("TRUST_PROXY"):
+        # Render terminates HTTPS in front of the app; trust its X-Forwarded-* headers so
+        # request.url, url_for(_external=True) and client IPs (rate limits) are correct.
+        from werkzeug.middleware.proxy_fix import ProxyFix
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
     if not app.config.get("SECRET_KEY"):
         raise RuntimeError("APP_SECRET_KEY is not set. Copy .env.example to .env and fill it in.")
 
