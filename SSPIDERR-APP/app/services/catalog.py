@@ -12,6 +12,7 @@ from flask import current_app
 
 from ..extensions import cache
 from . import http
+from .concurrency import parallel_map
 from .spotify import TRACK_PLACEHOLDER, app_client, format_artists
 
 log = logging.getLogger(__name__)
@@ -204,12 +205,13 @@ def playlist_preview(playlist_id, limit=15):
     """First tracks of a public playlist with iTunes preview links."""
     from .spotify import parse_playlist_track
     results = app_client().playlist_items(playlist_id, limit=limit, market="US", additional_types=("track",))
+    parsed = [t for t in (parse_playlist_track(e) for e in results.get("items") or []) if t]
+    # Previews are optional: one failed (or rate-limited) iTunes lookup must not empty the list.
+    previews = parallel_map(lambda t: safe_itunes_preview(t["name"], t["artist"].split(" ft. ")[0]),
+                            parsed, max_workers=5, default={})
     tracks = []
-    for entry in results.get("items") or []:
-        t = parse_playlist_track(entry)
-        if not t:
-            continue
-        preview = itunes_preview(t["name"], t["artist"].split(" ft. ")[0]) or {}
+    for t, preview in zip(parsed, previews):
+        preview = preview or {}
         tracks.append({
             "name": t["name"], "artist": t["artist"], "album": t["album"],
             "image": t["image"], "track_id": t["id"], "id": t["id"],

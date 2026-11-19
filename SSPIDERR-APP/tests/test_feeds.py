@@ -118,3 +118,28 @@ def test_refresh_news_backfills_existing_posts(app, db, monkeypatch):
     assert news.refresh_news() == 0
     assert old.byline == "Jane" and old.tags == ["Pop"] and "Much longer" in old.body
     assert old.img_url == "https://cdn/cover.jpg"
+
+
+def test_best_hits_survive_failed_itunes_lookups(app, monkeypatch):
+    """On Render, Apple rate-limits shared IPs; one failed preview lookup used to empty 'Best hits'."""
+    from app.services import catalog
+
+    def entry(i):
+        return {"track": {"id": f"t{i}", "name": f"Song {i}", "type": "track", "artists": [{"name": f"Artist {i}"}],
+                          "album": {"name": "A", "images": []}, "preview_url": None}}
+
+    class FakeSpotify:
+        def playlist_items(self, *_a, **_k):
+            return {"items": [entry(i) for i in range(5)]}
+
+    def flaky_itunes(name, artist=None, country="US"):
+        if name in ("Song 1", "Song 3"):
+            raise RuntimeError("iTunes search failed")        # e.g. HTTP 403/429
+        return {"preview_url": f"https://audio/{name}", "itunes_url": "https://itunes"}
+
+    monkeypatch.setattr(catalog, "app_client", lambda: FakeSpotify())
+    monkeypatch.setattr(catalog, "itunes_preview", flaky_itunes)
+    with app.test_request_context():
+        tracks = catalog.playlist_preview.uncached("best-hits", 15)
+    assert [t["name"] for t in tracks] == [f"Song {i}" for i in range(5)]
+    assert tracks[0]["preview_url"] == "https://audio/Song 0" and tracks[1]["preview_url"] is None
