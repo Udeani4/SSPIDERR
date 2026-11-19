@@ -155,6 +155,7 @@ def app_client():
                 client_id=_credentials.get("client_id"),
                 client_secret=_credentials.get("client_secret"),
                 requests_timeout=15,
+                cache_handler=MemoryCacheHandler(),   # don't write a .cache token file to disk
             )
             _app_client = spotipy.Spotify(
                 client_credentials_manager=manager, requests_timeout=15, retries=2, status_retries=2)

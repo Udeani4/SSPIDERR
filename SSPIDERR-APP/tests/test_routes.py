@@ -407,3 +407,32 @@ def test_about_pages_and_their_screenshots_exist(client, app):
         html = client.get(f"/about-us/{section['slug']}").get_data(as_text=True)
         assert str(escape(section["label"])) in html and 'alt="Upload local songs"' not in html
     assert client.get("/about-us/not-a-section").status_code == 302
+
+
+# --------------------------------------------------------------------- hosting settings
+def test_settings_ignore_quotes_and_spaces(monkeypatch):
+    from app import config
+    monkeypatch.setenv("SOME_KEY", '  "abc123"  ')
+    assert config._env("SOME_KEY") == "abc123"
+    monkeypatch.setenv("SOME_KEY", "'abc123'")
+    assert config._env("SOME_KEY") == "abc123"
+    monkeypatch.setenv("SOME_KEY", "abc123 ")
+    assert config._env("SOME_KEY") == "abc123"
+    monkeypatch.setenv("SOME_KEY", '""')
+    assert config._env("SOME_KEY", "default") == "default"
+    monkeypatch.setenv("SOME_FLAG", ' "1" ')
+    assert config._bool("SOME_FLAG") is True
+
+
+def test_rejected_app_credentials_show_a_page_not_a_crash(client, offline, monkeypatch, caplog):
+    import spotipy
+
+    import app.blueprints.music as music
+
+    class Rejecting:
+        def track(self, *_a):
+            raise spotipy.SpotifyOauthError("invalid_client", error="invalid_client")
+    monkeypatch.setattr(music, "app_client", lambda: Rejecting())
+    res = client.get("/song-page/" + "a" * 22)
+    assert res.status_code == 503 and b"Spotify is unavailable" in res.data
+    assert "SSPIDERR_SPOTIFY_CLIENT_ID" in caplog.text

@@ -165,6 +165,17 @@ def _register_error_handlers(app):
     def csrf_error(_e):
         return render_error(400, "Session expired", "Your session expired. Refresh the page and try again.")
 
+    @app.errorhandler(spotipy.SpotifyOauthError)
+    def spotify_credentials_error(e):
+        # The app's own Client ID/Secret were refused (not a user's account problem).
+        app.logger.error(
+            "Spotify rejected SSPIDERR's app credentials (%s). Check SSPIDERR_SPOTIFY_CLIENT_ID and "
+            "SSPIDERR_SPOTIFY_CLIENT_SECRET: they must match the Spotify Developer Dashboard exactly, "
+            "with no quotes or spaces.", getattr(e, "error", None) or e)
+        return render_error(503, "Spotify is unavailable right now",
+                            "We can't reach Spotify at the moment. Charts and news still work; "
+                            "please try this page again later.")
+
     @app.errorhandler(spotipy.SpotifyException)
     def spotify_error(e):
         from flask_login import current_user
