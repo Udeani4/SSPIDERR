@@ -17,6 +17,7 @@ log = logging.getLogger(__name__)
 
 ITUNES_RSS = "https://rss.applemarketingtools.com/api/v2/us/music/most-played/{limit}/{kind}.json"
 KEEP_SNAPSHOTS = 3
+NO_DESCRIPTION = "No description available."
 
 
 def _itunes_rss(kind, limit=25):
@@ -129,7 +130,7 @@ def build_home_snapshot():
         "artist_art": (catalog.artist_image, (top_artist, 0), None),
         "profile": (catalog.artist_profile, (top_artist,), {}),
         "description": (catalog.artist_description, (top_artist,),
-                        {"source": None, "description": "No description available."}),
+                        {"source": None, "description": NO_DESCRIPTION}),
     }, max_workers=4, timeout=60)
 
     profile = second["profile"] or {}
@@ -161,10 +162,35 @@ def build_home_snapshot():
     }
 
 
+def missing_parts(row):
+    """Sections of a snapshot that came back empty (usually a rejected or missing API key).
+
+    An incomplete snapshot is shown, but should_run_24h_task() retries it within the hour
+    instead of waiting for midnight.
+    """
+    if row is None:
+        return []                     # nothing saved yet; the normal staleness rules handle that
+    missing = []
+    if not row.best_2025_hits:
+        missing.append("best hits (Spotify)")
+    if not row.this_weeks_hits:
+        missing.append("top 10 (Last.fm)")
+    images = list((row.artist_section_dict or {}).values())
+    if not row.artist_art or (images and not any(images)):
+        missing.append("artist images (Spotify)")
+    if (row.artist_description or {}).get("description", NO_DESCRIPTION) == NO_DESCRIPTION:
+        missing.append("artist description (Last.fm)")
+    return missing
+
+
 def save_snapshot(data):
     row = HomeData(**data)
     db.session.add(row)
     db.session.commit()
+    missing = missing_parts(row)
+    if missing:
+        log.warning("Home feed saved without: %s. Check the API keys; it will retry within the hour.",
+                    ", ".join(missing))
     # Keep a few old snapshots for debugging, drop the rest (P11).
     old_ids = [r.id for r in HomeData.query.order_by(HomeData.id.desc()).offset(KEEP_SNAPSHOTS)]
     if old_ids:

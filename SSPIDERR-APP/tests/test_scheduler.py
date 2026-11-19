@@ -128,3 +128,35 @@ def test_clear_stale_locks(app, db):
     status(db, running_since=datetime.now(UTC))
     tasks.clear_stale_locks(app)
     assert SchedulerStatus.query.one().running_since is None
+
+
+# ------------------------------------------------- incomplete feeds are retried early
+def _snapshot(db, **overrides):
+    from app.models import HomeData
+    data = dict(artist_art="a.jpg", artist_section_dict={"X": "x.jpg"},
+                artist_description={"source": "Last.fm", "description": "Bio"},
+                best_2025_hits=[{"id": "1"}], this_weeks_hits=[{"name": "s"}])
+    data.update(overrides)
+    db.session.add(HomeData(**data))
+    db.session.commit()
+
+
+def test_complete_feed_waits_for_midnight(app, db):
+    _snapshot(db)
+    status(db, last_run=at(2026, 11, 14, 8, 0), last_attempt=at(2026, 11, 14, 8, 0))
+    assert tasks.should_run_24h_task(now=at(2026, 11, 14, 12, 0)) is False
+
+
+def test_incomplete_feed_is_retried_after_an_hour(app, db):
+    # Built while the Spotify key was rejected: no best hits, no artist pictures.
+    _snapshot(db, best_2025_hits=[], artist_art=None, artist_section_dict={"X": None})
+    status(db, last_run=at(2026, 11, 14, 8, 0), last_attempt=at(2026, 11, 14, 8, 0))
+    assert tasks.should_run_24h_task(now=at(2026, 11, 14, 8, 30)) is False   # not hammered
+    assert tasks.should_run_24h_task(now=at(2026, 11, 14, 9, 5)) is True
+
+
+def test_missing_parts_names_what_is_empty(app, db):
+    from app.services.home_feed import latest_snapshot, missing_parts
+    _snapshot(db, artist_description={"source": None, "description": "No description available."},
+              this_weeks_hits=[])
+    assert missing_parts(latest_snapshot()) == ["top 10 (Last.fm)", "artist description (Last.fm)"]

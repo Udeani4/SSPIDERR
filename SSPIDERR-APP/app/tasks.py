@@ -16,7 +16,9 @@ The home-page charts are global, so one job refreshes them for everybody:
 * the job has never succeeded, or
 * the last success happened on an earlier calendar day (so data rolls over
   at midnight), or
-* the last success is older than HOME_REFRESH_MAX_AGE_HOURS (default 24h).
+* the last success is older than HOME_REFRESH_MAX_AGE_HOURS (default 24h), or
+* (home feed only) the newest snapshot is missing sections - e.g. it was built
+  while an API key was wrong - and the last attempt was over an hour ago.
 
 ...and returns False while the job is already running, or for 15 minutes
 after a failed attempt (so a broken upstream API isn't hammered).
@@ -38,6 +40,7 @@ HOME_JOB = "home_feed"
 NEWS_JOB = "news_feed"
 RETRY_AFTER_FAILURE = timedelta(minutes=15)
 STALE_LOCK = timedelta(minutes=30)
+RETRY_INCOMPLETE = timedelta(hours=1)
 
 _locks = {}
 _locks_guard = threading.Lock()
@@ -92,6 +95,10 @@ def should_run_24h_task(job_name=HOME_JOB, now=None, max_age_hours=None, tz_name
         return True
     if now - last_run >= max_age:
         return True
+    if job_name == HOME_JOB and (last_attempt is None or now - last_attempt >= RETRY_INCOMPLETE):
+        from .services.home_feed import latest_snapshot, missing_parts
+        if missing_parts(latest_snapshot()):
+            return True                   # half-built feed: try again rather than wait for midnight
     # New calendar day in the scheduler's timezone -> refresh (the "00:00" rule).
     return last_run.astimezone(tz).date() < now.astimezone(tz).date()
 
